@@ -1,4 +1,4 @@
-version: "3.9"
+
 
 services:
   db:
@@ -6,9 +6,9 @@ services:
     container_name: postgres_db
     restart: always
     environment:
-      POSTGRES_USER: ${ENV_PROTUBE_DB_USER}
-      POSTGRES_PASSWORD: ${ENV_PROTUBE_DB_PASS}
-      POSTGRES_DB: ${ENV_PROTUBE_DB}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: protube
     ports:
       - "5432:5432"
     volumes:
