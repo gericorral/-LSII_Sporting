@@ -49,7 +49,8 @@ def compute_cut_params(v: str, full_duration: int) -> dict[str, int]:
 def grab_video(v:str, id: int):
     YT_URL = "https://www.youtube.com/watch"
     CONSTANT_DLP_PARAMS = ("--quiet --no-overwrites --write-comments --extractor-args youtube:max_comments={} "
-                           "--remux-video mp4 --write-info-json --write-thumbnail --convert-thumbnails webp --embed-thumbnail"
+                           "--cookies-from-browser chrome:Default --remux-video mp4 --write-info-json "
+                           "--write-thumbnail --convert-thumbnails webp --embed-thumbnail"
                            .format(random.randint(1, 14)))
 
     dlp_command = f"{YT_DLP_BIN} -f bv+ba -S filesize~100M -o {id}_tmp.%(ext)s {CONSTANT_DLP_PARAMS} {YT_URL}?v={v}"
