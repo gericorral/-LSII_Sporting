@@ -13,6 +13,45 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: protube_backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      ENV_PROTUBE_STORE_DIR: /app/store/
+      ENV_PROTUBE_DB_HOST: db
+      ENV_PROTUBE_DB: ${ENV_PROTUBE_DB:-protube}
+      ENV_PROTUBE_DB_USER: ${ENV_PROTUBE_DB_USER:-postgres}
+      ENV_PROTUBE_DB_PWD: ${ENV_PROTUBE_DB_PWD:-secret}
+      ENV_PROTUBE_GOOGLE_CLIENT_ID: ${ENV_PROTUBE_GOOGLE_CLIENT_ID:-}
+      ENV_PROTUBE_GOOGLE_CLIENT_SECRET: ${ENV_PROTUBE_GOOGLE_CLIENT_SECRET:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    volumes:
+      - ${VIDEO_STORE_DIR:-./video-store}:/app/store
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: protube_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+        - "80:80"
 
 volumes:
   postgres_data:
