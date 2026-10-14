@@ -1,6 +1,6 @@
 package com.tecnocampus.LS2.protube_back;
 
-import com.tecnocampus.LS2.protube_back.services.VideoService;
+import com.tecnocampus.LS2.protube_back.video.domain.port.in.ListVideosUseCase;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,11 +15,11 @@ import static org.junit.Assert.assertNotNull;
 class ProtubeBackApplicationTests {
 
     @Autowired
-    VideoService videoService;
+    ListVideosUseCase listVideosUseCase;
 
     @Test
     void shouldStartApp() {
-        Assertions.assertNotNull(videoService);
+        Assertions.assertNotNull(listVideosUseCase);
     }
 
 }
