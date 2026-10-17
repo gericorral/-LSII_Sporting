@@ -4,6 +4,7 @@ import com.tecnocampus.LS2.protube_back.video.domain.port.out.VideoCatalogPort;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -17,8 +18,11 @@ class VideoApplicationServiceTest {
 
     @Test
     void listsVideosThroughTheOutputPort() {
-        when(videoCatalogPort.findAll()).thenReturn(List.of("video 1", "video 2"));
+        List<VideoSummary> videos = List.of(
+                new VideoSummary("1", "Video 1", "Description", 30, "/media/1.webp", "/media/1.mp4")
+        );
+        when(videoCatalogPort.findAll()).thenReturn(videos);
 
-        assertEquals(List.of("video 1", "video 2"), videoApplicationService.listVideos());
+        assertEquals(videos, videoApplicationService.listVideos());
     }
 }

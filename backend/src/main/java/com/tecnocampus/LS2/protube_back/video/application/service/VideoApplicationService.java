@@ -5,6 +5,7 @@ import com.tecnocampus.LS2.protube_back.video.domain.port.out.VideoCatalogPort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
 
 @Service
 public class VideoApplicationService implements ListVideosUseCase {
@@ -16,7 +17,7 @@ public class VideoApplicationService implements ListVideosUseCase {
     }
 
     @Override
-    public List<String> listVideos() {
+    public List<VideoSummary> listVideos() {
         return videoCatalogPort.findAll();
     }
 }

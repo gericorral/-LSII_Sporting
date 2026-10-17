@@ -124,9 +124,31 @@ requests.
 - [MVP requirements](REQUIREMENT.md)
 - [Project rules](README.md)
 - [Approved prompts](prompts/README.md)
+- [Exam study guide](docs/GUIA_ESTUDIO_EXAMEN.md)
+
+## 6. Exam study guide
+
+After every code change, update both `docs/GUIA_ESTUDIO_EXAMEN.md` and its Word export
+`docs/GUIA_ESTUDIO_EXAMEN.docx` with the relevant explanation of what was implemented,
+which application behavior or project area it affects, and what should be understood
+for the exam. Do not copy code into the guide; describe the functionality, the
+components or layers involved, the reason for the change, and any important testing,
+configuration, or pending-work implications.
 
 ## Approved AI Prompts
 
 Approved prompts are stored as individual files in `/prompts`, following the naming
 and review rules in [prompts/README.md](prompts/README.md). Do not duplicate prompt
 content in this file.
+
+## AI change log
+
+- 2026-10-17: Implemented the US-04 video catalog using
+  `prompts/06-implement-video-catalog.md`. The change was generated with AI and documented in
+  `docs/GUIA_ESTUDIO_EXAMEN.md` and `docs/GUIA_ESTUDIO_EXAMEN.docx`.
+- 2026-10-17: Fixed the frontend Jest configuration using
+  `prompts/07-fix-frontend-jest-configuration.md` and `babel-jest` through
+  `frontend/jest.config.cjs`; the change is documented in the Catalan study guide.
+- 2026-10-17: Fixed the Docker backend image build by skipping JaCoCo checks when
+  packaging without tests using `prompts/08-fix-docker-production-build.md`; the
+  change is documented in the Catalan study guide.

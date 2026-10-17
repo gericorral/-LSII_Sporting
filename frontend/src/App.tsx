@@ -1,5 +1,6 @@
 import './App.css';
 import { useAllVideos } from './useAllVideos';
+import VideoGrid from './components/VideoGrid';
 
 function App() {
   return (
@@ -26,12 +27,8 @@ function ContentApp() {
     case 'success':
       return (
         <>
-          <strong>Videos availables:</strong>
-          <ul>
-            {value.map((item) => (
-              <li>{item}</li>
-            ))}
-          </ul>
+          <h2>Available videos</h2>
+          <VideoGrid videos={value} />
         </>
       );
   }

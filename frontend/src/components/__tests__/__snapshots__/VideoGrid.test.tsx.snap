@@ -3,13 +3,46 @@
 exports[`this component renders correctly 1`] = `
 <DocumentFragment>
   <ul
-    class="row g-4"
+    class="video-grid"
   >
-    <li>
-      video 1 test
+    <li
+      class="video-card"
+    >
+      <img
+        alt="Thumbnail for Video 1 test"
+        src="/media/1.webp"
+      />
+      <div
+        class="video-card-content"
+      >
+        <h3>
+          Video 1 test
+        </h3>
+        <p>
+          A test video
+        </p>
+        <span>
+          30s
+        </span>
+      </div>
     </li>
-    <li>
-      video 2 test
+    <li
+      class="video-card"
+    >
+      <img
+        alt="Thumbnail for Video 2 test"
+        src="/media/2.webp"
+      />
+      <div
+        class="video-card-content"
+      >
+        <h3>
+          Video 2 test
+        </h3>
+        <p>
+          No description available.
+        </p>
+      </div>
     </li>
   </ul>
 </DocumentFragment>

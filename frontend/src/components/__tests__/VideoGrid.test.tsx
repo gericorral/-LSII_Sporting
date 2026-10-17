@@ -1,19 +1,32 @@
-import { act, render } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import VideoGrid from '../VideoGrid';
-import fetchMock from 'jest-fetch-mock';
 
 describe('this component', () => {
-  beforeEach(() => {
-    fetchMock.resetMocks(); // Reset mocks before each test
-  });
-
   it('renders correctly', async () => {
-    fetchMock.mockResponseOnce(JSON.stringify(['video 1 test', 'video 2 test']));
-    const asFragment = await act(async () => {
-      return render(<VideoGrid />).asFragment;
-    });
+    const { asFragment } = render(
+      <VideoGrid
+        videos={[
+          {
+            id: '1',
+            title: 'Video 1 test',
+            description: 'A test video',
+            duration: 30,
+            thumbnailUrl: '/media/1.webp',
+            videoUrl: '/media/1.mp4',
+          },
+          {
+            id: '2',
+            title: 'Video 2 test',
+            description: '',
+            duration: null,
+            thumbnailUrl: '/media/2.webp',
+            videoUrl: '/media/2.mp4',
+          },
+        ]}
+      />,
+    );
     expect(asFragment()).toMatchSnapshot();
   });
 });

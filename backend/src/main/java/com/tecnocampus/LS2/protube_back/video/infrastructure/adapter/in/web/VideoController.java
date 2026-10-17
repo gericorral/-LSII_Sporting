@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
 
 @RestController
 @RequestMapping("/api/videos")
@@ -19,7 +20,7 @@ public class VideoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<String>> getVideos() {
+    public ResponseEntity<List<VideoSummary>> getVideos() {
         return ResponseEntity.ok(listVideosUseCase.listVideos());
     }
 }
