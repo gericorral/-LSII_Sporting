@@ -84,9 +84,11 @@ A change is done when:
 - It implements an agreed issue or user story and follows the existing architecture
   and naming conventions.
 - New or changed behavior has appropriate automated tests.
+- After every code change, run the automated test suites and keep coverage at or above
+  90%; do not consider the change complete if this threshold is not met.
 - Backend and frontend checks relevant to the change pass, including build, tests,
   lint, and formatting where applicable.
-- Overall application coverage remains above 50% for both backend and frontend.
+- Overall application coverage remains above 90% for both backend and frontend.
 - No secrets, credentials, generated media, or local environment files are committed.
 - Relevant documentation is updated when commands, configuration, or behavior changes.
 - The pull request has at least one human team approval and all Copilot review
@@ -152,3 +154,9 @@ content in this file.
 - 2026-10-17: Fixed the Docker backend image build by skipping JaCoCo checks when
   packaging without tests using `prompts/08-fix-docker-production-build.md`; the
   change is documented in the Catalan study guide.
+- 2026-10-18: Implemented video detail and playback for US-05 using
+  `prompts/09-implement-video-detail-playback.md`; the change is documented in the
+  Catalan study guide.
+- 2026-10-18: Enforced global 90% test coverage using
+  `prompts/10-enforce-global-coverage.md`; the change is documented in the Catalan
+  study guide.

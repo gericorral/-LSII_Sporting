@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -41,5 +42,68 @@ class FileVideoCatalogAdapterTest {
         FileVideoCatalogAdapter adapter = new FileVideoCatalogAdapter(store.toString(), objectMapper);
 
         assertEquals(List.of(), adapter.findAll());
+    }
+
+    @Test
+    void findsACompleteVideoById(@TempDir Path store) throws IOException {
+        Files.writeString(store.resolve("1.json"), """
+                {"title":"Test video","duration":42,"meta":{"description":"A description"}}
+                """);
+        Files.createFile(store.resolve("1.mp4"));
+        Files.createFile(store.resolve("1.webp"));
+
+        FileVideoCatalogAdapter adapter = new FileVideoCatalogAdapter(store.toString(), objectMapper);
+
+        assertEquals("Test video", adapter.findById("1").orElseThrow().title());
+    }
+
+    @Test
+    void doesNotResolveAnUnsafeOrMissingId(@TempDir Path store) {
+        FileVideoCatalogAdapter adapter = new FileVideoCatalogAdapter(store.toString(), objectMapper);
+
+        assertEquals(Optional.empty(), adapter.findById(null));
+        assertEquals(Optional.empty(), adapter.findById(""));
+        assertEquals(Optional.empty(), adapter.findById("../1"));
+        assertEquals(Optional.empty(), adapter.findById("a/b"));
+        assertEquals(Optional.empty(), adapter.findById("a\\b"));
+        assertEquals(Optional.empty(), adapter.findById("missing"));
+    }
+
+    @Test
+    void returnsEmptyForMissingStore(@TempDir Path store) {
+        FileVideoCatalogAdapter adapter = new FileVideoCatalogAdapter(
+                store.resolve("missing").toString(), objectMapper
+        );
+
+        assertEquals(List.of(), adapter.findAll());
+        assertEquals(Optional.empty(), adapter.findById("1"));
+    }
+
+    @Test
+    void skipsMalformedMetadataAndSupportsMissingOptionalFields(@TempDir Path store) throws IOException {
+        Files.writeString(store.resolve("malformed.json"), "{");
+        Files.createFile(store.resolve("malformed.mp4"));
+        Files.createFile(store.resolve("malformed.webp"));
+        Files.writeString(store.resolve("without-duration.json"), "{\"title\":\"No duration\"}");
+        Files.createFile(store.resolve("without-duration.mp4"));
+        Files.createFile(store.resolve("without-duration.webp"));
+
+        FileVideoCatalogAdapter adapter = new FileVideoCatalogAdapter(store.toString(), objectMapper);
+
+        assertEquals(Optional.empty(), adapter.findById("malformed"));
+        assertEquals(null, adapter.findById("without-duration").orElseThrow().duration());
+    }
+
+    @Test
+    void rejectsEachIncompleteMediaCombination(@TempDir Path store) throws IOException {
+        Files.writeString(store.resolve("missing-thumbnail.json"), "{\"title\":\"Video\"}");
+        Files.createFile(store.resolve("missing-thumbnail.mp4"));
+        Files.writeString(store.resolve("missing-video.json"), "{\"title\":\"Video\"}");
+        Files.createFile(store.resolve("missing-video.webp"));
+
+        FileVideoCatalogAdapter adapter = new FileVideoCatalogAdapter(store.toString(), objectMapper);
+
+        assertEquals(Optional.empty(), adapter.findById("missing-thumbnail"));
+        assertEquals(Optional.empty(), adapter.findById("missing-video"));
     }
 }

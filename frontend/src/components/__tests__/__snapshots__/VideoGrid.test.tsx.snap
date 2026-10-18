@@ -8,41 +8,49 @@ exports[`this component renders correctly 1`] = `
     <li
       class="video-card"
     >
-      <img
-        alt="Thumbnail for Video 1 test"
-        src="/media/1.webp"
-      />
-      <div
-        class="video-card-content"
+      <a
+        href="#video/1"
       >
-        <h3>
-          Video 1 test
-        </h3>
-        <p>
-          A test video
-        </p>
-        <span>
-          30s
-        </span>
-      </div>
+        <img
+          alt="Thumbnail for Video 1 test"
+          src="/media/1.webp"
+        />
+        <div
+          class="video-card-content"
+        >
+          <h3>
+            Video 1 test
+          </h3>
+          <p>
+            A test video
+          </p>
+          <span>
+            30s
+          </span>
+        </div>
+      </a>
     </li>
     <li
       class="video-card"
     >
-      <img
-        alt="Thumbnail for Video 2 test"
-        src="/media/2.webp"
-      />
-      <div
-        class="video-card-content"
+      <a
+        href="#video/2"
       >
-        <h3>
-          Video 2 test
-        </h3>
-        <p>
-          No description available.
-        </p>
-      </div>
+        <img
+          alt="Thumbnail for Video 2 test"
+          src="/media/2.webp"
+        />
+        <div
+          class="video-card-content"
+        >
+          <h3>
+            Video 2 test
+          </h3>
+          <p>
+            No description available.
+          </p>
+        </div>
+      </a>
     </li>
   </ul>
 </DocumentFragment>

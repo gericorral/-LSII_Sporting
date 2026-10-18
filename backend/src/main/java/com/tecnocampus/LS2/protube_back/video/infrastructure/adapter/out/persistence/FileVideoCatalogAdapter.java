@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Component
@@ -49,6 +50,19 @@ public class FileVideoCatalogAdapter implements VideoCatalogPort {
         } catch (IOException exception) {
             throw new IllegalStateException("Unable to read video store: " + storeDirectory, exception);
         }
+    }
+
+    @Override
+    public Optional<VideoSummary> findById(String id) {
+        if (id == null || id.isBlank() || id.contains("/") || id.contains("\\") || id.contains("..")) {
+            return Optional.empty();
+        }
+
+        Path metadataPath = storeDirectory.resolve(id + ".json").normalize();
+        if (!metadataPath.getParent().equals(storeDirectory.normalize())) {
+            return Optional.empty();
+        }
+        return Files.isRegularFile(metadataPath) ? readVideo(metadataPath) : Optional.empty();
     }
 
     private java.util.Optional<VideoSummary> readVideo(Path metadataPath) {

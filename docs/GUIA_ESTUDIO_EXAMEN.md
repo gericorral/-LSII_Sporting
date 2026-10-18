@@ -147,13 +147,17 @@ repositori.
 | 17/10/2026 | S'implementa el catàleg real de vídeos de l'US-04. | El backend llegeix els triples del magatzem, valida que siguin utilitzables i el frontend els mostra en targetes. |
 | 17/10/2026 | Es corregeix la configuració de Jest del frontend. | Jest 30 utilitza una configuració CommonJS amb `babel-jest`, aprofitant Babel per transformar TypeScript i React i evitant la incompatibilitat amb `ts-jest` 29. |
 | 17/10/2026 | Es corregeix el build de la imatge Docker del backend. | La construcció de producció no executa tests ni el control JaCoCo, perquè la cobertura es valida a la CI; així Docker pot crear el jar i la CI continua protegint la qualitat. |
+| 18/10/2026 | S'implementa el detall i la reproducció de vídeos de l'US-05. | El backend consulta un vídeo per identificador a través dels ports i retorna 404 si no existeix; el frontend obre una vista amb reproductor HTML5, poster, metadades i estats d'error. |
+| 18/10/2026 | S'afegeixen proves automàtiques dels estats de reproducció i s'estableix el llindar de cobertura al 90%. | Cada canvi de codi ha d'executar proves automàtiques; els tests cobreixen càrrega, èxit, error, 404, identificadors insegurs i metadades invàlides. |
+| 18/10/2026 | La cobertura passa a mesurar globalment el codi d'aplicació frontend i backend. | Jest inclou tots els fitxers de l'aplicació i JaCoCo exigeix com a mínim un 90% global d'instruccions, línies, branques i mètodes. |
+| 18/10/2026 | Es documenta el prompt aprovat per mantenir la cobertura global del 90%. | El prompt `prompts/10-enforce-global-coverage.md` obliga a executar totes les suites, mesurar el codi d'aplicació complet i fer fallar el build si qualsevol mètrica baixa del llindar. |
 
 ## 8. Temes pendents
 
 - Registre, autenticació, sessions i protecció de rutes.
 - Persistència real d'usuaris, vídeos, comentaris i analítiques.
 - Pujada i edició de vídeos amb control del propietari.
-- Cerca, paginació i detall del vídeo.
+- Cerca i paginació.
 - Comentaris, respostes i likes.
 - Analítiques del contingut propi.
 - Tests E2E dels recorreguts principals.

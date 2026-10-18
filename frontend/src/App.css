@@ -37,6 +37,12 @@
   text-align: left;
 }
 
+.video-card a {
+  color: inherit;
+  display: block;
+  text-decoration: none;
+}
+
 .video-card img {
   aspect-ratio: 16 / 9;
   display: block;
@@ -55,6 +61,23 @@
 .video-card p {
   color: #d1d5db;
   margin: 0 0 0.75rem;
+}
+
+.video-detail {
+  max-width: 900px;
+  text-align: left;
+  width: 100%;
+}
+
+.video-detail a {
+  color: #61dafb;
+}
+
+.video-detail video {
+  background: #000;
+  display: block;
+  max-width: 100%;
+  width: 900px;
 }
 
 .App-link {

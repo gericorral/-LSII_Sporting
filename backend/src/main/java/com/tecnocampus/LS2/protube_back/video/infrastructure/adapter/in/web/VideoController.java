@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
@@ -22,5 +23,12 @@ public class VideoController {
     @GetMapping
     public ResponseEntity<List<VideoSummary>> getVideos() {
         return ResponseEntity.ok(listVideosUseCase.listVideos());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<VideoSummary> getVideo(@PathVariable String id) {
+        return listVideosUseCase.getVideo(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
