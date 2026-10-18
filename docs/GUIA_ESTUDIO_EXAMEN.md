@@ -4,7 +4,7 @@
 > després de cada canvi de codi. No substitueix el codi: resumeix què fa
 > l'aplicació, quines peces es modifiquen i quines decisions s'han de saber justificar.
 
-**Última actualització:** 17 d'octubre de 2026
+**Última actualització:** 18 d'octubre de 2026
 
 ## 1. Què és ProTube
 
@@ -151,10 +151,14 @@ repositori.
 | 18/10/2026 | S'afegeixen proves automàtiques dels estats de reproducció i s'estableix el llindar de cobertura al 90%. | Cada canvi de codi ha d'executar proves automàtiques; els tests cobreixen càrrega, èxit, error, 404, identificadors insegurs i metadades invàlides. |
 | 18/10/2026 | La cobertura passa a mesurar globalment el codi d'aplicació frontend i backend. | Jest inclou tots els fitxers de l'aplicació i JaCoCo exigeix com a mínim un 90% global d'instruccions, línies, branques i mètodes. |
 | 18/10/2026 | Es documenta el prompt aprovat per mantenir la cobertura global del 90%. | El prompt `prompts/10-enforce-global-coverage.md` obliga a executar totes les suites, mesurar el codi d'aplicació complet i fer fallar el build si qualsevol mètrica baixa del llindar. |
+| 18/10/2026 | S'implementa el registre de l'US-01 amb validació, detecció de duplicats i autenticació automàtica. | El backend valida la petició, normalitza l'email, desa la contrasenya amb PBKDF2 i guarda l'identificador d'usuari a la sessió HTTP; el frontend valida abans d'enviar, mostra errors de camp i confirma l'estat autenticat després d'un 201. |
+| 18/10/2026 | Es millora la pantalla de registre amb una interfície visual més clara i professional. | El formulari separa la capçalera de marca, les etiquetes, els camps, els missatges d'error i l'acció principal; també incorpora focus visible, placeholders, indicadors d'entrada invàlida i adaptació a pantalles petites sense canviar el contracte de l'API. |
+| 18/10/2026 | Es centra el títol del catàleg de vídeos. | La barra superior del catàleg manté l'acció de registre a la dreta i presenta el títol centrat independentment de l'amplada del text. |
+| 18/10/2026 | Es corregeix l'arrencada del registre en PostgreSQL. | El perfil de producció inicialitza de manera idempotent la taula `users` abans de consultar duplicats; així l'API no depèn que el script SQL general s'hagi executat prèviament. |
 
 ## 8. Temes pendents
 
-- Registre, autenticació, sessions i protecció de rutes.
+- Login, tancament de sessió i protecció de rutes.
 - Persistència real d'usuaris, vídeos, comentaris i analítiques.
 - Pujada i edició de vídeos amb control del propietari.
 - Cerca i paginació.

@@ -160,3 +160,6 @@ content in this file.
 - 2026-10-18: Enforced global 90% test coverage using
   `prompts/10-enforce-global-coverage.md`; the change is documented in the Catalan
   study guide.
+- 2026-10-18: Implemented US-01 user registration using
+  `prompts/11-implement-user-registration.md`; the change is documented in the Catalan
+  study guide.
