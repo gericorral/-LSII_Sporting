@@ -204,3 +204,10 @@ content in this file.
   `prompts/14-implement-video-upload.md`; authenticated MP4 uploads are validated and
   atomically published to the shared store with frontend error handling, documented in
   the Catalan study guide.
+- 2026-10-19: Improved the video catalog and detail view responsive design using
+  `prompts/15-improve-responsive-video-ui.md`; the frontend now uses a fluid,
+  video-platform-style layout that adapts the navigation, cards and player to small
+  screens, documented in the Catalan study guide.
+- 2026-10-19: Polished the responsive frontend controls and form styling using
+  `prompts/16-polish-responsive-frontend-design.md`; pagination, focus states,
+  hover states and form fields now have a more consistent visual treatment.

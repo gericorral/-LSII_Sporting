@@ -108,6 +108,25 @@ error, elimina temporals i fitxers parcials. El catàleg existent accepta miniat
 immediatament a la llista. La persistència relacional de vídeos continua pendent de
 NFR-01 i serà una evolució separada.
 
+### Disseny responsive del catàleg i del reproductor
+
+La interfície de vídeos utilitza ara un contenidor fluid amb una graella que adapta el
+nombre de targetes segons l'amplada disponible. Les targetes tenen miniatures amb
+proporció 16:9, títols retallats de manera segura i estats hover sense alterar la
+navegació. La barra d'accions del catàleg passa a una disposició vertical en pantalles
+petites, evitant que els enllaços i el botó de tancar sessió surtin de la pantalla.
+El reproductor del detall ocupa l'amplada disponible, conserva la proporció del vídeo
+i evita el desbordament horitzontal en mòbil. El canvi és només de presentació i no
+modifica els contractes ni la lògica de càrrega.
+
+### Refinament visual dels controls
+
+El botó de càrrega de més vídeos té ara un estil propi, amb contrast, vores
+arrodonides, efectes hover i focus visible. També s'han uniformitzat els estats
+interactius de la navegació i els camps dels formularis, inclòs el selector de fitxers.
+Aquest refinament manté la jerarquia visual en escriptori i conserva controls amplis i
+fàcils de prémer en dispositius mòbils.
+
 ## 4. Com s'afegeix una funcionalitat nova
 
 Per implementar una història com pujar un vídeo, cercar o comentar:

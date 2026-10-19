@@ -151,7 +151,7 @@ function VideoCatalog({
           </div>
           <VideoGrid videos={value} />
           {hasNext && (
-            <button type="button" onClick={loadMore}>
+            <button className="load-more-button" type="button" onClick={loadMore}>
               Load more videos
             </button>
           )}

@@ -1,4 +1,6 @@
 .App {
+  background: #0f0f0f;
+  min-height: 100vh;
   text-align: center;
 }
 
@@ -6,41 +8,56 @@
   height: auto;
   pointer-events: none;
   position: absolute;
-  left: 1.5rem;
-  top: 1rem;
-  width: 120px;
+  left: 2rem;
+  top: 1.25rem;
+  width: 112px;
 }
 
 .App-header {
-  background-color: #282c34;
+  background:
+    radial-gradient(circle at 50% -20%, rgba(62, 166, 255, 0.1), transparent 34rem),
+    #0f0f0f;
   box-sizing: border-box;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+  justify-content: flex-start;
   color: white;
-  padding: 5rem 2rem 2rem;
+  padding: 5.75rem clamp(1rem, 4vw, 3rem) 3rem;
   position: relative;
+}
+
+.App-header > :not(.App-logo) {
+  max-width: 1280px;
+  width: 100%;
 }
 
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2.25rem 1rem;
   list-style: none;
-  margin: 1rem 0 0;
-  max-width: 1200px;
+  margin: 2rem 0 0;
   padding: 0;
   width: 100%;
 }
 
 .video-card {
-  background: #3a3f4b;
-  border-radius: 8px;
+  background: transparent;
+  border-radius: 10px;
   overflow: hidden;
   text-align: left;
+  transition: transform 0.2s ease;
+}
+
+.video-card:hover {
+  transform: translateY(-3px);
+}
+
+.video-card:focus-within {
+  outline: 2px solid #3ea6ff;
+  outline-offset: 4px;
 }
 
 .video-card a {
@@ -51,22 +68,30 @@
 
 .video-card img {
   aspect-ratio: 16 / 9;
+  background: #272727;
+  border-radius: 10px;
   display: block;
   object-fit: cover;
   width: 100%;
 }
 
 .video-card-content {
-  padding: 1rem;
+  padding: 0.8rem 0.25rem;
 }
 
 .video-card h3 {
   font-size: 1rem;
-  margin: 0 0 0.5rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0 0 0.35rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .video-card-content span {
-  font-size: 0.78rem;
+  color: #aaa;
+  font-size: 0.8rem;
 }
 
 .video-card p {
@@ -75,56 +100,124 @@
 }
 
 .catalog-toolbar {
-  position: relative;
+  align-items: center;
+  border-bottom: 1px solid #272727;
+  display: flex;
+  justify-content: space-between;
+  min-height: 3rem;
+  padding-bottom: 1rem;
   width: 100%;
 }
 
 .catalog-toolbar h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
   margin: 0;
-  text-align: center;
+  text-align: left;
 }
 
 .catalog-toolbar a {
-  color: #61dafb;
-  font-size: 1rem;
+  color: #f1f1f1;
+  font-size: 0.9rem;
+  text-decoration: none;
 }
 
 .catalog-actions {
   align-items: center;
   display: flex;
-  gap: 1rem;
+  gap: 1.25rem;
   justify-content: flex-end;
-  margin-top: 0;
-  position: absolute;
-  right: 0;
-  top: -4rem;
 }
 
 .catalog-actions button {
-  background: transparent;
-  border: 1px solid #61dafb;
+  background: #272727;
+  border: 0;
   border-radius: 999px;
-  color: #61dafb;
+  color: #f1f1f1;
   cursor: pointer;
   font-size: 0.9rem;
-  padding: 0.25rem 0.65rem;
+  padding: 0.55rem 0.9rem;
+}
+
+.catalog-actions a:hover {
+  color: #3ea6ff;
+}
+
+.catalog-actions button:hover {
+  background: #3f3f3f;
+}
+
+.catalog-actions button:focus-visible,
+.load-more-button:focus-visible {
+  outline: 2px solid #3ea6ff;
+  outline-offset: 3px;
+}
+
+.load-more-button {
+  background: #272727;
+  border: 1px solid #3f3f3f;
+  border-radius: 999px;
+  color: #f1f1f1;
+  cursor: pointer;
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 2.25rem auto 0;
+  padding: 0.75rem 1.35rem;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.load-more-button:hover {
+  background: #3f3f3f;
+  border-color: #666;
+  transform: translateY(-1px);
 }
 
 .video-detail {
-  max-width: 900px;
+  max-width: 1100px;
   text-align: left;
   width: 100%;
 }
 
 .video-detail a {
-  color: #61dafb;
+  color: #3ea6ff;
+  display: inline-block;
+  font-size: 1rem;
+  margin-bottom: 0.65rem;
+}
+
+.video-detail h2 {
+  font-size: clamp(1.25rem, 2.5vw, 1.8rem);
+  line-height: 1.25;
+  margin: 0 0 0.75rem;
 }
 
 .video-detail video {
   background: #000;
+  border-radius: 10px;
   display: block;
-  max-width: 100%;
-  width: 900px;
+  height: auto;
+  max-height: 72vh;
+  object-fit: contain;
+  width: 100%;
+}
+
+.video-detail p {
+  color: #d1d1d1;
+  font-size: 1rem;
+  line-height: 1.55;
+  margin: 1rem 0 0.4rem;
+  white-space: pre-wrap;
+}
+
+.video-detail > span {
+  color: #aaa;
+  display: inline-block;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
 }
 
 .registration-panel {
@@ -136,6 +229,31 @@
   padding: 2.5rem;
   text-align: left;
   width: 100%;
+}
+
+.registration-panel textarea {
+  background: rgba(16, 21, 32, 0.45);
+  border: 1px solid #536078;
+  border-radius: 9px;
+  box-sizing: border-box;
+  color: #fff;
+  font: inherit;
+  min-height: 7rem;
+  padding: 0.78rem 0.9rem;
+  resize: vertical;
+  width: 100%;
+}
+
+.registration-panel input[type='file'] {
+  cursor: pointer;
+  padding: 0.65rem;
+}
+
+.registration-panel input:focus,
+.registration-panel textarea:focus {
+  border-color: #3ea6ff;
+  box-shadow: 0 0 0 3px rgba(62, 166, 255, 0.16);
+  outline: none;
 }
 
 .profile-panel {
@@ -367,23 +485,64 @@
 }
 
 @media (max-width: 520px) {
+  .App-logo {
+    left: 1rem;
+    top: 1rem;
+    width: 92px;
+  }
+
+  .App-header {
+    padding: 4.75rem 0.85rem 2rem;
+  }
+
+  .catalog-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .catalog-actions {
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    justify-content: flex-start;
+  }
+
+  .catalog-actions a,
+  .catalog-actions button {
+    font-size: 0.82rem;
+  }
+
   .video-grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-top: 1.25rem;
+  }
+
+  .video-card h3 {
+    font-size: 0.95rem;
+  }
+
+  .video-detail video {
+    border-radius: 6px;
+  }
+
+  .load-more-button {
+    margin-top: 1.75rem;
+    width: 100%;
   }
 
   .registration-panel {
     padding: 1.75rem;
-  }
-
-  .catalog-actions {
-    gap: 0.5rem;
-    right: -1rem;
   }
 }
 
 @media (min-width: 521px) and (max-width: 900px) {
   .video-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .catalog-actions {
+    gap: 0.75rem;
   }
 }
 
