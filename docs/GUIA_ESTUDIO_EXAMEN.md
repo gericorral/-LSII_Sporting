@@ -4,7 +4,7 @@
 > després de cada canvi de codi. No substitueix el codi: resumeix què fa
 > l'aplicació, quines peces es modifiquen i quines decisions s'han de saber justificar.
 
-**Última actualització:** 18 d'octubre de 2026
+**Última actualització:** 19 d'octubre de 2026
 
 ## 1. Què és ProTube
 
@@ -84,6 +84,14 @@ en mòbil a una. Cada targeta mostra la miniatura, el títol amb una mida compac
 amb una mida encara més petita si està disponible;
 la descripció queda reservada a `VideoDetail`, on l'usuari pot llegir-la després
 d'obrir el vídeo. La interfície conserva els estats de càrrega, èxit i error.
+
+La segona iteració de l'US-04 afegeix paginació al contracte `GET /api/videos`:
+`page` identifica la pàgina començant per zero i `size` limita la mida entre 1 i 100.
+La resposta inclou el contingut i la informació `totalElements`, `totalPages` i
+`hasNext`. El frontend carrega els primers 12 vídeos i ofereix "Load more videos"
+quan hi ha més contingut, acumulant les pàgines sense substituir les targetes ja
+visibles. Això evita carregar tot el directori de vídeos en una sola petició i
+compleix el criteri d'acceptació per a catàlegs més grans.
 
 ## 4. Com s'afegeix una funcionalitat nova
 
@@ -185,13 +193,14 @@ repositori.
 | 19/10/2026 | S'ajusta la jerarquia tipogràfica del formulari de registre. | Les etiquetes dels camps tenen més presència i els placeholders i el text d'ajuda són més petits, de manera que la informació principal queda clarament diferenciada de l'exemple. |
 | 19/10/2026 | Es completa la cobertura mínima del 90% al frontend i backend. | Els tests cobreixen branques de navegació, errors de formularis, permisos de perfil, validacions, persistència H2 i credencials; Jest i JaCoCo fan fallar el build si alguna mètrica global baixa del 90%. |
 | 19/10/2026 | Es resolen les rutes multimèdia relatives en desenvolupament. | El frontend transforma les adreces `/media/...` retornades per l'API en URLs del domini multimèdia configurat, de manera que funciona tant amb Vite a `localhost:5173` com amb el frontend servit pel backend o Docker. |
+| 19/10/2026 | Es completa la paginació de l'US-04. | El servei calcula la pàgina sol·licitada i el frontend afegeix 12 vídeos més quan l'usuari ho demana; els tests cobreixen la resposta paginada, els límits i l'acumulació de resultats. |
 
 ## 8. Temes pendents
 
 - Protecció de rutes i autorització per recurs.
 - Persistència real d'usuaris, vídeos, comentaris i analítiques.
 - Pujada i edició de vídeos amb control del propietari.
-- Cerca i paginació.
+- Cerca.
 - Comentaris, respostes i likes.
 - Analítiques del contingut propi.
 - Tests E2E dels recorreguts principals.

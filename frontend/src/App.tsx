@@ -97,7 +97,7 @@ function VideoCatalog({
   loggedUser: { username: string; email: string } | null;
   onLogout: () => void;
 }) {
-  const { loading, message, value } = useAllVideos();
+  const { loading, message, value, hasNext, loadMore } = useAllVideos();
   if (videoId) {
     return <VideoDetailPage id={videoId} />;
   }
@@ -133,6 +133,11 @@ function VideoCatalog({
             </nav>
           </div>
           <VideoGrid videos={value} />
+          {hasNext && (
+            <button type="button" onClick={loadMore}>
+              Load more videos
+            </button>
+          )}
         </>
       );
   }

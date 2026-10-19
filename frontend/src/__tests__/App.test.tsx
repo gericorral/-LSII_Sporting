@@ -21,7 +21,9 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 describe('App routes', () => {
   beforeEach(() => {
     window.location.hash = '';
-    mockedUseAllVideos.mockReturnValue({ loading: 'success', message: '', value: [] });
+    mockedUseAllVideos.mockReturnValue({
+      loading: 'success', message: '', value: [], hasNext: false, loadMore: jest.fn(),
+    });
     mockedUseVideo.mockReturnValue({ loading: 'loading', message: '', value: null });
   });
 
@@ -47,13 +49,28 @@ describe('App routes', () => {
   });
 
   it('shows catalog loading and error states', () => {
-    mockedUseAllVideos.mockReturnValueOnce({ loading: 'loading', message: '', value: [] });
+    mockedUseAllVideos.mockReturnValueOnce({
+      loading: 'loading', message: '', value: [], hasNext: false, loadMore: jest.fn(),
+    });
     const { rerender } = render(<App />);
     expect(screen.getByText('Loading...')).toBeInTheDocument();
 
-    mockedUseAllVideos.mockReturnValue({ loading: 'error', message: 'network error', value: [] });
+    mockedUseAllVideos.mockReturnValue({
+      loading: 'error', message: 'network error', value: [], hasNext: false, loadMore: jest.fn(),
+    });
     rerender(<App />);
     expect(screen.getByText('network error')).toBeInTheDocument();
+  });
+
+  it('offers another catalog page when more videos are available', () => {
+    const loadMore = jest.fn();
+    mockedUseAllVideos.mockReturnValue({
+      loading: 'success', message: '', value: [], hasNext: true, loadMore,
+    });
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Load more videos' }));
+    expect(loadMore).toHaveBeenCalled();
   });
 
   it('authenticates from the login route and logs out', async () => {

@@ -196,3 +196,7 @@ content in this file.
   with larger thumbnails and compact titles while preserving responsive breakpoints.
 - 2026-10-19: Reduced the duration text size in video catalog cards without changing
   the metadata sizing on the video detail page.
+- 2026-10-19: Completed US-04 pagination using the approved
+  `prompts/06-implement-video-catalog.md`; the backend now returns bounded pages and
+  the frontend loads additional catalog pages on demand, documented in the Catalan
+  study guide.

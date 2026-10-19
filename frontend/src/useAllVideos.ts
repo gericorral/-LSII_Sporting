@@ -13,19 +13,32 @@ export type VideoSummary = {
   videoUrl: string;
 };
 
+export type VideoPage = {
+  content: VideoSummary[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+};
+
 const ALL_VIDEOS_URL = `${getEnv().API_BASE_URL}/videos`;
 export function useAllVideos() {
   const [value, setValue] = useState<VideoSummary[]>([]);
   const [message, setMessage] = useState<string>('Loading...');
   const [loading, setLoading] = useState<LoadingState>('idle');
+  const [hasNext, setHasNext] = useState(false);
+  const [nextPage, setNextPage] = useState(0);
 
   useEffect(() => {
     const getVideos = async () => {
       try {
         setLoading('loading');
-        const response = await axios.get<VideoSummary[]>(ALL_VIDEOS_URL);
+        const response = await axios.get<VideoPage>(ALL_VIDEOS_URL, { params: { page: 0, size: 12 } });
         if (response.status === 200) {
-          setValue(response.data);
+          setValue(response.data.content);
+          setHasNext(response.data.hasNext);
+          setNextPage(1);
         }
         setLoading('success');
       } catch (error: unknown) {
@@ -36,5 +49,24 @@ export function useAllVideos() {
     getVideos().then();
   }, []);
 
-  return { value, message, loading };
+  const loadMore = async () => {
+    if (!hasNext || loading === 'loading') return;
+    try {
+      setLoading('loading');
+      const response = await axios.get<VideoPage>(ALL_VIDEOS_URL, {
+        params: { page: nextPage, size: 12 },
+      });
+      if (response.status === 200) {
+        setValue((current) => [...current, ...response.data.content]);
+        setHasNext(response.data.hasNext);
+        setNextPage((current) => current + 1);
+      }
+      setLoading('success');
+    } catch (error: unknown) {
+      setLoading('error');
+      setMessage('Error fetching more videos: ' + (error as AxiosError).message);
+    }
+  };
+
+  return { value, message, loading, hasNext, loadMore };
 }
