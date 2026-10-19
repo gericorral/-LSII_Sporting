@@ -70,6 +70,9 @@ public class FileVideoCatalogAdapter implements VideoCatalogPort {
         String id = fileName.substring(0, fileName.length() - ".json".length());
         Path videoPath = storeDirectory.resolve(id + ".mp4");
         Path thumbnailPath = storeDirectory.resolve(id + ".webp");
+        if (!Files.isRegularFile(thumbnailPath)) {
+            thumbnailPath = storeDirectory.resolve(id + ".png");
+        }
 
         if (!Files.isRegularFile(videoPath) || !Files.isRegularFile(thumbnailPath)) {
             LOG.warn("Skipping video {} because its media files are incomplete", id);
@@ -86,13 +89,19 @@ public class FileVideoCatalogAdapter implements VideoCatalogPort {
                     title,
                     description,
                     duration,
-                    "/media/" + id + ".webp",
+                    "/media/" + id + "." + extension(thumbnailPath),
                     "/media/" + id + ".mp4"
             ));
         } catch (IOException | IllegalArgumentException exception) {
             LOG.warn("Skipping invalid video metadata {}", metadataPath, exception);
             return java.util.Optional.empty();
         }
+
+    }
+
+    private String extension(Path path) {
+        String fileName = path.getFileName().toString();
+        return fileName.substring(fileName.lastIndexOf('.') + 1);
     }
 
     private String requiredText(JsonNode metadata, String field) {

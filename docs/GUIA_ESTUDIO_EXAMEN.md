@@ -93,6 +93,21 @@ quan hi ha més contingut, acumulant les pàgines sense substituir les targetes 
 visibles. Això evita carregar tot el directori de vídeos en una sola petició i
 compleix el criteri d'acceptació per a catàlegs més grans.
 
+### US-06: pujada de vídeos
+
+La pujada es protegeix amb l'atribut de sessió `authenticatedUserId`; si no hi ha una
+sessió vàlida, el backend respon 401 i el frontend mostra el login en lloc del formulari.
+El formulari demana títol, descripció i un fitxer MP4 de fins a 100 MB. El servei valida
+els camps abans d'escriure i mai utilitza el nom original del fitxer com a ruta.
+
+El backend crea un identificador UUID i escriu el vídeo, una miniatura PNG generada i el
+JSON de metadades en fitxers temporals dins del directori configurat. Només mou els tres
+fitxers a les seves rutes públiques quan totes les operacions han acabat; si hi ha un
+error, elimina temporals i fitxers parcials. El catàleg existent accepta miniatures
+`.webp` del `videoGrabber` i `.png` de les pujades, de manera que el vídeo apareix
+immediatament a la llista. La persistència relacional de vídeos continua pendent de
+NFR-01 i serà una evolució separada.
+
 ## 4. Com s'afegeix una funcionalitat nova
 
 Per implementar una història com pujar un vídeo, cercar o comentar:
@@ -194,6 +209,7 @@ repositori.
 | 19/10/2026 | Es completa la cobertura mínima del 90% al frontend i backend. | Els tests cobreixen branques de navegació, errors de formularis, permisos de perfil, validacions, persistència H2 i credencials; Jest i JaCoCo fan fallar el build si alguna mètrica global baixa del 90%. |
 | 19/10/2026 | Es resolen les rutes multimèdia relatives en desenvolupament. | El frontend transforma les adreces `/media/...` retornades per l'API en URLs del domini multimèdia configurat, de manera que funciona tant amb Vite a `localhost:5173` com amb el frontend servit pel backend o Docker. |
 | 19/10/2026 | Es completa la paginació de l'US-04. | El servei calcula la pàgina sol·licitada i el frontend afegeix 12 vídeos més quan l'usuari ho demana; els tests cobreixen la resposta paginada, els límits i l'acumulació de resultats. |
+| 19/10/2026 | S'implementa la pujada de vídeos de l'US-06. | La sessió protegeix l'endpoint, el servei valida MP4 i mida, publica vídeo, miniatura i metadades de manera atòmica i el frontend mostra errors i estat de pujada. |
 
 ## 8. Temes pendents
 
@@ -201,6 +217,7 @@ repositori.
 - Persistència real d'usuaris, vídeos, comentaris i analítiques.
 - Pujada i edició de vídeos amb control del propietari.
 - Cerca.
+- Persistència relacional dels vídeos pujats segons NFR-01.
 - Comentaris, respostes i likes.
 - Analítiques del contingut propi.
 - Tests E2E dels recorreguts principals.

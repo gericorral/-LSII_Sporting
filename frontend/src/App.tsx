@@ -9,6 +9,7 @@ import LoginForm from './components/LoginForm';
 import axios from 'axios';
 import { getEnv } from './utils/Env';
 import ProfilePage from './components/ProfilePage';
+import UploadForm from './components/UploadForm';
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function ContentApp() {
   const registering = hash === '#register';
   const loggingIn = hash === '#login';
   const profileId = getProfileId(hash);
+  const uploading = hash === '#upload';
 
   if (loggingIn) {
     return (
@@ -59,6 +61,20 @@ function ContentApp() {
           window.location.hash = '';
         }}
       />
+    );
+  }
+
+  if (uploading) {
+    return loggedUser ? (
+      <UploadForm onUploaded={() => {
+        setHash('');
+        window.location.hash = '';
+      }} />
+    ) : (
+      <LoginForm onLoggedIn={(user) => {
+        setLoggedUser(user);
+        window.location.hash = '#upload';
+      }} />
     );
   }
 
@@ -120,6 +136,7 @@ function VideoCatalog({
               {loggedUser ? (
                 <>
                   <a href="#profile">Hi, {loggedUser.username}</a>
+                  <a href="#upload">Upload video</a>
                   <button type="button" onClick={onLogout}>
                     Log out
                   </button>

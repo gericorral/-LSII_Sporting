@@ -200,3 +200,7 @@ content in this file.
   `prompts/06-implement-video-catalog.md`; the backend now returns bounded pages and
   the frontend loads additional catalog pages on demand, documented in the Catalan
   study guide.
+- 2026-10-19: Implemented US-06 video upload using
+  `prompts/14-implement-video-upload.md`; authenticated MP4 uploads are validated and
+  atomically published to the shared store with frontend error handling, documented in
+  the Catalan study guide.

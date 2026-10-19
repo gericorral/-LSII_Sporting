@@ -62,6 +62,15 @@ describe('App routes', () => {
     expect(screen.getByText('network error')).toBeInTheDocument();
   });
 
+  it('shows the idle catalog state', () => {
+    mockedUseAllVideos.mockReturnValue({
+      loading: 'idle', message: '', value: [], hasNext: false, loadMore: jest.fn(),
+    });
+    render(<App />);
+
+    expect(screen.getByText('Idle...')).toBeInTheDocument();
+  });
+
   it('offers another catalog page when more videos are available', () => {
     const loadMore = jest.fn();
     mockedUseAllVideos.mockReturnValue({
@@ -71,6 +80,45 @@ describe('App routes', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Load more videos' }));
     expect(loadMore).toHaveBeenCalled();
+  });
+
+  it('redirects unauthenticated upload access to login', () => {
+    window.location.hash = '#upload';
+    render(<App />);
+
+    expect(screen.getByRole('button', { name: 'Fake login' })).toBeInTheDocument();
+  });
+
+  it('shows the upload form after authenticating from the upload route', async () => {
+    window.location.hash = '#upload';
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
+    expect(await screen.findByRole('heading', { name: 'Upload a video' })).toBeInTheDocument();
+  });
+
+  it('opens a public profile route', () => {
+    mockedAxios.get.mockResolvedValue({ data: {} });
+    window.location.hash = '#profile/42';
+    render(<App />);
+
+    expect(screen.getByRole('status')).toHaveTextContent('Loading profile...');
+    fireEvent.click(screen.getByRole('button', { name: 'Back to videos' }));
+  });
+
+  it('returns to the catalog after an upload succeeds', async () => {
+    mockedAxios.post.mockResolvedValue({ status: 201 });
+    window.location.hash = '#upload';
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
+    fireEvent.change(await screen.findByLabelText('Title'), { target: { value: 'Video' } });
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Description' } });
+    fireEvent.change(screen.getByLabelText('MP4 video'), {
+      target: { files: [new File(['video'], 'video.mp4', { type: 'video/mp4' })] },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Upload video' }));
+
+    expect(await screen.findByRole('heading', { name: 'Available videos' })).toBeInTheDocument();
   });
 
   it('authenticates from the login route and logs out', async () => {

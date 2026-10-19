@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.Optional;
 import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.ListVideosUseCase.VideoPage;
+import com.tecnocampus.LS2.protube_back.video.application.service.VideoUploadService;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.mock.web.MockMultipartFile;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -15,7 +19,8 @@ import static org.mockito.Mockito.when;
 class VideoControllerTest {
 
     private final ListVideosUseCase listVideosUseCase = mock(ListVideosUseCase.class);
-    private final VideoController videoController = new VideoController(listVideosUseCase);
+    private final VideoUploadService videoUploadService = mock(VideoUploadService.class);
+    private final VideoController videoController = new VideoController(listVideosUseCase, videoUploadService);
 
     @Test
     void returnsVideosFromTheInputPort() {
@@ -50,5 +55,38 @@ class VideoControllerTest {
         assertEquals(400, videoController.getVideos(-1, 12).getStatusCode().value());
         assertEquals(400, videoController.getVideos(0, 101).getStatusCode().value());
         assertEquals(400, videoController.getVideos(0, 0).getStatusCode().value());
+    }
+
+    @Test
+    void rejectsUnauthenticatedUpload() {
+        HttpSession session = mock(HttpSession.class);
+
+        assertEquals(401, videoController.uploadVideo(
+                "Title", "Description",
+                new MockMultipartFile("video", "video.mp4", "video/mp4", new byte[] {1}),
+                session
+        ).getStatusCode().value());
+    }
+
+    @Test
+    void uploadsForAuthenticatedUser() {
+        UUID userId = UUID.randomUUID();
+        HttpSession session = mock(HttpSession.class);
+        when(session.getAttribute("authenticatedUserId")).thenReturn(userId);
+        VideoSummary uploaded = new VideoSummary(
+                "id", "Title", "Description", null, "/media/id.png", "/media/id.mp4"
+        );
+        when(videoUploadService.upload(
+                org.mockito.ArgumentMatchers.eq("Title"),
+                org.mockito.ArgumentMatchers.eq("Description"),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.eq(userId)
+        )).thenReturn(uploaded);
+
+        assertEquals(201, videoController.uploadVideo(
+                "Title", "Description",
+                new MockMultipartFile("video", "video.mp4", "video/mp4", new byte[] {1}),
+                session
+        ).getStatusCode().value());
     }
 }
