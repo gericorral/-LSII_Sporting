@@ -15,6 +15,10 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
+import java.nio.file.StandardCopyOption;
 import java.util.stream.Stream;
 
 @Component
@@ -84,19 +88,71 @@ public class FileVideoCatalogAdapter implements VideoCatalogPort {
             String title = requiredText(metadata, "title");
             String description = metadata.path("meta").path("description").asText("");
             Integer duration = metadata.hasNonNull("duration") ? metadata.get("duration").asInt() : null;
+            UUID ownerId = metadata.hasNonNull("ownerId")
+                    ? UUID.fromString(metadata.get("ownerId").asText()) : null;
+            List<String> tags = new ArrayList<>();
+            metadata.path("tags").forEach(node -> tags.add(node.asText()));
+            String category = metadata.path("category").asText("");
             return java.util.Optional.of(new VideoSummary(
                     id,
                     title,
                     description,
                     duration,
                     "/media/" + id + "." + extension(thumbnailPath),
-                    "/media/" + id + ".mp4"
+                    "/media/" + id + ".mp4",
+                    ownerId,
+                    List.copyOf(tags),
+                    category
             ));
         } catch (IOException | IllegalArgumentException exception) {
             LOG.warn("Skipping invalid video metadata {}", metadataPath, exception);
             return java.util.Optional.empty();
         }
+    }
 
+    @Override
+    public Optional<VideoSummary> updateMetadata(
+                String id,
+                UUID ownerId,
+                String title,
+                String description,
+                List<String> tags,
+                String category
+        ) {
+            Optional<VideoSummary> existing = findById(id);
+            if (existing.isEmpty() || ownerId == null || !ownerId.equals(existing.get().ownerId())) {
+                return Optional.empty();
+            }
+            Path metadataPath = storeDirectory.resolve(id + ".json");
+            Path temporaryPath = storeDirectory.resolve("." + id + ".json.editing");
+            try {
+                JsonNode metadata = objectMapper.readTree(metadataPath.toFile());
+                var updated = objectMapper.createObjectNode();
+                updated.put("title", title);
+                var meta = updated.putObject("meta");
+                meta.put("description", description);
+                updated.put("ownerId", ownerId.toString());
+                updated.put("category", category);
+                updated.set("tags", objectMapper.valueToTree(tags));
+                if (metadata.hasNonNull("duration")) {
+                    updated.set("duration", metadata.get("duration"));
+                }
+                objectMapper.writeValue(temporaryPath.toFile(), updated);
+                try {
+                    Files.move(temporaryPath, metadataPath, StandardCopyOption.ATOMIC_MOVE,
+                            StandardCopyOption.REPLACE_EXISTING);
+                } catch (java.nio.file.AtomicMoveNotSupportedException exception) {
+                    Files.move(temporaryPath, metadataPath, StandardCopyOption.REPLACE_EXISTING);
+                }
+                return findById(id);
+            } catch (IOException | RuntimeException exception) {
+                try {
+                    Files.deleteIfExists(temporaryPath);
+                } catch (IOException cleanupException) {
+                    LOG.warn("Unable to remove temporary metadata {}", temporaryPath, cleanupException);
+                }
+                throw new IllegalStateException("Unable to update video metadata: " + id, exception);
+            }
     }
 
     private String extension(Path path) {

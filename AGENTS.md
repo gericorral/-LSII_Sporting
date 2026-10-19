@@ -211,3 +211,10 @@ content in this file.
 - 2026-10-19: Polished the responsive frontend controls and form styling using
   `prompts/16-polish-responsive-frontend-design.md`; pagination, focus states,
   hover states and form fields now have a more consistent visual treatment.
+- 2026-10-19: Implemented US-07 video metadata editing using
+  `prompts/17-implement-video-metadata-editing.md`; owners can update title,
+  description, tags and category through an authorized backend endpoint and the
+  responsive video detail editor.
+- 2026-10-19: Synchronized the catalog after metadata edits using
+  `prompts/18-refresh-catalog-after-metadata-edit.md`; returning to the catalog now
+  reloads the first page so changed titles are immediately visible.

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import axios, { AxiosError } from 'axios';
 import { getEnv } from './utils/Env';
 
@@ -11,6 +11,9 @@ export type VideoSummary = {
   duration: number | null;
   thumbnailUrl: string;
   videoUrl: string;
+  ownerId?: string | null;
+  tags?: string[];
+  category?: string;
 };
 
 export type VideoPage = {
@@ -30,24 +33,25 @@ export function useAllVideos() {
   const [hasNext, setHasNext] = useState(false);
   const [nextPage, setNextPage] = useState(0);
 
-  useEffect(() => {
-    const getVideos = async () => {
-      try {
-        setLoading('loading');
-        const response = await axios.get<VideoPage>(ALL_VIDEOS_URL, { params: { page: 0, size: 12 } });
-        if (response.status === 200) {
-          setValue(response.data.content);
-          setHasNext(response.data.hasNext);
-          setNextPage(1);
-        }
-        setLoading('success');
-      } catch (error: unknown) {
-        setLoading('error');
-        setMessage('Error fetching videos: ' + (error as AxiosError).message);
+  const refresh = useCallback(async () => {
+    try {
+      setLoading('loading');
+      const response = await axios.get<VideoPage>(ALL_VIDEOS_URL, { params: { page: 0, size: 12 } });
+      if (response.status === 200) {
+        setValue(response.data.content);
+        setHasNext(response.data.hasNext);
+        setNextPage(1);
       }
-    };
-    getVideos().then();
+      setLoading('success');
+    } catch (error: unknown) {
+      setLoading('error');
+      setMessage('Error fetching videos: ' + (error as AxiosError).message);
+    }
   }, []);
+
+  useEffect(() => {
+    refresh().then();
+  }, [refresh]);
 
   const loadMore = async () => {
     if (!hasNext || loading === 'loading') return;
@@ -68,5 +72,5 @@ export function useAllVideos() {
     }
   };
 
-  return { value, message, loading, hasNext, loadMore };
+  return { value, message, loading, hasNext, loadMore, refresh };
 }

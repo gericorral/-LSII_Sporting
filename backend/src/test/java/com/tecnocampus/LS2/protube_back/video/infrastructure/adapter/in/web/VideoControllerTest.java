@@ -8,6 +8,7 @@ import java.util.Optional;
 import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.ListVideosUseCase.VideoPage;
 import com.tecnocampus.LS2.protube_back.video.application.service.VideoUploadService;
+import com.tecnocampus.LS2.protube_back.video.application.service.VideoMetadataService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.mock.web.MockMultipartFile;
 import java.util.UUID;
@@ -20,7 +21,10 @@ class VideoControllerTest {
 
     private final ListVideosUseCase listVideosUseCase = mock(ListVideosUseCase.class);
     private final VideoUploadService videoUploadService = mock(VideoUploadService.class);
-    private final VideoController videoController = new VideoController(listVideosUseCase, videoUploadService);
+    private final VideoMetadataService videoMetadataService = mock(VideoMetadataService.class);
+    private final VideoController videoController = new VideoController(
+            listVideosUseCase, videoUploadService, videoMetadataService
+    );
 
     @Test
     void returnsVideosFromTheInputPort() {
@@ -87,6 +91,57 @@ class VideoControllerTest {
                 "Title", "Description",
                 new MockMultipartFile("video", "video.mp4", "video/mp4", new byte[] {1}),
                 session
+        ).getStatusCode().value());
+    }
+
+    @Test
+    void updatesVideoForAuthenticatedOwner() {
+        UUID userId = UUID.randomUUID();
+        HttpSession session = mock(HttpSession.class);
+        when(session.getAttribute("authenticatedUserId")).thenReturn(userId);
+        VideoSummary updated = new VideoSummary(
+                "1", "New", "Description", null, "/media/1.webp", "/media/1.mp4", userId, List.of(), ""
+        );
+        when(videoMetadataService.update("1", userId, "New", "Description", List.of(), ""))
+                .thenReturn(updated);
+
+        assertEquals(200, videoController.updateVideo(
+                "1", new VideoController.UpdateVideoRequest("New", "Description", List.of(), ""), session
+        ).getStatusCode().value());
+    }
+
+    @Test
+    void deniesUnauthenticatedMetadataUpdate() {
+        HttpSession session = mock(HttpSession.class);
+
+        assertEquals(401, videoController.updateVideo(
+                "1", new VideoController.UpdateVideoRequest("New", "Description", List.of(), ""), session
+        ).getStatusCode().value());
+    }
+
+    @Test
+    void deniesMetadataUpdateForAnotherOwner() {
+        UUID userId = UUID.randomUUID();
+        HttpSession session = mock(HttpSession.class);
+        when(session.getAttribute("authenticatedUserId")).thenReturn(userId);
+        when(videoMetadataService.update("1", userId, "New", "Description", List.of(), ""))
+                .thenThrow(new VideoMetadataService.VideoNotFoundException("not owner"));
+
+        assertEquals(403, videoController.updateVideo(
+                "1", new VideoController.UpdateVideoRequest("New", "Description", List.of(), ""), session
+        ).getStatusCode().value());
+    }
+
+    @Test
+    void rejectsInvalidMetadataUpdate() {
+        UUID userId = UUID.randomUUID();
+        HttpSession session = mock(HttpSession.class);
+        when(session.getAttribute("authenticatedUserId")).thenReturn(userId);
+        when(videoMetadataService.update("1", userId, "", "Description", List.of(), ""))
+                .thenThrow(new VideoMetadataService.InvalidMetadataException("Title is required."));
+
+        assertEquals(400, videoController.updateVideo(
+                "1", new VideoController.UpdateVideoRequest("", "Description", List.of(), ""), session
         ).getStatusCode().value());
     }
 }

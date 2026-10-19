@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpSession;
@@ -17,6 +18,9 @@ import java.util.UUID;
 import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.ListVideosUseCase.VideoPage;
 import com.tecnocampus.LS2.protube_back.video.application.service.VideoUploadService;
+import com.tecnocampus.LS2.protube_back.video.application.service.VideoMetadataService;
+import org.springframework.web.bind.annotation.RequestBody;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/videos")
@@ -24,10 +28,37 @@ public class VideoController {
 
     private final ListVideosUseCase listVideosUseCase;
     private final VideoUploadService videoUploadService;
+    private final VideoMetadataService videoMetadataService;
 
-    public VideoController(ListVideosUseCase listVideosUseCase, VideoUploadService videoUploadService) {
+    public VideoController(
+            ListVideosUseCase listVideosUseCase,
+            VideoUploadService videoUploadService,
+            VideoMetadataService videoMetadataService
+    ) {
         this.listVideosUseCase = listVideosUseCase;
         this.videoUploadService = videoUploadService;
+        this.videoMetadataService = videoMetadataService;
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateVideo(
+            @PathVariable String id,
+            @RequestBody UpdateVideoRequest request,
+            HttpSession session
+    ) {
+        Object userId = session.getAttribute("authenticatedUserId");
+        if (!(userId instanceof UUID ownerId)) {
+            return ResponseEntity.status(401).body(Map.of("message", "Log in to edit videos."));
+        }
+        try {
+            return ResponseEntity.ok(videoMetadataService.update(
+                    id, ownerId, request.title(), request.description(), request.tags(), request.category()
+            ));
+        } catch (VideoMetadataService.InvalidMetadataException exception) {
+            return ResponseEntity.badRequest().body(Map.of("message", exception.getMessage()));
+        } catch (VideoMetadataService.VideoNotFoundException exception) {
+            return ResponseEntity.status(403).body(Map.of("message", "You cannot edit this video."));
+        }
     }
 
     @PostMapping(consumes = "multipart/form-data")
@@ -68,5 +99,13 @@ public class VideoController {
         return listVideosUseCase.getVideo(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    public record UpdateVideoRequest(
+            String title,
+            String description,
+            List<String> tags,
+            String category
+    ) {
     }
 }

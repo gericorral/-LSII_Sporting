@@ -2,7 +2,7 @@ import { FormEvent, useState } from 'react';
 import axios from 'axios';
 import { getEnv } from '../utils/Env';
 
-type LoginUser = { username: string; email: string };
+type LoginUser = { id?: string; username: string; email: string };
 type LoginFormProps = { onLoggedIn: (user: LoginUser) => void };
 const LOGIN_URL = `${getEnv().API_BASE_URL}/auth/login`;
 

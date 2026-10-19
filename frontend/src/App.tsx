@@ -24,8 +24,8 @@ function App() {
 
 function ContentApp() {
   const [hash, setHash] = useState(() => window.location.hash);
-  const [registeredUser, setRegisteredUser] = useState<{ username: string; email: string } | null>(null);
-  const [loggedUser, setLoggedUser] = useState<{ username: string; email: string } | null>(null);
+  const [registeredUser, setRegisteredUser] = useState<{ id?: string; username: string; email: string } | null>(null);
+  const [loggedUser, setLoggedUser] = useState<{ id?: string; username: string; email: string } | null>(null);
 
   useEffect(() => {
     const onHashChange = () => setHash(window.location.hash);
@@ -110,12 +110,12 @@ function VideoCatalog({
   onLogout,
 }: {
   videoId: string | null;
-  loggedUser: { username: string; email: string } | null;
+  loggedUser: { id?: string; username: string; email: string } | null;
   onLogout: () => void;
 }) {
-  const { loading, message, value, hasNext, loadMore } = useAllVideos();
+  const { loading, message, value, hasNext, loadMore, refresh } = useAllVideos();
   if (videoId) {
-    return <VideoDetailPage id={videoId} />;
+    return <VideoDetailPage id={videoId} loggedUser={loggedUser} onUpdated={refresh} />;
   }
 
   switch (loading) {
@@ -161,7 +161,15 @@ function VideoCatalog({
   return <div>Idle...</div>;
 }
 
-function VideoDetailPage({ id }: { id: string }) {
+function VideoDetailPage({
+  id,
+  loggedUser,
+  onUpdated,
+}: {
+  id: string;
+  loggedUser: { id?: string; username: string; email: string } | null;
+  onUpdated: () => Promise<void>;
+}) {
   const { loading, message, value } = useVideo(id);
   if (loading === 'loading') return <div>Loading video...</div>;
   if (loading === 'error' || value === null) {
@@ -173,7 +181,13 @@ function VideoDetailPage({ id }: { id: string }) {
       </div>
     );
   }
-  return <VideoDetail video={value} />;
+  return (
+    <VideoDetail
+      video={value}
+      canEdit={Boolean(loggedUser?.id && loggedUser.id === value.ownerId)}
+      onUpdated={onUpdated}
+    />
+  );
 }
 
 function getVideoId(hash: string) {

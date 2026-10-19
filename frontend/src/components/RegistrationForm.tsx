@@ -3,6 +3,7 @@ import axios from 'axios';
 import { getEnv } from '../utils/Env';
 
 type RegistrationUser = {
+  id: string;
   username: string;
   email: string;
 };

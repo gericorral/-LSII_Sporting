@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -105,5 +106,27 @@ class FileVideoCatalogAdapterTest {
 
         assertEquals(Optional.empty(), adapter.findById("missing-thumbnail"));
         assertEquals(Optional.empty(), adapter.findById("missing-video"));
+    }
+
+    @Test
+    void updatesMetadataOnlyForTheOwner(@TempDir Path store) throws IOException {
+        UUID ownerId = UUID.randomUUID();
+        Files.writeString(store.resolve("1.json"), """
+                {"title":"Old","meta":{"description":"Old description"},"ownerId":"%s","tags":["old"],"category":"Old"}
+                """.formatted(ownerId));
+        Files.createFile(store.resolve("1.mp4"));
+        Files.createFile(store.resolve("1.webp"));
+        FileVideoCatalogAdapter adapter = new FileVideoCatalogAdapter(store.toString(), objectMapper);
+
+        assertEquals(Optional.empty(), adapter.updateMetadata(
+                "1", UUID.randomUUID(), "New", "New description", List.of("new"), "New category"
+        ));
+        VideoSummary updated = adapter.updateMetadata(
+                "1", ownerId, "New", "New description", List.of("new", "live"), "New category"
+        ).orElseThrow();
+        assertEquals("New", updated.title());
+        assertEquals(List.of("new", "live"), updated.tags());
+        assertEquals("New category", updated.category());
+        assertEquals("New description", updated.description());
     }
 }

@@ -127,6 +127,20 @@ interactius de la navegació i els camps dels formularis, inclòs el selector de
 Aquest refinament manté la jerarquia visual en escriptori i conserva controls amplis i
 fàcils de prémer en dispositius mòbils.
 
+### US-07: edició de metadades dels vídeos
+
+El detall del vídeo mostra un editor només per al propietari autenticat. El frontend
+envia títol, descripció, tags i categoria al backend, però l'autorització real es fa
+al servidor comparant l'usuari de la sessió amb l'`ownerId` guardat en els metadades.
+L'adaptador de fitxers actualitza el JSON mitjançant un fitxer temporal i un moviment
+atòmic, conservant el vídeo, la miniatura i la durada. Els vídeos antics sense
+propietari continuen sent visibles però no es poden editar; els usuaris no autenticats
+o que no són propietaris reben una resposta d'accés denegat.
+
+Després de desar, el detall demana una recàrrega del primer lot del catàleg abans de
+tornar a la llista. Això evita que el catàleg mostri el títol antic que encara quedava
+en l'estat de React carregat abans de l'edició.
+
 ## 4. Com s'afegeix una funcionalitat nova
 
 Per implementar una història com pujar un vídeo, cercar o comentar:
