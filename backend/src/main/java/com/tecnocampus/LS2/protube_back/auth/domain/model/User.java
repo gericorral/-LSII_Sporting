@@ -22,6 +22,9 @@ public class User {
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
+    @Column(nullable = false, length = 20)
+    private String status = "ACTIVE";
+
     protected User() {
     }
 
@@ -46,5 +49,9 @@ public class User {
 
     public String getPasswordHash() {
         return passwordHash;
+    }
+
+    public String getStatus() {
+        return status;
     }
 }

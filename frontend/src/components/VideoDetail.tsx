@@ -1,4 +1,5 @@
 import type { VideoSummary } from '../useAllVideos';
+import { resolveMediaUrl } from '../utils/Env';
 
 type VideoDetailProps = {
   video: VideoSummary;
@@ -8,7 +9,7 @@ const VideoDetail = ({ video }: VideoDetailProps) => (
   <article className="video-detail">
     <a href="#">&larr; Back to videos</a>
     <h2>{video.title}</h2>
-    <video controls poster={video.thumbnailUrl} src={video.videoUrl}>
+    <video controls poster={resolveMediaUrl(video.thumbnailUrl)} src={resolveMediaUrl(video.videoUrl)}>
       Your browser does not support video playback.
     </video>
     <p>{video.description || 'No description available.'}</p>

@@ -163,3 +163,36 @@ content in this file.
 - 2026-10-18: Implemented US-01 user registration using
   `prompts/11-implement-user-registration.md`; the change is documented in the Catalan
   study guide.
+- 2026-10-19: Implemented US-02 user login using
+  `prompts/12-implement-user-login.md`; the change was generated with AI and documented
+  in the Catalan study guide.
+- 2026-10-19: Implemented US-03 user profile using
+  `prompts/13-implement-user-profile.md`; the change was generated with AI and documented
+  in the Catalan study guide.
+- 2026-10-19: Fixed the H2 user schema mismatch that prevented profile loading; the
+  `User` model and development initializer now keep the `status` column aligned with
+  profile queries, and the change is documented in the Catalan study guide.
+- 2026-10-19: Fixed hash navigation and profile save error visibility in the frontend;
+  route changes now re-render without a browser reload, and backend error messages are
+  shown when profile persistence fails.
+- 2026-10-19: Fixed local CORS configuration for profile updates by explicitly allowing
+  PUT preflight requests, credentials, and frontend headers.
+- 2026-10-19: Adjusted the frontend header so the ProTube logo appears small in the
+  upper-left corner while the main content remains centered.
+- 2026-10-19: Aligned the authenticated user's profile link and logout action with
+  the compact logo header in the video catalog.
+- 2026-10-19: Tuned the profile and logout action sizes so the username link has
+  slightly more emphasis while the logout control remains compact.
+- 2026-10-19: Adjusted registration form typography so field labels are more prominent
+  and placeholder/help text is smaller.
+- 2026-10-19: Raised frontend and backend test coverage to the required 90% minimum
+  by covering navigation, form failures, profile authorization, validation, H2
+  persistence, and credential branches.
+- 2026-10-19: Fixed relative media URLs so video thumbnails and playback resolve
+  through the configured media domain in both Vite development and Docker deployments.
+- 2026-10-19: Kept video descriptions out of the catalog cards and displayed them
+  only in the individual video detail view.
+- 2026-10-19: Adjusted the video catalog to three cards per row on large screens,
+  with larger thumbnails and compact titles while preserving responsive breakpoints.
+- 2026-10-19: Reduced the duration text size in video catalog cards without changing
+  the metadata sizing on the video detail page.

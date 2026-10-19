@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import VideoGrid from '../VideoGrid';
@@ -27,6 +27,8 @@ describe('this component', () => {
         ]}
       />,
     );
+    expect(screen.queryByText('A test video')).not.toBeInTheDocument();
+    expect(screen.queryByText('No description available.')).not.toBeInTheDocument();
     expect(asFragment()).toMatchSnapshot();
   });
 });

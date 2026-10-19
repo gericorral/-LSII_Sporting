@@ -78,8 +78,12 @@ Si el directori no existeix, el catàleg retorna una llista buida i deixa const�
 problema als logs.
 
 Al frontend, `useAllVideos` demana la llista i `VideoGrid` la presenta en targetes
-responsives. Cada targeta mostra la miniatura, el títol, la descripció i la durada si
-està disponible. La interfície conserva els estats de càrrega, èxit i error.
+responsives. En pantalles grans es mostren tres targetes per fila per aprofitar millor
+l'espai i fer les miniatures més llegibles; en pantalles mitjanes es redueix a dues i
+en mòbil a una. Cada targeta mostra la miniatura, el títol amb una mida compacta i la durada
+amb una mida encara més petita si està disponible;
+la descripció queda reservada a `VideoDetail`, on l'usuari pot llegir-la després
+d'obrir el vídeo. La interfície conserva els estats de càrrega, èxit i error.
 
 ## 4. Com s'afegeix una funcionalitat nova
 
@@ -108,6 +112,21 @@ un reinici, quines entitats es relacionen i com una migració manté l'estructur
 No n'hi ha prou amb amagar un botó al frontend. El backend ha d'identificar l'usuari i
 comprovar permisos en cada operació protegida. Per exemple, només el propietari d'un
 vídeo hauria de poder editar-ne les metadades.
+
+El login de l'US-02 reutilitza la sessió HTTP: el backend normalitza l'email, busca
+l'usuari i verifica el hash PBKDF2 sense retornar mai la contrasenya. Només després
+d'una verificació correcta crea la sessió amb `authenticatedUserId`; les credencials
+incorrectes responen amb un missatge genèric i no creen cap sessió autenticada. El
+logout invalida explícitament la sessió existent. El frontend conserva el cookie de
+sessió amb `withCredentials`, mostra el formulari de login i ofereix el tancament de
+sessió des del catàleg.
+
+El perfil de l'US-03 es desa a `user_profiles`, relacionat amb `users` per `user_id`.
+El backend exposa el perfil propi només amb sessió, permet actualitzar els camps
+editables i exposa altres perfils únicament quan són públics. El frontend reutilitza
+el mateix component per a la vista editable pròpia i la vista pública de lectura;
+l'avatar és una referència URL en aquesta primera iteració, mentre que la pujada del
+fitxer queda per a una futura funcionalitat d'emmagatzematge.
 
 ### Errors
 
@@ -155,10 +174,21 @@ repositori.
 | 18/10/2026 | Es millora la pantalla de registre amb una interfície visual més clara i professional. | El formulari separa la capçalera de marca, les etiquetes, els camps, els missatges d'error i l'acció principal; també incorpora focus visible, placeholders, indicadors d'entrada invàlida i adaptació a pantalles petites sense canviar el contracte de l'API. |
 | 18/10/2026 | Es centra el títol del catàleg de vídeos. | La barra superior del catàleg manté l'acció de registre a la dreta i presenta el títol centrat independentment de l'amplada del text. |
 | 18/10/2026 | Es corregeix l'arrencada del registre en PostgreSQL. | El perfil de producció inicialitza de manera idempotent la taula `users` abans de consultar duplicats; així l'API no depèn que el script SQL general s'hagi executat prèviament. |
+| 19/10/2026 | S'implementa el login de l'US-02 amb logout i sessió HTTP. | El servei verifica hashes PBKDF2, usa errors genèrics per a credencials incorrectes i només crea la sessió després d'autenticar; la interfície React permet entrar i sortir. |
+| 19/10/2026 | S'implementa el perfil de l'US-03 amb vista pròpia editable i perfil públic. | `ProfileController`, el servei i l'adaptador JDBC separen HTTP, negoci i persistència; la visibilitat pública evita mostrar controls d'edició a altres usuaris. |
+| 19/10/2026 | Es corregeix la compatibilitat entre l'entitat `User`, l'esquema H2 i la consulta de perfils. | El camp `status` forma part del model i l'inicialitzador afegeix la columna si una base de desenvolupament ja existia; així `GET /api/profiles/me` pot filtrar usuaris actius sense fallar. |
+| 19/10/2026 | Es centralitza la navegació hash del frontend i es fan visibles els errors de guardat del perfil. | React manté el hash actual en estat propi, de manera que canviar entre catàleg i perfil actualitza la vista sense recarregar; els errors HTTP del backend ja no es perden en un missatge genèric. |
+| 19/10/2026 | Es configura CORS per permetre el guardat del perfil des del frontend local. | El navegador fa un preflight `OPTIONS` abans del `PUT`; declarar explícitament mètodes, cabeceres i credencials evita que Axios mostri un error de xarxa encara que el backend estigui encès. |
+| 19/10/2026 | Es redissenya la capçalera per mostrar el logo petit a la cantonada superior esquerra. | El logo es posiciona de manera absoluta dins de la capçalera i el contingut conserva l'alineació central sense que la marca ocupe l'espai principal. |
+| 19/10/2026 | Es col·loquen les accions de sessió a la mateixa línia superior que el logo. | El nom de l'usuari i el logout es posicionen dins de la capçalera visual del catàleg, mantenint el títol centrat i les targetes separades. |
+| 19/10/2026 | S'ajusta l'escala visual de les accions de sessió. | L'enllaç al perfil manté més protagonisme i el botó de logout utilitza una mida i un espaiat més compactes per equilibrar la capçalera. |
+| 19/10/2026 | S'ajusta la jerarquia tipogràfica del formulari de registre. | Les etiquetes dels camps tenen més presència i els placeholders i el text d'ajuda són més petits, de manera que la informació principal queda clarament diferenciada de l'exemple. |
+| 19/10/2026 | Es completa la cobertura mínima del 90% al frontend i backend. | Els tests cobreixen branques de navegació, errors de formularis, permisos de perfil, validacions, persistència H2 i credencials; Jest i JaCoCo fan fallar el build si alguna mètrica global baixa del 90%. |
+| 19/10/2026 | Es resolen les rutes multimèdia relatives en desenvolupament. | El frontend transforma les adreces `/media/...` retornades per l'API en URLs del domini multimèdia configurat, de manera que funciona tant amb Vite a `localhost:5173` com amb el frontend servit pel backend o Docker. |
 
 ## 8. Temes pendents
 
-- Login, tancament de sessió i protecció de rutes.
+- Protecció de rutes i autorització per recurs.
 - Persistència real d'usuaris, vídeos, comentaris i analítiques.
 - Pujada i edició de vídeos amb control del propietari.
 - Cerca i paginació.

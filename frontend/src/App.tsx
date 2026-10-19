@@ -5,6 +5,10 @@ import VideoDetail from './components/VideoDetail';
 import { useVideo } from './useVideo';
 import { useEffect, useState } from 'react';
 import RegistrationForm from './components/RegistrationForm';
+import LoginForm from './components/LoginForm';
+import axios from 'axios';
+import { getEnv } from './utils/Env';
+import ProfilePage from './components/ProfilePage';
 
 function App() {
   return (
@@ -18,18 +22,45 @@ function App() {
 }
 
 function ContentApp() {
-  const [videoId, setVideoId] = useState<string | null>(() => getVideoId());
-  const [registering, setRegistering] = useState(() => window.location.hash === '#register');
+  const [hash, setHash] = useState(() => window.location.hash);
   const [registeredUser, setRegisteredUser] = useState<{ username: string; email: string } | null>(null);
+  const [loggedUser, setLoggedUser] = useState<{ username: string; email: string } | null>(null);
 
   useEffect(() => {
-    const onHashChange = () => {
-      setVideoId(getVideoId());
-      setRegistering(window.location.hash === '#register');
-    };
+    const onHashChange = () => setHash(window.location.hash);
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
+
+  const videoId = getVideoId(hash);
+  const registering = hash === '#register';
+  const loggingIn = hash === '#login';
+  const profileId = getProfileId(hash);
+
+  if (loggingIn) {
+    return (
+      <LoginForm
+        onLoggedIn={(user) => {
+          setLoggedUser(user);
+          setHash('');
+          window.location.hash = '';
+        }}
+      />
+    );
+  }
+
+  if (hash === '#profile' || profileId) {
+    return (
+      <ProfilePage
+        userId={profileId}
+        editable={!profileId}
+        onBack={() => {
+          setHash('');
+          window.location.hash = '';
+        }}
+      />
+    );
+  }
 
   if (registering) {
     return registeredUser ? (
@@ -43,10 +74,29 @@ function ContentApp() {
     );
   }
 
-  return <VideoCatalog videoId={videoId} />;
+  return (
+    <VideoCatalog
+      videoId={videoId}
+      loggedUser={loggedUser || registeredUser}
+      onLogout={() => {
+        axios.post(`${getEnv().API_BASE_URL}/auth/logout`, {}, { withCredentials: true }).finally(() => {
+          setLoggedUser(null);
+          setRegisteredUser(null);
+        });
+      }}
+    />
+  );
 }
 
-function VideoCatalog({ videoId }: { videoId: string | null }) {
+function VideoCatalog({
+  videoId,
+  loggedUser,
+  onLogout,
+}: {
+  videoId: string | null;
+  loggedUser: { username: string; email: string } | null;
+  onLogout: () => void;
+}) {
   const { loading, message, value } = useAllVideos();
   if (videoId) {
     return <VideoDetailPage id={videoId} />;
@@ -66,7 +116,21 @@ function VideoCatalog({ videoId }: { videoId: string | null }) {
         <>
           <div className="catalog-toolbar">
             <h2>Available videos</h2>
-            <a href="#register">Create an account</a>
+            <nav className="catalog-actions">
+              {loggedUser ? (
+                <>
+                  <a href="#profile">Hi, {loggedUser.username}</a>
+                  <button type="button" onClick={onLogout}>
+                    Log out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <a href="#login">Log in</a>
+                  <a href="#register">Create an account</a>
+                </>
+              )}
+            </nav>
           </div>
           <VideoGrid videos={value} />
         </>
@@ -90,9 +154,14 @@ function VideoDetailPage({ id }: { id: string }) {
   return <VideoDetail video={value} />;
 }
 
-function getVideoId() {
-  const match = window.location.hash.match(/^#video\/(.+)$/);
+function getVideoId(hash: string) {
+  const match = hash.match(/^#video\/(.+)$/);
   return match ? decodeURIComponent(match[1]) : null;
+}
+
+function getProfileId(hash: string) {
+  const match = hash.match(/^#profile\/(.+)$/);
+  return match ? decodeURIComponent(match[1]) : undefined;
 }
 
 export default App;

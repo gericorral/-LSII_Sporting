@@ -21,9 +21,6 @@ exports[`this component renders correctly 1`] = `
           <h3>
             Video 1 test
           </h3>
-          <p>
-            A test video
-          </p>
           <span>
             30s
           </span>
@@ -46,9 +43,6 @@ exports[`this component renders correctly 1`] = `
           <h3>
             Video 2 test
           </h3>
-          <p>
-            No description available.
-          </p>
         </div>
       </a>
     </li>

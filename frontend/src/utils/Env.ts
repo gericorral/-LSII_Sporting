@@ -7,3 +7,13 @@ export const getEnv = () => {
     __vite__: otherViteConfig,
   };
 };
+
+export const resolveMediaUrl = (url: string) => {
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
+
+  const mediaBaseUrl = getEnv().MEDIA_BASE_URL.replace(/\/$/, '');
+  const mediaPath = url.replace(/^\/media\/?/, '');
+  return `${mediaBaseUrl}/${mediaPath}`;
+};

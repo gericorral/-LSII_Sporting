@@ -28,5 +28,23 @@ public class UserSchemaInitializer {
                     last_login_at TIMESTAMP
                 )
                 """);
+        jdbcTemplate.execute("""
+                ALTER TABLE users
+                ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
+                """);
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS user_profiles (
+                    user_id UUID PRIMARY KEY,
+                    display_name VARCHAR(100),
+                    description VARCHAR(2000),
+                    avatar_path VARCHAR(500),
+                    website VARCHAR(500),
+                    location VARCHAR(200),
+                    is_public BOOLEAN NOT NULL DEFAULT TRUE,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT fk_user_profiles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                )
+                """);
     }
 }
