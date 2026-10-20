@@ -30,6 +30,8 @@ The backend is organized by business module and uses a Ports and Adapters struct
 6. DTOs crossing application or web boundaries are Java records. Persistence entities never cross those boundaries.
 7. Shared technical configuration belongs in `shared` or module infrastructure, not in the domain.
 
-The initial video listing has been migrated to this structure while preserving `GET /api/videos`. The current
-adapter returns the existing seed values; it is an intentional transitional adapter until the PostgreSQL entities
-and repositories are implemented.
+The video catalog, upload and metadata-management slices follow this structure while preserving their existing HTTP
+contracts. `ListVideosUseCase`, `UploadVideoUseCase` and `UpdateVideoMetadataUseCase` are input ports. The file
+catalog and publication adapters implement output ports, so JSON serialization, thumbnail generation, atomic file
+moves and multipart handling remain outside the application services. This keeps EPIC 4 independent of Spring
+multipart types, Jackson and filesystem APIs.

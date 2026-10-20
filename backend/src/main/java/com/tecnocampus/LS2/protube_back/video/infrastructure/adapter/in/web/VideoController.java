@@ -1,6 +1,8 @@
 package com.tecnocampus.LS2.protube_back.video.infrastructure.adapter.in.web;
 
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.ListVideosUseCase;
+import com.tecnocampus.LS2.protube_back.video.domain.port.in.UpdateVideoMetadataUseCase;
+import com.tecnocampus.LS2.protube_back.video.domain.port.in.UploadVideoUseCase;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,8 +19,6 @@ import java.util.UUID;
 
 import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.ListVideosUseCase.VideoPage;
-import com.tecnocampus.LS2.protube_back.video.application.service.VideoUploadService;
-import com.tecnocampus.LS2.protube_back.video.application.service.VideoMetadataService;
 import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 
@@ -27,17 +27,17 @@ import java.util.List;
 public class VideoController {
 
     private final ListVideosUseCase listVideosUseCase;
-    private final VideoUploadService videoUploadService;
-    private final VideoMetadataService videoMetadataService;
+    private final UploadVideoUseCase uploadVideoUseCase;
+    private final UpdateVideoMetadataUseCase updateVideoMetadataUseCase;
 
     public VideoController(
             ListVideosUseCase listVideosUseCase,
-            VideoUploadService videoUploadService,
-            VideoMetadataService videoMetadataService
+            UploadVideoUseCase uploadVideoUseCase,
+            UpdateVideoMetadataUseCase updateVideoMetadataUseCase
     ) {
         this.listVideosUseCase = listVideosUseCase;
-        this.videoUploadService = videoUploadService;
-        this.videoMetadataService = videoMetadataService;
+        this.uploadVideoUseCase = uploadVideoUseCase;
+        this.updateVideoMetadataUseCase = updateVideoMetadataUseCase;
     }
 
     @PutMapping("/{id}")
@@ -51,12 +51,12 @@ public class VideoController {
             return ResponseEntity.status(401).body(Map.of("message", "Log in to edit videos."));
         }
         try {
-            return ResponseEntity.ok(videoMetadataService.update(
+            return ResponseEntity.ok(updateVideoMetadataUseCase.update(
                     id, ownerId, request.title(), request.description(), request.tags(), request.category()
             ));
-        } catch (VideoMetadataService.InvalidMetadataException exception) {
+        } catch (UpdateVideoMetadataUseCase.InvalidMetadataException exception) {
             return ResponseEntity.badRequest().body(Map.of("message", exception.getMessage()));
-        } catch (VideoMetadataService.VideoNotFoundException exception) {
+        } catch (UpdateVideoMetadataUseCase.VideoNotFoundException exception) {
             return ResponseEntity.status(403).body(Map.of("message", "You cannot edit this video."));
         }
     }
@@ -73,11 +73,17 @@ public class VideoController {
             return ResponseEntity.status(401).body(Map.of("message", "Log in to upload videos."));
         }
         try {
+            UploadVideoUseCase.VideoFile videoFile = new UploadVideoUseCase.VideoFile(
+                    video.getInputStream(), video.getSize(), video.getContentType()
+            );
             return ResponseEntity.status(201)
-                    .body(videoUploadService.upload(title, description, video, ownerId));
-        } catch (VideoUploadService.InvalidUploadException exception) {
+                    .body(uploadVideoUseCase.upload(title, description, videoFile, ownerId));
+        } catch (java.io.IOException exception) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("message", "The video could not be published."));
+        } catch (UploadVideoUseCase.InvalidUploadException exception) {
             return ResponseEntity.badRequest().body(Map.of("message", exception.getMessage()));
-        } catch (VideoUploadService.UploadFailedException exception) {
+        } catch (UploadVideoUseCase.UploadFailedException exception) {
             return ResponseEntity.internalServerError()
                     .body(Map.of("message", "The video could not be published."));
         }

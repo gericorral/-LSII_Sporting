@@ -1,6 +1,7 @@
 package com.tecnocampus.LS2.protube_back.video.application.service;
 
 import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
+import com.tecnocampus.LS2.protube_back.video.domain.port.in.UpdateVideoMetadataUseCase;
 import com.tecnocampus.LS2.protube_back.video.domain.port.out.VideoCatalogPort;
 import org.springframework.stereotype.Service;
 
@@ -8,13 +9,14 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class VideoMetadataService {
+public class VideoMetadataService implements UpdateVideoMetadataUseCase {
     private final VideoCatalogPort videoCatalogPort;
 
     public VideoMetadataService(VideoCatalogPort videoCatalogPort) {
         this.videoCatalogPort = videoCatalogPort;
     }
 
+    @Override
     public VideoSummary update(
             String id,
             UUID ownerId,
@@ -48,15 +50,4 @@ public class VideoMetadataService {
                 .orElseThrow(() -> new VideoNotFoundException("Video not found or not owned by the user."));
     }
 
-    public static class InvalidMetadataException extends RuntimeException {
-        public InvalidMetadataException(String message) {
-            super(message);
-        }
-    }
-
-    public static class VideoNotFoundException extends RuntimeException {
-        public VideoNotFoundException(String message) {
-            super(message);
-        }
-    }
 }

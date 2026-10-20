@@ -97,8 +97,9 @@ compleix el criteri d'acceptació per a catàlegs més grans.
 
 La pujada es protegeix amb l'atribut de sessió `authenticatedUserId`; si no hi ha una
 sessió vàlida, el backend respon 401 i el frontend mostra el login en lloc del formulari.
-El formulari demana títol, descripció i un fitxer MP4 de fins a 100 MB. El servei valida
-els camps abans d'escriure i mai utilitza el nom original del fitxer com a ruta.
+El formulari demana títol, descripció i un fitxer MP4 de fins a 100 MB. El port d'entrada
+`UploadVideoUseCase` rep un model de fitxer independent de Spring i el servei valida els
+camps abans d'escriure; mai utilitza el nom original del fitxer com a ruta.
 
 El backend crea un identificador UUID i escriu el vídeo, una miniatura PNG generada i el
 JSON de metadades en fitxers temporals dins del directori configurat. Només mou els tres
@@ -140,6 +141,20 @@ o que no són propietaris reben una resposta d'accés denegat.
 Després de desar, el detall demana una recàrrega del primer lot del catàleg abans de
 tornar a la llista. Això evita que el catàleg mostri el títol antic que encara quedava
 en l'estat de React carregat abans de l'edició.
+
+### Arquitectura hexagonal de l'Epic 4
+
+Les US-06 i US-07 tenen ara ports d'entrada explícits: `UploadVideoUseCase` i
+`UpdateVideoMetadataUseCase`. El controlador només tradueix multipart, sessió, errors i
+respostes HTTP; no coneix els serveis concrets. Els serveis d'aplicació contenen les
+validacions i la normalització, i depenen només dels ports de sortida.
+
+La publicació de fitxers està darrere de `VideoPublicationPort`, implementat per
+`FileVideoPublicationAdapter`. Aquest adaptador encapsula `Multipart` ja convertit,
+Jackson, la miniatura PNG, els fitxers temporals i els moviments atòmics. La persistència
+de metadades d'edició continua darrere de `VideoCatalogPort`. Així es conserva el
+comportament actual però es pot substituir el sistema d'emmagatzematge sense modificar
+les regles de negoci.
 
 ## 4. Com s'afegeix una funcionalitat nova
 
@@ -261,12 +276,12 @@ repositori.
 | 19/10/2026 | Es completa la paginació de l'US-04. | El servei calcula la pàgina sol·licitada i el frontend afegeix 12 vídeos més quan l'usuari ho demana; els tests cobreixen la resposta paginada, els límits i l'acumulació de resultats. |
 | 19/10/2026 | S'implementa la pujada de vídeos de l'US-06. | La sessió protegeix l'endpoint, el servei valida MP4 i mida, publica vídeo, miniatura i metadades de manera atòmica i el frontend mostra errors i estat de pujada. |
 | 20/10/2026 | Es completa la migració de login, logout, registre i perfils a arquitectura hexagonal. | Els controladors depenen de ports d'entrada, els serveis de ports de sortida i els adaptadors encapsulen persistència i sessió; la suite backend manté 90% o més de cobertura global. |
+| 20/10/2026 | Es completa l'arquitectura hexagonal de les US-06 i US-07 de l'Epic 4. | Els casos d'ús d'upload i edició s'exposen com a ports d'entrada; el servei d'upload ja no depèn de `MultipartFile`, Jackson ni del sistema de fitxers, i els adaptadors conserven la publicació i l'edició atòmiques. |
 
 ## 8. Temes pendents
 
 - Protecció de rutes i autorització per recurs.
 - Persistència real d'usuaris, vídeos, comentaris i analítiques.
-- Pujada i edició de vídeos amb control del propietari.
 - Cerca.
 - Persistència relacional dels vídeos pujats segons NFR-01.
 - Comentaris, respostes i likes.

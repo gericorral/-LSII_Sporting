@@ -1,14 +1,14 @@
 package com.tecnocampus.LS2.protube_back.video.infrastructure.adapter.in.web;
 
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.ListVideosUseCase;
+import com.tecnocampus.LS2.protube_back.video.domain.port.in.UpdateVideoMetadataUseCase;
+import com.tecnocampus.LS2.protube_back.video.domain.port.in.UploadVideoUseCase;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Optional;
 import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.ListVideosUseCase.VideoPage;
-import com.tecnocampus.LS2.protube_back.video.application.service.VideoUploadService;
-import com.tecnocampus.LS2.protube_back.video.application.service.VideoMetadataService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.mock.web.MockMultipartFile;
 import java.util.UUID;
@@ -20,10 +20,10 @@ import static org.mockito.Mockito.when;
 class VideoControllerTest {
 
     private final ListVideosUseCase listVideosUseCase = mock(ListVideosUseCase.class);
-    private final VideoUploadService videoUploadService = mock(VideoUploadService.class);
-    private final VideoMetadataService videoMetadataService = mock(VideoMetadataService.class);
+    private final UploadVideoUseCase uploadVideoUseCase = mock(UploadVideoUseCase.class);
+    private final UpdateVideoMetadataUseCase updateVideoMetadataUseCase = mock(UpdateVideoMetadataUseCase.class);
     private final VideoController videoController = new VideoController(
-            listVideosUseCase, videoUploadService, videoMetadataService
+            listVideosUseCase, uploadVideoUseCase, updateVideoMetadataUseCase
     );
 
     @Test
@@ -80,7 +80,7 @@ class VideoControllerTest {
         VideoSummary uploaded = new VideoSummary(
                 "id", "Title", "Description", null, "/media/id.png", "/media/id.mp4"
         );
-        when(videoUploadService.upload(
+        when(uploadVideoUseCase.upload(
                 org.mockito.ArgumentMatchers.eq("Title"),
                 org.mockito.ArgumentMatchers.eq("Description"),
                 org.mockito.ArgumentMatchers.any(),
@@ -102,7 +102,7 @@ class VideoControllerTest {
         VideoSummary updated = new VideoSummary(
                 "1", "New", "Description", null, "/media/1.webp", "/media/1.mp4", userId, List.of(), ""
         );
-        when(videoMetadataService.update("1", userId, "New", "Description", List.of(), ""))
+        when(updateVideoMetadataUseCase.update("1", userId, "New", "Description", List.of(), ""))
                 .thenReturn(updated);
 
         assertEquals(200, videoController.updateVideo(
@@ -124,8 +124,8 @@ class VideoControllerTest {
         UUID userId = UUID.randomUUID();
         HttpSession session = mock(HttpSession.class);
         when(session.getAttribute("authenticatedUserId")).thenReturn(userId);
-        when(videoMetadataService.update("1", userId, "New", "Description", List.of(), ""))
-                .thenThrow(new VideoMetadataService.VideoNotFoundException("not owner"));
+        when(updateVideoMetadataUseCase.update("1", userId, "New", "Description", List.of(), ""))
+                .thenThrow(new UpdateVideoMetadataUseCase.VideoNotFoundException("not owner"));
 
         assertEquals(403, videoController.updateVideo(
                 "1", new VideoController.UpdateVideoRequest("New", "Description", List.of(), ""), session
@@ -137,8 +137,8 @@ class VideoControllerTest {
         UUID userId = UUID.randomUUID();
         HttpSession session = mock(HttpSession.class);
         when(session.getAttribute("authenticatedUserId")).thenReturn(userId);
-        when(videoMetadataService.update("1", userId, "", "Description", List.of(), ""))
-                .thenThrow(new VideoMetadataService.InvalidMetadataException("Title is required."));
+        when(updateVideoMetadataUseCase.update("1", userId, "", "Description", List.of(), ""))
+                .thenThrow(new UpdateVideoMetadataUseCase.InvalidMetadataException("Title is required."));
 
         assertEquals(400, videoController.updateVideo(
                 "1", new VideoController.UpdateVideoRequest("", "Description", List.of(), ""), session

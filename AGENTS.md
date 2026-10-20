@@ -222,3 +222,7 @@ content in this file.
 - 2026-10-19: Synchronized the catalog after metadata edits using
   `prompts/18-refresh-catalog-after-metadata-edit.md`; returning to the catalog now
   reloads the first page so changed titles are immediately visible.
+- 2026-10-20: Completed the hexagonal refactoring of EPIC 4 (US-06 and US-07) using
+  `prompts/05-hexagonal-vertical-slicing-backend.md`; upload and metadata editing now
+  use input/output ports while filesystem, Jackson and multipart details remain in
+  infrastructure adapters. The change is documented in the Catalan study guide.

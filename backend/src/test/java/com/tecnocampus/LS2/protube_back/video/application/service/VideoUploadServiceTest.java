@@ -1,31 +1,27 @@
 package com.tecnocampus.LS2.protube_back.video.application.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tecnocampus.LS2.protube_back.video.domain.port.in.UploadVideoUseCase;
+import com.tecnocampus.LS2.protube_back.video.infrastructure.adapter.out.storage.FileVideoPublicationAdapter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.springframework.mock.web.MockMultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class VideoUploadServiceTest {
 
     @Test
     void publishesVideoMetadataAndThumbnail(@TempDir Path store) throws Exception {
-        VideoUploadService service = new VideoUploadService(store.toString(), new ObjectMapper());
+        VideoUploadService service = service(store);
 
         var result = service.upload(
-                " Uploaded title ", " Description ",
-                new MockMultipartFile("video", "sample.mp4", "video/mp4", new byte[] {1, 2, 3}),
-                UUID.randomUUID()
+                " Uploaded title ", " Description ", file(new byte[] {1, 2, 3}), UUID.randomUUID()
         );
 
         assertEquals("Uploaded title", result.title());
@@ -41,62 +37,47 @@ class VideoUploadServiceTest {
     }
 
     @Test
-    void rejectsMissingMetadataAndUnsupportedFiles(@TempDir Path store) throws Exception {
-        VideoUploadService service = new VideoUploadService(store.toString(), new ObjectMapper());
+    void rejectsMissingMetadataAndUnsupportedFiles(@TempDir Path store) {
+        VideoUploadService service = service(store);
 
-        assertThrows(VideoUploadService.InvalidUploadException.class, () -> service.upload(
-                "", "Description",
-                new MockMultipartFile("video", "sample.mp4", "video/mp4", new byte[] {1}),
-                UUID.randomUUID()
-        ));
-        assertThrows(VideoUploadService.InvalidUploadException.class, () -> service.upload(
+        assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
+                "", "Description", file(new byte[] {1}), UUID.randomUUID()));
+        assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
                 "Title", "Description",
-                new MockMultipartFile("video", "sample.avi", "video/x-msvideo", new byte[] {1}),
-                UUID.randomUUID()
-        ));
-        assertThrows(VideoUploadService.InvalidUploadException.class, () -> service.upload(
-                "Title", "", new MockMultipartFile("video", "sample.mp4", "video/mp4", new byte[] {1}),
-                UUID.randomUUID()
-        ));
-        assertThrows(VideoUploadService.InvalidUploadException.class, () -> service.upload(
-                "Title", "Description", null, UUID.randomUUID()
-        ));
-        assertThrows(VideoUploadService.InvalidUploadException.class, () -> service.upload(
-                "Title", "Description", new MockMultipartFile("video", "sample.mp4", "video/mp4", new byte[0]),
-                UUID.randomUUID()
-        ));
-        assertThrows(VideoUploadService.InvalidUploadException.class, () -> service.upload(
-                "x".repeat(256), "Description",
-                new MockMultipartFile("video", "sample.mp4", "video/mp4", new byte[] {1}),
-                UUID.randomUUID()
-        ));
-        var oversized = mock(org.springframework.web.multipart.MultipartFile.class);
-        when(oversized.isEmpty()).thenReturn(false);
-        when(oversized.getSize()).thenReturn(100L * 1024 * 1024 + 1);
-        assertThrows(VideoUploadService.InvalidUploadException.class, () -> service.upload(
-                "Title", "Description", oversized, UUID.randomUUID()
-        ));
-        if (Files.exists(store)) {
-            try (var files = Files.list(store)) {
-                assertEquals(0, files.count());
-            }
-        }
+                new UploadVideoUseCase.VideoFile(new ByteArrayInputStream(new byte[] {1}), 1, "video/x-msvideo"),
+                UUID.randomUUID()));
+        assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
+                "Title", "", file(new byte[] {1}), UUID.randomUUID()));
+        assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
+                "Title", "Description", null, UUID.randomUUID()));
+        assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
+                "Title", "Description", file(new byte[0]), UUID.randomUUID()));
+        assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
+                "x".repeat(256), "Description", file(new byte[] {1}), UUID.randomUUID()));
+        assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
+                "Title", "Description",
+                new UploadVideoUseCase.VideoFile(new ByteArrayInputStream(new byte[] {1}),
+                        100L * 1024 * 1024 + 1, "video/mp4"),
+                UUID.randomUUID()));
     }
 
     @Test
-    void wrapsPublicationFailureAndCleansFiles(@TempDir Path store) throws Exception {
-        VideoUploadService service = new VideoUploadService(store.toString(), new ObjectMapper());
-        var file = mock(org.springframework.web.multipart.MultipartFile.class);
-        when(file.isEmpty()).thenReturn(false);
-        when(file.getSize()).thenReturn(1L);
-        when(file.getContentType()).thenReturn("video/mp4");
-        doThrow(new java.io.IOException("disk full")).when(file).transferTo(any(Path.class));
+    void wrapsPublicationFailure(@TempDir Path store) {
+        VideoUploadService service = new VideoUploadService(
+                (id, title, description, ownerId, video) -> {
+                    throw new IllegalStateException("disk full");
+                }
+        );
 
-        assertThrows(VideoUploadService.UploadFailedException.class, () -> service.upload(
-                "Title", "Description", file, UUID.randomUUID()
-        ));
-        try (var files = Files.list(store)) {
-            assertEquals(0, files.count());
-        }
+        assertThrows(UploadVideoUseCase.UploadFailedException.class, () -> service.upload(
+                "Title", "Description", file(new byte[] {1}), UUID.randomUUID()));
+    }
+
+    private VideoUploadService service(Path store) {
+        return new VideoUploadService(new FileVideoPublicationAdapter(store.toString(), new ObjectMapper()));
+    }
+
+    private UploadVideoUseCase.VideoFile file(byte[] content) {
+        return new UploadVideoUseCase.VideoFile(new ByteArrayInputStream(content), content.length, "video/mp4");
     }
 }
