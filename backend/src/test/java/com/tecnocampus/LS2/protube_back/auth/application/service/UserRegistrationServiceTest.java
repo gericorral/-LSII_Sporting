@@ -1,7 +1,8 @@
 package com.tecnocampus.LS2.protube_back.auth.application.service;
 
 import com.tecnocampus.LS2.protube_back.auth.domain.model.User;
-import com.tecnocampus.LS2.protube_back.auth.infrastructure.adapter.out.persistence.UserRepository;
+import com.tecnocampus.LS2.protube_back.auth.application.port.out.UserPersistencePort;
+import com.tecnocampus.LS2.protube_back.auth.application.port.in.RegistrationUseCase;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -9,7 +10,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class UserRegistrationServiceTest {
-    private final UserRepository repository = mock(UserRepository.class);
+    private final UserPersistencePort repository = mock(UserPersistencePort.class);
     private final UserRegistrationService service = new UserRegistrationService(repository);
 
     @Test
@@ -28,8 +29,8 @@ class UserRegistrationServiceTest {
     void rejectsDuplicateEmail() {
         when(repository.existsByEmailIgnoreCase("user@example.com")).thenReturn(true);
 
-        UserRegistrationService.DuplicateUserException exception = assertThrows(
-                UserRegistrationService.DuplicateUserException.class,
+        RegistrationUseCase.DuplicateUserException exception = assertThrows(
+                RegistrationUseCase.DuplicateUserException.class,
                 () -> service.register("user@example.com", "player_1", "secret123")
         );
 
@@ -41,8 +42,8 @@ class UserRegistrationServiceTest {
     void rejectsDuplicateUsername() {
         when(repository.existsByUsernameIgnoreCase("player_1")).thenReturn(true);
 
-        UserRegistrationService.DuplicateUserException exception = assertThrows(
-                UserRegistrationService.DuplicateUserException.class,
+        RegistrationUseCase.DuplicateUserException exception = assertThrows(
+                RegistrationUseCase.DuplicateUserException.class,
                 () -> service.register("user@example.com", "player_1", "secret123")
         );
 
@@ -54,8 +55,8 @@ class UserRegistrationServiceTest {
     void translatesConcurrentDuplicateIntoConflict() {
         when(repository.save(any(User.class))).thenThrow(new DataIntegrityViolationException("duplicate"));
 
-        UserRegistrationService.DuplicateUserException exception = assertThrows(
-                UserRegistrationService.DuplicateUserException.class,
+        RegistrationUseCase.DuplicateUserException exception = assertThrows(
+                RegistrationUseCase.DuplicateUserException.class,
                 () -> service.register("user@example.com", "player_1", "secret123")
         );
 

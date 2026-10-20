@@ -1,6 +1,7 @@
 package com.tecnocampus.LS2.protube_back.auth.infrastructure.adapter.out.persistence;
 
-import com.tecnocampus.LS2.protube_back.auth.application.service.UserProfileService;
+import com.tecnocampus.LS2.protube_back.auth.application.port.in.ProfileUseCase;
+import com.tecnocampus.LS2.protube_back.auth.application.port.out.UserProfilePersistencePort;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -8,14 +9,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public class UserProfileRepository {
+public class UserProfileRepository implements UserProfilePersistencePort {
     private final JdbcTemplate jdbcTemplate;
 
     public UserProfileRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public Optional<UserProfileService.Profile> findByUserId(UUID userId) {
+    @Override
+    public Optional<ProfileUseCase.Profile> findByUserId(UUID userId) {
         return jdbcTemplate.query("""
                 SELECT u.id, u.username, p.display_name, p.description, p.avatar_path,
                        p.website, p.location, p.is_public
@@ -24,7 +26,7 @@ public class UserProfileRepository {
                 WHERE u.id = ? AND u.status = 'ACTIVE'
                 """,
                 rs -> rs.next()
-                        ? Optional.of(new UserProfileService.Profile(
+                        ? Optional.of(new ProfileUseCase.Profile(
                                 rs.getObject("id", UUID.class),
                                 rs.getString("username"),
                                 rs.getString("display_name"),
@@ -37,7 +39,8 @@ public class UserProfileRepository {
                 userId);
     }
 
-    public void save(UUID userId, UserProfileService.ProfileUpdate update) {
+    @Override
+    public void save(UUID userId, ProfileUseCase.ProfileUpdate update) {
         int updated = jdbcTemplate.update("""
                 UPDATE user_profiles
                 SET display_name = ?, description = ?, avatar_path = ?, website = ?, location = ?,

@@ -1,7 +1,7 @@
 package com.tecnocampus.LS2.protube_back.auth.infrastructure.adapter.in.web;
 
-import com.tecnocampus.LS2.protube_back.auth.application.service.UserProfileService;
-import jakarta.servlet.http.HttpSession;
+import com.tecnocampus.LS2.protube_back.auth.application.port.in.ProfileUseCase;
+import com.tecnocampus.LS2.protube_back.auth.application.port.out.SessionPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,40 +12,36 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/profiles")
 public class ProfileController {
-    private static final String SESSION_USER_ID = "authenticatedUserId";
-    private final UserProfileService profileService;
+    private final ProfileUseCase profileUseCase;
+    private final SessionPort sessionPort;
 
-    public ProfileController(UserProfileService profileService) {
-        this.profileService = profileService;
+    public ProfileController(ProfileUseCase profileUseCase, SessionPort sessionPort) {
+        this.profileUseCase = profileUseCase;
+        this.sessionPort = sessionPort;
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> getOwnProfile(HttpSession session) {
-        UUID userId = authenticatedUser(session);
+    public ResponseEntity<?> getOwnProfile() {
+        UUID userId = sessionPort.currentUserId();
         if (userId == null) return unauthorized();
-        return ResponseEntity.ok(ProfileResponse.from(profileService.get(userId)));
+        return ResponseEntity.ok(ProfileResponse.from(profileUseCase.get(userId)));
     }
 
     @PutMapping("/me")
-    public ResponseEntity<?> updateOwnProfile(@RequestBody ProfileRequest request, HttpSession session) {
-        UUID userId = authenticatedUser(session);
+    public ResponseEntity<?> updateOwnProfile(@RequestBody ProfileRequest request) {
+        UUID userId = sessionPort.currentUserId();
         if (userId == null) return unauthorized();
         Map<String, String> error = request.validationError();
         if (error != null) return ResponseEntity.badRequest().body(error);
-        return ResponseEntity.ok(ProfileResponse.from(profileService.update(userId, request.toUpdate())));
+        return ResponseEntity.ok(ProfileResponse.from(profileUseCase.update(userId, request.toUpdate())));
     }
 
     @GetMapping("/{userId}")
     public ResponseEntity<?> getPublicProfile(@PathVariable UUID userId) {
-        UserProfileService.Profile profile = profileService.get(userId);
+        ProfileUseCase.Profile profile = profileUseCase.get(userId);
         return profile.publicProfile()
                 ? ResponseEntity.ok(ProfileResponse.from(profile))
                 : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-    }
-
-    private UUID authenticatedUser(HttpSession session) {
-        Object value = session.getAttribute(SESSION_USER_ID);
-        return value instanceof UUID ? (UUID) value : null;
     }
 
     private ResponseEntity<Map<String, String>> unauthorized() {
@@ -53,7 +49,7 @@ public class ProfileController {
                 .body(Map.of("message", "Authentication required"));
     }
 
-    @ExceptionHandler(UserProfileService.ProfileNotFoundException.class)
+    @ExceptionHandler(ProfileUseCase.ProfileNotFoundException.class)
     ResponseEntity<Void> notFound() {
         return ResponseEntity.notFound().build();
     }
@@ -74,8 +70,8 @@ public class ProfileController {
             return null;
         }
 
-        UserProfileService.ProfileUpdate toUpdate() {
-            return new UserProfileService.ProfileUpdate(displayName, description, avatarPath, website, location,
+        ProfileUseCase.ProfileUpdate toUpdate() {
+            return new ProfileUseCase.ProfileUpdate(displayName, description, avatarPath, website, location,
                     publicProfile == null || publicProfile);
         }
     }
@@ -84,7 +80,7 @@ public class ProfileController {
             UUID userId, String username, String displayName, String description,
             String avatarPath, String website, String location, boolean publicProfile
     ) {
-        static ProfileResponse from(UserProfileService.Profile profile) {
+        static ProfileResponse from(ProfileUseCase.Profile profile) {
             return new ProfileResponse(profile.userId(), profile.username(), profile.displayName(),
                     profile.description(), profile.avatarPath(), profile.website(), profile.location(),
                     profile.publicProfile());

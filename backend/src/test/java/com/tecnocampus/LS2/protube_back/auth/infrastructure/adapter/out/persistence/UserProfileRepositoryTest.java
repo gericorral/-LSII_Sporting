@@ -1,6 +1,6 @@
 package com.tecnocampus.LS2.protube_back.auth.infrastructure.adapter.out.persistence;
 
-import com.tecnocampus.LS2.protube_back.auth.application.service.UserProfileService;
+import com.tecnocampus.LS2.protube_back.auth.application.port.in.ProfileUseCase;
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,7 +60,7 @@ class UserProfileRepositoryTest {
 
     @Test
     void updatesExistingProfile() {
-        UserProfileService.ProfileUpdate update = new UserProfileService.ProfileUpdate(
+        ProfileUseCase.ProfileUpdate update = new ProfileUseCase.ProfileUpdate(
                 "Player One", "About me", null, "https://example.com", "Barcelona", true);
 
         repository.save(userId, update);

@@ -4,7 +4,7 @@
 > després de cada canvi de codi. No substitueix el codi: resumeix què fa
 > l'aplicació, quines peces es modifiquen i quines decisions s'han de saber justificar.
 
-**Última actualització:** 19 d'octubre de 2026
+**Última actualització:** 20 d'octubre de 2026
 
 ## 1. Què és ProTube
 
@@ -189,6 +189,23 @@ fitxer queda per a una futura funcionalitat d'emmagatzematge.
 Cal diferenciar una entrada invàlida, un recurs inexistent, una operació no autoritzada
 i un error intern. El frontend ha de mostrar un estat comprensible i no un èxit fals.
 
+### Arquitectura hexagonal aplicada a autenticació i perfils
+
+Login, logout, registre i perfil segueixen ara una separació explícita de ports i
+adaptadors. Els controladors HTTP, situats als adaptadors d'entrada, depenen dels
+ports d'entrada (`LoginUseCase`, `LogoutUseCase`, `RegistrationUseCase` i
+`ProfileUseCase`) i del `SessionPort`, no de les classes concretes ni de
+`HttpSession`. Els serveis d'aplicació implementen aquests casos d'ús i només
+coneixen ports de sortida.
+
+La persistència queda darrere de `UserPersistencePort`,
+`UserAuthenticationPort` i `UserProfilePersistencePort`; els repositoris JPA/JDBC
+són els adaptadors que implementen aquests contractes. `HttpSessionAdapter` encapsula
+la sessió Servlet i implementa `SessionPort`. D'aquesta manera es pot substituir la
+persistència o la tecnologia de sessió sense modificar la lògica dels casos d'ús.
+Els tests d'aplicació mockegen ports, mentre que els tests dels adaptadors comproven
+la integració amb HTTP, JDBC i JPA.
+
 ### Tests i CI
 
 Els tests unitaris comproven regles aïllades; els tests de controlador comproven el
@@ -243,6 +260,7 @@ repositori.
 | 19/10/2026 | Es resolen les rutes multimèdia relatives en desenvolupament. | El frontend transforma les adreces `/media/...` retornades per l'API en URLs del domini multimèdia configurat, de manera que funciona tant amb Vite a `localhost:5173` com amb el frontend servit pel backend o Docker. |
 | 19/10/2026 | Es completa la paginació de l'US-04. | El servei calcula la pàgina sol·licitada i el frontend afegeix 12 vídeos més quan l'usuari ho demana; els tests cobreixen la resposta paginada, els límits i l'acumulació de resultats. |
 | 19/10/2026 | S'implementa la pujada de vídeos de l'US-06. | La sessió protegeix l'endpoint, el servei valida MP4 i mida, publica vídeo, miniatura i metadades de manera atòmica i el frontend mostra errors i estat de pujada. |
+| 20/10/2026 | Es completa la migració de login, logout, registre i perfils a arquitectura hexagonal. | Els controladors depenen de ports d'entrada, els serveis de ports de sortida i els adaptadors encapsulen persistència i sessió; la suite backend manté 90% o més de cobertura global. |
 
 ## 8. Temes pendents
 

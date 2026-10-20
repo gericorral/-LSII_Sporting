@@ -1,7 +1,8 @@
 package com.tecnocampus.LS2.protube_back.auth.application.service;
 
 import com.tecnocampus.LS2.protube_back.auth.domain.model.User;
-import com.tecnocampus.LS2.protube_back.auth.infrastructure.adapter.out.persistence.UserRepository;
+import com.tecnocampus.LS2.protube_back.auth.application.port.in.LoginUseCase;
+import com.tecnocampus.LS2.protube_back.auth.application.port.out.UserAuthenticationPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,19 +13,20 @@ import java.util.Base64;
 import java.util.Locale;
 
 @Service
-public class UserLoginService {
+public class UserLoginService implements LoginUseCase {
     private static final String INVALID_CREDENTIALS = "Invalid email or password";
-    private final UserRepository userRepository;
+    private final UserAuthenticationPort userRepository;
 
-    public UserLoginService(UserRepository userRepository) {
+    public UserLoginService(UserAuthenticationPort userRepository) {
         this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
+    @Override
     public User authenticate(String email, String password) {
         return userRepository.findByEmailIgnoreCase(email.trim().toLowerCase(Locale.ROOT))
                 .filter(user -> verifyPassword(password, user.getPasswordHash()))
-                .orElseThrow(() -> new InvalidCredentialsException(INVALID_CREDENTIALS));
+                .orElseThrow(() -> new LoginUseCase.InvalidCredentialsException(INVALID_CREDENTIALS));
     }
 
     private boolean verifyPassword(String password, String encodedHash) {
@@ -46,9 +48,4 @@ public class UserLoginService {
         }
     }
 
-    public static class InvalidCredentialsException extends RuntimeException {
-        public InvalidCredentialsException(String message) {
-            super(message);
-        }
-    }
 }

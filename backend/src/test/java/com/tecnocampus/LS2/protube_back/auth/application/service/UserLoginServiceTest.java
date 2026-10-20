@@ -1,6 +1,7 @@
 package com.tecnocampus.LS2.protube_back.auth.application.service;
 
 import com.tecnocampus.LS2.protube_back.auth.domain.model.User;
+import com.tecnocampus.LS2.protube_back.auth.application.port.in.LoginUseCase;
 import com.tecnocampus.LS2.protube_back.auth.infrastructure.adapter.out.persistence.UserRepository;
 import org.junit.jupiter.api.Test;
 
@@ -26,15 +27,15 @@ class UserLoginServiceTest {
     @Test
     void rejectsUnknownUserAndWrongPasswordWithSameError() {
         when(repository.findByEmailIgnoreCase("missing@example.com")).thenReturn(java.util.Optional.empty());
-        UserLoginService.InvalidCredentialsException missing = assertThrows(
-                UserLoginService.InvalidCredentialsException.class,
+        LoginUseCase.InvalidCredentialsException missing = assertThrows(
+                LoginUseCase.InvalidCredentialsException.class,
                 () -> service.authenticate("missing@example.com", "secret123")
         );
 
         User user = new User(UUID.randomUUID(), "user@example.com", "player_1", hash("secret123"));
         when(repository.findByEmailIgnoreCase("user@example.com")).thenReturn(java.util.Optional.of(user));
-        UserLoginService.InvalidCredentialsException wrong = assertThrows(
-                UserLoginService.InvalidCredentialsException.class,
+        LoginUseCase.InvalidCredentialsException wrong = assertThrows(
+                LoginUseCase.InvalidCredentialsException.class,
                 () -> service.authenticate("user@example.com", "wrongpass")
         );
 
@@ -46,7 +47,7 @@ class UserLoginServiceTest {
         User user = new User(UUID.randomUUID(), "user@example.com", "player_1", "not-a-hash");
         when(repository.findByEmailIgnoreCase("user@example.com")).thenReturn(java.util.Optional.of(user));
 
-        assertThrows(UserLoginService.InvalidCredentialsException.class,
+        assertThrows(LoginUseCase.InvalidCredentialsException.class,
                 () -> service.authenticate("user@example.com", "secret123"));
     }
 
@@ -55,7 +56,7 @@ class UserLoginServiceTest {
         User user = new User(UUID.randomUUID(), "user@example.com", "player_1", "pbkdf2$120000$%%%$%%%");
         when(repository.findByEmailIgnoreCase("user@example.com")).thenReturn(java.util.Optional.of(user));
 
-        assertThrows(UserLoginService.InvalidCredentialsException.class,
+        assertThrows(LoginUseCase.InvalidCredentialsException.class,
                 () -> service.authenticate("user@example.com", "secret123"));
     }
 

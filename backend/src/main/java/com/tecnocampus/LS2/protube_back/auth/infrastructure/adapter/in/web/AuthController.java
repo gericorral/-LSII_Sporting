@@ -1,80 +1,73 @@
 package com.tecnocampus.LS2.protube_back.auth.infrastructure.adapter.in.web;
 
-import com.tecnocampus.LS2.protube_back.auth.application.service.UserRegistrationService;
-import com.tecnocampus.LS2.protube_back.auth.application.service.UserLoginService;
+import com.tecnocampus.LS2.protube_back.auth.application.port.in.LoginUseCase;
+import com.tecnocampus.LS2.protube_back.auth.application.port.in.LogoutUseCase;
+import com.tecnocampus.LS2.protube_back.auth.application.port.in.RegistrationUseCase;
+import com.tecnocampus.LS2.protube_back.auth.application.port.out.SessionPort;
 import com.tecnocampus.LS2.protube_back.auth.domain.model.User;
-import jakarta.servlet.http.HttpSession;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
-import java.util.regex.Pattern;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-    private static final String SESSION_USER_ID = "authenticatedUserId";
-    private final UserRegistrationService registrationService;
-    private final UserLoginService loginService;
+    private final RegistrationUseCase registrationUseCase;
+    private final LoginUseCase loginUseCase;
+    private final LogoutUseCase logoutUseCase;
+    private final SessionPort sessionPort;
 
-    public AuthController(UserRegistrationService registrationService) {
-        this(registrationService, null);
-    }
-
-    @Autowired
-    public AuthController(UserRegistrationService registrationService, UserLoginService loginService) {
-        this.registrationService = registrationService;
-        this.loginService = loginService;
+    public AuthController(
+            RegistrationUseCase registrationUseCase,
+            LoginUseCase loginUseCase,
+            LogoutUseCase logoutUseCase,
+            SessionPort sessionPort
+    ) {
+        this.registrationUseCase = registrationUseCase;
+        this.loginUseCase = loginUseCase;
+        this.logoutUseCase = logoutUseCase;
+        this.sessionPort = sessionPort;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(
-            @RequestBody LoginRequest request,
-            HttpServletRequest httpRequest
-    ) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         Map<String, String> validationError = request.validationError();
         if (validationError != null) {
             return ResponseEntity.badRequest().body(validationError);
         }
-        User user = loginService.authenticate(request.email(), request.password());
-        httpRequest.getSession(true).setAttribute(SESSION_USER_ID, user.getId());
+        User user = loginUseCase.authenticate(request.email(), request.password());
+        sessionPort.authenticate(user.getId());
         return ResponseEntity.ok(UserResponse.from(user));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
-        }
+    public ResponseEntity<Void> logout() {
+        logoutUseCase.logout();
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(
-            @RequestBody RegistrationRequest request,
-            HttpSession session
-    ) {
+    public ResponseEntity<?> register(@RequestBody RegistrationRequest request) {
         Map<String, String> validationError = request.validationError();
         if (validationError != null) {
             return ResponseEntity.badRequest().body(validationError);
         }
-        User user = registrationService.register(request.email(), request.username(), request.password());
-        session.setAttribute(SESSION_USER_ID, user.getId());
+        User user = registrationUseCase.register(request.email(), request.username(), request.password());
+        sessionPort.authenticate(user.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.from(user));
     }
 
-    @ExceptionHandler(UserRegistrationService.DuplicateUserException.class)
-    ResponseEntity<Map<String, String>> duplicate(UserRegistrationService.DuplicateUserException exception) {
+    @ExceptionHandler(RegistrationUseCase.DuplicateUserException.class)
+    ResponseEntity<Map<String, String>> duplicate(RegistrationUseCase.DuplicateUserException exception) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(Map.of("field", exception.getField(), "message", exception.getMessage()));
     }
 
-    @ExceptionHandler(UserLoginService.InvalidCredentialsException.class)
+    @ExceptionHandler(LoginUseCase.InvalidCredentialsException.class)
     ResponseEntity<Map<String, String>> invalidCredentials() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("message", "Invalid email or password"));

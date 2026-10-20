@@ -1,7 +1,8 @@
 package com.tecnocampus.LS2.protube_back.auth.application.service;
 
 import com.tecnocampus.LS2.protube_back.auth.domain.model.User;
-import com.tecnocampus.LS2.protube_back.auth.infrastructure.adapter.out.persistence.UserRepository;
+import com.tecnocampus.LS2.protube_back.auth.application.port.in.RegistrationUseCase;
+import com.tecnocampus.LS2.protube_back.auth.application.port.out.UserPersistencePort;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,23 +15,24 @@ import java.util.Locale;
 import java.util.UUID;
 
 @Service
-public class UserRegistrationService {
-    private final UserRepository userRepository;
+public class UserRegistrationService implements RegistrationUseCase {
+    private final UserPersistencePort userRepository;
 
-    public UserRegistrationService(UserRepository userRepository) {
+    public UserRegistrationService(UserPersistencePort userRepository) {
         this.userRepository = userRepository;
     }
 
     @Transactional
+    @Override
     public User register(String email, String username, String password) {
         String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
         String normalizedUsername = username.trim();
 
         if (userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
-            throw new DuplicateUserException("email", "Email is already registered");
+            throw new RegistrationUseCase.DuplicateUserException("email", "Email is already registered");
         }
         if (userRepository.existsByUsernameIgnoreCase(normalizedUsername)) {
-            throw new DuplicateUserException("username", "Username is already taken");
+            throw new RegistrationUseCase.DuplicateUserException("username", "Username is already taken");
         }
 
         try {
@@ -41,7 +43,8 @@ public class UserRegistrationService {
                     hashPassword(password)
             ));
         } catch (DataIntegrityViolationException exception) {
-            throw new DuplicateUserException("account", "Email or username is already registered", exception);
+            throw new RegistrationUseCase.DuplicateUserException(
+                    "account", "Email or username is already registered", exception);
         }
     }
 
@@ -58,21 +61,4 @@ public class UserRegistrationService {
         }
     }
 
-    public static class DuplicateUserException extends RuntimeException {
-        private final String field;
-
-        public DuplicateUserException(String field, String message) {
-            super(message);
-            this.field = field;
-        }
-
-        public DuplicateUserException(String field, String message, Throwable cause) {
-            super(message, cause);
-            this.field = field;
-        }
-
-        public String getField() {
-            return field;
-        }
-    }
 }

@@ -196,6 +196,10 @@ content in this file.
   with larger thumbnails and compact titles while preserving responsive breakpoints.
 - 2026-10-19: Reduced the duration text size in video catalog cards without changing
   the metadata sizing on the video detail page.
+- 2026-10-20: Completed the hexagonal refactoring of authentication and profiles;
+  controllers now depend on input ports, application services on output ports, and
+  persistence/session adapters provide the infrastructure implementations. The
+  backend test suite passes with the required 90% global coverage.
 - 2026-10-19: Completed US-04 pagination using the approved
   `prompts/06-implement-video-catalog.md`; the backend now returns bounded pages and
   the frontend loads additional catalog pages on demand, documented in the Catalan
