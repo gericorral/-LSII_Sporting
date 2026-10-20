@@ -84,9 +84,11 @@ A change is done when:
 - It implements an agreed issue or user story and follows the existing architecture
   and naming conventions.
 - New or changed behavior has appropriate automated tests.
+- After every code change, run the automated test suites and keep coverage at or above
+  90%; do not consider the change complete if this threshold is not met.
 - Backend and frontend checks relevant to the change pass, including build, tests,
   lint, and formatting where applicable.
-- Overall application coverage remains above 50% for both backend and frontend.
+- Overall application coverage remains above 90% for both backend and frontend.
 - No secrets, credentials, generated media, or local environment files are committed.
 - Relevant documentation is updated when commands, configuration, or behavior changes.
 - The pull request has at least one human team approval and all Copilot review
@@ -124,9 +126,103 @@ requests.
 - [MVP requirements](REQUIREMENT.md)
 - [Project rules](README.md)
 - [Approved prompts](prompts/README.md)
+- [Exam study guide](docs/GUIA_ESTUDIO_EXAMEN.md)
+
+## 6. Exam study guide
+
+After every code change, update both `docs/GUIA_ESTUDIO_EXAMEN.md` and its Word export
+`docs/GUIA_ESTUDIO_EXAMEN.docx` with the relevant explanation of what was implemented,
+which application behavior or project area it affects, and what should be understood
+for the exam. Do not copy code into the guide; describe the functionality, the
+components or layers involved, the reason for the change, and any important testing,
+configuration, or pending-work implications.
 
 ## Approved AI Prompts
 
 Approved prompts are stored as individual files in `/prompts`, following the naming
 and review rules in [prompts/README.md](prompts/README.md). Do not duplicate prompt
 content in this file.
+
+## AI change log
+
+- 2026-10-17: Implemented the US-04 video catalog using
+  `prompts/06-implement-video-catalog.md`. The change was generated with AI and documented in
+  `docs/GUIA_ESTUDIO_EXAMEN.md` and `docs/GUIA_ESTUDIO_EXAMEN.docx`.
+- 2026-10-17: Fixed the frontend Jest configuration using
+  `prompts/07-fix-frontend-jest-configuration.md` and `babel-jest` through
+  `frontend/jest.config.cjs`; the change is documented in the Catalan study guide.
+- 2026-10-17: Fixed the Docker backend image build by skipping JaCoCo checks when
+  packaging without tests using `prompts/08-fix-docker-production-build.md`; the
+  change is documented in the Catalan study guide.
+- 2026-10-18: Implemented video detail and playback for US-05 using
+  `prompts/09-implement-video-detail-playback.md`; the change is documented in the
+  Catalan study guide.
+- 2026-10-18: Enforced global 90% test coverage using
+  `prompts/10-enforce-global-coverage.md`; the change is documented in the Catalan
+  study guide.
+- 2026-10-18: Implemented US-01 user registration using
+  `prompts/11-implement-user-registration.md`; the change is documented in the Catalan
+  study guide.
+- 2026-10-19: Implemented US-02 user login using
+  `prompts/12-implement-user-login.md`; the change was generated with AI and documented
+  in the Catalan study guide.
+- 2026-10-19: Implemented US-03 user profile using
+  `prompts/13-implement-user-profile.md`; the change was generated with AI and documented
+  in the Catalan study guide.
+- 2026-10-19: Fixed the H2 user schema mismatch that prevented profile loading; the
+  `User` model and development initializer now keep the `status` column aligned with
+  profile queries, and the change is documented in the Catalan study guide.
+- 2026-10-19: Fixed hash navigation and profile save error visibility in the frontend;
+  route changes now re-render without a browser reload, and backend error messages are
+  shown when profile persistence fails.
+- 2026-10-19: Fixed local CORS configuration for profile updates by explicitly allowing
+  PUT preflight requests, credentials, and frontend headers.
+- 2026-10-19: Adjusted the frontend header so the ProTube logo appears small in the
+  upper-left corner while the main content remains centered.
+- 2026-10-19: Aligned the authenticated user's profile link and logout action with
+  the compact logo header in the video catalog.
+- 2026-10-19: Tuned the profile and logout action sizes so the username link has
+  slightly more emphasis while the logout control remains compact.
+- 2026-10-19: Adjusted registration form typography so field labels are more prominent
+  and placeholder/help text is smaller.
+- 2026-10-19: Raised frontend and backend test coverage to the required 90% minimum
+  by covering navigation, form failures, profile authorization, validation, H2
+  persistence, and credential branches.
+- 2026-10-19: Fixed relative media URLs so video thumbnails and playback resolve
+  through the configured media domain in both Vite development and Docker deployments.
+- 2026-10-19: Kept video descriptions out of the catalog cards and displayed them
+  only in the individual video detail view.
+- 2026-10-19: Adjusted the video catalog to three cards per row on large screens,
+  with larger thumbnails and compact titles while preserving responsive breakpoints.
+- 2026-10-19: Reduced the duration text size in video catalog cards without changing
+  the metadata sizing on the video detail page.
+- 2026-10-20: Completed the hexagonal refactoring of authentication and profiles;
+  controllers now depend on input ports, application services on output ports, and
+  persistence/session adapters provide the infrastructure implementations. The
+  backend test suite passes with the required 90% global coverage.
+- 2026-10-19: Completed US-04 pagination using the approved
+  `prompts/06-implement-video-catalog.md`; the backend now returns bounded pages and
+  the frontend loads additional catalog pages on demand, documented in the Catalan
+  study guide.
+- 2026-10-19: Implemented US-06 video upload using
+  `prompts/14-implement-video-upload.md`; authenticated MP4 uploads are validated and
+  atomically published to the shared store with frontend error handling, documented in
+  the Catalan study guide.
+- 2026-10-19: Improved the video catalog and detail view responsive design using
+  `prompts/15-improve-responsive-video-ui.md`; the frontend now uses a fluid,
+  video-platform-style layout that adapts the navigation, cards and player to small
+  screens, documented in the Catalan study guide.
+- 2026-10-19: Polished the responsive frontend controls and form styling using
+  `prompts/16-polish-responsive-frontend-design.md`; pagination, focus states,
+  hover states and form fields now have a more consistent visual treatment.
+- 2026-10-19: Implemented US-07 video metadata editing using
+  `prompts/17-implement-video-metadata-editing.md`; owners can update title,
+  description, tags and category through an authorized backend endpoint and the
+  responsive video detail editor.
+- 2026-10-19: Synchronized the catalog after metadata edits using
+  `prompts/18-refresh-catalog-after-metadata-edit.md`; returning to the catalog now
+  reloads the first page so changed titles are immediately visible.
+- 2026-10-20: Completed the hexagonal refactoring of EPIC 4 (US-06 and US-07) using
+  `prompts/05-hexagonal-vertical-slicing-backend.md`; upload and metadata editing now
+  use input/output ports while filesystem, Jackson and multipart details remain in
+  infrastructure adapters. The change is documented in the Catalan study guide.

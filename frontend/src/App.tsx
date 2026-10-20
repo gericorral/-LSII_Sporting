@@ -1,5 +1,15 @@
 import './App.css';
 import { useAllVideos } from './useAllVideos';
+import VideoGrid from './components/VideoGrid';
+import VideoDetail from './components/VideoDetail';
+import { useVideo } from './useVideo';
+import { useEffect, useState } from 'react';
+import RegistrationForm from './components/RegistrationForm';
+import LoginForm from './components/LoginForm';
+import axios from 'axios';
+import { getEnv } from './utils/Env';
+import ProfilePage from './components/ProfilePage';
+import UploadForm from './components/UploadForm';
 
 function App() {
   return (
@@ -13,7 +23,105 @@ function App() {
 }
 
 function ContentApp() {
-  const { loading, message, value } = useAllVideos();
+  const [hash, setHash] = useState(() => window.location.hash);
+  const [registeredUser, setRegisteredUser] = useState<{ id?: string; username: string; email: string } | null>(null);
+  const [loggedUser, setLoggedUser] = useState<{ id?: string; username: string; email: string } | null>(null);
+
+  useEffect(() => {
+    const onHashChange = () => setHash(window.location.hash);
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  const videoId = getVideoId(hash);
+  const registering = hash === '#register';
+  const loggingIn = hash === '#login';
+  const profileId = getProfileId(hash);
+  const uploading = hash === '#upload';
+
+  if (loggingIn) {
+    return (
+      <LoginForm
+        onLoggedIn={(user) => {
+          setLoggedUser(user);
+          setHash('');
+          window.location.hash = '';
+        }}
+      />
+    );
+  }
+
+  if (hash === '#profile' || profileId) {
+    return (
+      <ProfilePage
+        userId={profileId}
+        editable={!profileId}
+        onBack={() => {
+          setHash('');
+          window.location.hash = '';
+        }}
+      />
+    );
+  }
+
+  if (uploading) {
+    return loggedUser ? (
+      <UploadForm
+        onUploaded={() => {
+          setHash('');
+          window.location.hash = '';
+        }}
+      />
+    ) : (
+      <LoginForm
+        onLoggedIn={(user) => {
+          setLoggedUser(user);
+          window.location.hash = '#upload';
+        }}
+      />
+    );
+  }
+
+  if (registering) {
+    return registeredUser ? (
+      <section className="registration-panel" aria-live="polite">
+        <h2>Welcome, {registeredUser.username}!</h2>
+        <p>Your account ({registeredUser.email}) is ready and you are now signed in.</p>
+        <a href="#">Continue to videos</a>
+      </section>
+    ) : (
+      <RegistrationForm onRegistered={setRegisteredUser} />
+    );
+  }
+
+  return (
+    <VideoCatalog
+      videoId={videoId}
+      loggedUser={loggedUser || registeredUser}
+      onLogout={() => {
+        axios.post(`${getEnv().API_BASE_URL}/auth/logout`, {}, { withCredentials: true }).finally(() => {
+          setLoggedUser(null);
+          setRegisteredUser(null);
+        });
+      }}
+    />
+  );
+}
+
+function VideoCatalog({
+  videoId,
+  loggedUser,
+  onLogout,
+}: {
+  videoId: string | null;
+  loggedUser: { id?: string; username: string; email: string } | null;
+  onLogout: () => void;
+}) {
+  const { loading, message, value, hasNext, loadMore, refresh } = useAllVideos();
+  if (videoId) {
+    return <VideoDetailPage id={videoId} loggedUser={loggedUser} onUpdated={refresh} />;
+  }
+
   switch (loading) {
     case 'loading':
       return <div>Loading...</div>;
@@ -26,16 +134,74 @@ function ContentApp() {
     case 'success':
       return (
         <>
-          <strong>Videos availables:</strong>
-          <ul>
-            {value.map((item) => (
-              <li>{item}</li>
-            ))}
-          </ul>
+          <div className="catalog-toolbar">
+            <h2>Available videos</h2>
+            <nav className="catalog-actions">
+              {loggedUser ? (
+                <>
+                  <a href="#profile">Hi, {loggedUser.username}</a>
+                  <a href="#upload">Upload video</a>
+                  <button type="button" onClick={onLogout}>
+                    Log out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <a href="#login">Log in</a>
+                  <a href="#register">Create an account</a>
+                </>
+              )}
+            </nav>
+          </div>
+          <VideoGrid videos={value} />
+          {hasNext && (
+            <button className="load-more-button" type="button" onClick={loadMore}>
+              Load more videos
+            </button>
+          )}
         </>
       );
   }
   return <div>Idle...</div>;
+}
+
+function VideoDetailPage({
+  id,
+  loggedUser,
+  onUpdated,
+}: {
+  id: string;
+  loggedUser: { id?: string; username: string; email: string } | null;
+  onUpdated: () => Promise<void>;
+}) {
+  const { loading, message, value } = useVideo(id);
+  if (loading === 'loading') return <div>Loading video...</div>;
+  if (loading === 'error' || value === null) {
+    return (
+      <div>
+        <a href="#">&larr; Back to videos</a>
+        <h3>Unable to load video</h3>
+        <p>{message}</p>
+      </div>
+    );
+  }
+  return (
+    <VideoDetail
+      video={value}
+      canEdit={Boolean(loggedUser?.id && loggedUser.id === value.ownerId)}
+      onUpdated={onUpdated}
+    />
+  );
+}
+
+function getVideoId(hash: string) {
+  const match = hash.match(/^#video\/(.+)$/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function getProfileId(hash: string) {
+  const match = hash.match(/^#profile\/(.+)$/);
+  return match ? decodeURIComponent(match[1]) : undefined;
 }
 
 export default App;

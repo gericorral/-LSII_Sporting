@@ -8,7 +8,7 @@ RUN mvn -f backend/pom.xml dependency:go-offline -B
 COPY backend backend
 COPY frontend frontend
 
-RUN mvn -f backend/pom.xml -Pprod -DskipTests package -B
+RUN mvn -f backend/pom.xml -Pprod -DskipTests -Djacoco.skip=true package -B
 
 FROM eclipse-temurin:21-jre
 

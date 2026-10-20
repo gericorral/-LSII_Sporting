@@ -26,4 +26,14 @@ describe('Testlinkpro', () => {
 
     expect(callMeMock).toHaveBeenCalledTimes(0);
   });
+
+  it('supports hovering without a callback and resets its class', () => {
+    render(<TestLinkPro page="test">Hello</TestLinkPro>);
+    const link = screen.getByText('Hello');
+
+    fireEvent.mouseEnter(link);
+    expect(link).toHaveClass('hovered');
+    fireEvent.mouseLeave(link);
+    expect(link).toHaveClass('normal');
+  });
 });
