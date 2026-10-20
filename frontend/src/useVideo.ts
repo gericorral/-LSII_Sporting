@@ -13,9 +13,7 @@ export function useVideo(id: string) {
   useEffect(() => {
     const getVideo = async () => {
       try {
-        const response = await axios.get<VideoSummary>(
-          `${getEnv().API_BASE_URL}/videos/${encodeURIComponent(id)}`,
-        );
+        const response = await axios.get<VideoSummary>(`${getEnv().API_BASE_URL}/videos/${encodeURIComponent(id)}`);
         setValue(response.data);
         setLoading('success');
       } catch (error: unknown) {
@@ -23,7 +21,7 @@ export function useVideo(id: string) {
         setMessage(
           (error as AxiosError).response?.status === 404
             ? 'Video not found.'
-            : `Error fetching video: ${(error as AxiosError).message}`,
+            : `Error fetching video: ${(error as AxiosError).message}`
         );
       }
     };

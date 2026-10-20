@@ -22,7 +22,11 @@ describe('App routes', () => {
   beforeEach(() => {
     window.location.hash = '';
     mockedUseAllVideos.mockReturnValue({
-      loading: 'success', message: '', value: [], hasNext: false, loadMore: jest.fn(),
+      loading: 'success',
+      message: '',
+      value: [],
+      hasNext: false,
+      loadMore: jest.fn(),
     });
     mockedUseVideo.mockReturnValue({ loading: 'loading', message: '', value: null });
   });
@@ -50,13 +54,21 @@ describe('App routes', () => {
 
   it('shows catalog loading and error states', () => {
     mockedUseAllVideos.mockReturnValueOnce({
-      loading: 'loading', message: '', value: [], hasNext: false, loadMore: jest.fn(),
+      loading: 'loading',
+      message: '',
+      value: [],
+      hasNext: false,
+      loadMore: jest.fn(),
     });
     const { rerender } = render(<App />);
     expect(screen.getByText('Loading...')).toBeInTheDocument();
 
     mockedUseAllVideos.mockReturnValue({
-      loading: 'error', message: 'network error', value: [], hasNext: false, loadMore: jest.fn(),
+      loading: 'error',
+      message: 'network error',
+      value: [],
+      hasNext: false,
+      loadMore: jest.fn(),
     });
     rerender(<App />);
     expect(screen.getByText('network error')).toBeInTheDocument();
@@ -64,7 +76,11 @@ describe('App routes', () => {
 
   it('shows the idle catalog state', () => {
     mockedUseAllVideos.mockReturnValue({
-      loading: 'idle', message: '', value: [], hasNext: false, loadMore: jest.fn(),
+      loading: 'idle',
+      message: '',
+      value: [],
+      hasNext: false,
+      loadMore: jest.fn(),
     });
     render(<App />);
 
@@ -74,7 +90,11 @@ describe('App routes', () => {
   it('offers another catalog page when more videos are available', () => {
     const loadMore = jest.fn();
     mockedUseAllVideos.mockReturnValue({
-      loading: 'success', message: '', value: [], hasNext: true, loadMore,
+      loading: 'success',
+      message: '',
+      value: [],
+      hasNext: true,
+      loadMore,
     });
     render(<App />);
 

@@ -39,11 +39,9 @@ describe('UploadForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Upload video' }));
 
     await waitFor(() => expect(onUploaded).toHaveBeenCalled());
-    expect(mockedAxios.post).toHaveBeenCalledWith(
-      expect.stringContaining('/videos'),
-      expect.any(FormData),
-      { withCredentials: true }
-    );
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/videos'), expect.any(FormData), {
+      withCredentials: true,
+    });
   });
 
   it('shows server upload errors', async () => {

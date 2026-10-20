@@ -22,12 +22,19 @@ const VideoDetail = ({ video, canEdit = false, onUpdated }: VideoDetailProps) =>
     setError('');
     try {
       setSaving(true);
-      await axios.put(`${getEnv().API_BASE_URL}/videos/${encodeURIComponent(video.id)}`, {
-        title,
-        description,
-        tags: tags.split(',').map((tag) => tag.trim()).filter(Boolean),
-        category,
-      }, { withCredentials: true });
+      await axios.put(
+        `${getEnv().API_BASE_URL}/videos/${encodeURIComponent(video.id)}`,
+        {
+          title,
+          description,
+          tags: tags
+            .split(',')
+            .map((tag) => tag.trim())
+            .filter(Boolean),
+          category,
+        },
+        { withCredentials: true }
+      );
       await onUpdated?.();
       setEditing(false);
     } catch (saveError: unknown) {
@@ -48,21 +55,38 @@ const VideoDetail = ({ video, canEdit = false, onUpdated }: VideoDetailProps) =>
       <video controls poster={resolveMediaUrl(video.thumbnailUrl)} src={resolveMediaUrl(video.videoUrl)}>
         Your browser does not support video playback.
       </video>
-      {canEdit && !editing && <button className="edit-video-button" type="button" onClick={() => setEditing(true)}>Edit metadata</button>}
+      {canEdit && !editing && (
+        <button className="edit-video-button" type="button" onClick={() => setEditing(true)}>
+          Edit metadata
+        </button>
+      )}
       {editing ? (
         <div className="video-edit-form">
           <label htmlFor="edit-video-title">Title</label>
           <input id="edit-video-title" value={title} onChange={(event) => setTitle(event.target.value)} />
           <label htmlFor="edit-video-description">Description</label>
-          <textarea id="edit-video-description" value={description} onChange={(event) => setDescription(event.target.value)} />
+          <textarea
+            id="edit-video-description"
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+          />
           <label htmlFor="edit-video-tags">Tags</label>
-          <input id="edit-video-tags" value={tags} onChange={(event) => setTags(event.target.value)} placeholder="music, live, tutorial" />
+          <input
+            id="edit-video-tags"
+            value={tags}
+            onChange={(event) => setTags(event.target.value)}
+            placeholder="music, live, tutorial"
+          />
           <label htmlFor="edit-video-category">Category</label>
           <input id="edit-video-category" value={category} onChange={(event) => setCategory(event.target.value)} />
           {error && <p role="alert">{error}</p>}
           <div className="video-edit-actions">
-            <button type="button" onClick={save} disabled={saving}>{saving ? 'Saving...' : 'Save changes'}</button>
-            <button type="button" onClick={() => setEditing(false)}>Cancel</button>
+            <button type="button" onClick={save} disabled={saving}>
+              {saving ? 'Saving...' : 'Save changes'}
+            </button>
+            <button type="button" onClick={() => setEditing(false)}>
+              Cancel
+            </button>
           </div>
         </div>
       ) : (

@@ -42,9 +42,7 @@ describe('useAllVideos', () => {
 
     render(<Harness />);
 
-    await waitFor(() =>
-      expect(screen.getByText('Error fetching videos: Network error')).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByText('Error fetching videos: Network error')).toBeInTheDocument());
   });
 
   it('keeps an empty catalog for a non-success response', async () => {

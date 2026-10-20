@@ -14,9 +14,7 @@
 }
 
 .App-header {
-  background:
-    radial-gradient(circle at 50% -20%, rgba(62, 166, 255, 0.1), transparent 34rem),
-    #0f0f0f;
+  background: radial-gradient(circle at 50% -20%, rgba(62, 166, 255, 0.1), transparent 34rem), #0f0f0f;
   box-sizing: border-box;
   min-height: 100vh;
   display: flex;

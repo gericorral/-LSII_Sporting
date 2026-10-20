@@ -25,7 +25,7 @@ describe('this component', () => {
             videoUrl: '/media/2.mp4',
           },
         ]}
-      />,
+      />
     );
     expect(screen.queryByText('A test video')).not.toBeInTheDocument();
     expect(screen.queryByText('No description available.')).not.toBeInTheDocument();

@@ -23,14 +23,11 @@ describe('VideoDetail', () => {
           thumbnailUrl: '/media/1.webp',
           videoUrl: '/media/1.mp4',
         }}
-      />,
+      />
     );
 
     expect(screen.getByRole('heading', { name: 'Video 1' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /back to videos/i })).toHaveAttribute(
-      'href',
-      '#',
-    );
+    expect(screen.getByRole('link', { name: /back to videos/i })).toHaveAttribute('href', '#');
     expect(screen.getByText('A description')).toBeInTheDocument();
     expect(document.querySelector('video')).toHaveAttribute('src', '/media/1.mp4');
   });
@@ -46,7 +43,7 @@ describe('VideoDetail', () => {
           thumbnailUrl: '/media/2.webp',
           videoUrl: '/media/2.mp4',
         }}
-      />,
+      />
     );
 
     expect(document.querySelector('.video-detail span')).not.toBeInTheDocument();
@@ -70,7 +67,7 @@ describe('VideoDetail', () => {
           tags: ['old'],
           category: 'Music',
         }}
-      />,
+      />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit metadata' }));
@@ -80,11 +77,13 @@ describe('VideoDetail', () => {
     fireEvent.change(screen.getByLabelText('Category'), { target: { value: 'Live music' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
 
-    await waitFor(() => expect(mockedAxios.put).toHaveBeenCalledWith(
-      expect.stringContaining('/videos/owner-video'),
-      expect.objectContaining({ title: 'New title', tags: ['music', 'live'] }),
-      { withCredentials: true },
-    ));
+    await waitFor(() =>
+      expect(mockedAxios.put).toHaveBeenCalledWith(
+        expect.stringContaining('/videos/owner-video'),
+        expect.objectContaining({ title: 'New title', tags: ['music', 'live'] }),
+        { withCredentials: true }
+      )
+    );
     expect(await screen.findByRole('button', { name: 'Edit metadata' })).toBeInTheDocument();
     expect(onUpdated).toHaveBeenCalled();
   });
@@ -101,7 +100,7 @@ describe('VideoDetail', () => {
           thumbnailUrl: '/media/video.webp',
           videoUrl: '/media/video.mp4',
         }}
-      />,
+      />
     );
     fireEvent.click(screen.getByRole('button', { name: 'Edit metadata' }));
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
@@ -119,7 +118,7 @@ describe('VideoDetail', () => {
           thumbnailUrl: '/media/video.webp',
           videoUrl: '/media/video.mp4',
         }}
-      />,
+      />
     );
     expect(screen.queryByRole('button', { name: 'Edit metadata' })).not.toBeInTheDocument();
 
@@ -139,7 +138,7 @@ describe('VideoDetail', () => {
           thumbnailUrl: '/media/video.webp',
           videoUrl: '/media/video.mp4',
         }}
-      />,
+      />
     );
     fireEvent.click(screen.getByRole('button', { name: 'Edit metadata' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));

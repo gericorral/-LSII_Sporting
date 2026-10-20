@@ -66,15 +66,19 @@ function ContentApp() {
 
   if (uploading) {
     return loggedUser ? (
-      <UploadForm onUploaded={() => {
-        setHash('');
-        window.location.hash = '';
-      }} />
+      <UploadForm
+        onUploaded={() => {
+          setHash('');
+          window.location.hash = '';
+        }}
+      />
     ) : (
-      <LoginForm onLoggedIn={(user) => {
-        setLoggedUser(user);
-        window.location.hash = '#upload';
-      }} />
+      <LoginForm
+        onLoggedIn={(user) => {
+          setLoggedUser(user);
+          window.location.hash = '#upload';
+        }}
+      />
     );
   }
 

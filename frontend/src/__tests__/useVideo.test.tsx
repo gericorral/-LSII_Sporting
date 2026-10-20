@@ -41,8 +41,6 @@ describe('useVideo', () => {
 
     mockedAxios.get.mockRejectedValueOnce({ message: 'Network error' });
     rerender(<Harness id="broken" />);
-    await waitFor(() =>
-      expect(screen.getByText('Error fetching video: Network error')).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByText('Error fetching video: Network error')).toBeInTheDocument());
   });
 });
