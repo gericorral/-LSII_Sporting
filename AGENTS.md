@@ -226,3 +226,8 @@ content in this file.
   `prompts/05-hexagonal-vertical-slicing-backend.md`; upload and metadata editing now
   use input/output ports while filesystem, Jackson and multipart details remain in
   infrastructure adapters. The change is documented in the Catalan study guide.
+- 2026-10-21: Fixed Docker video uploads by configuring the frontend Nginx proxy with
+  the same 100 MB request limit as the backend; the change is documented in the
+  Catalan study guide and Word export.
+- 2026-10-21: Changed the video catalog ordering so newly published videos appear
+  first, based on the uploaded MP4 modification time.
