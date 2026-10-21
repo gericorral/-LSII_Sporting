@@ -277,6 +277,8 @@ repositori.
 | 19/10/2026 | S'implementa la pujada de vídeos de l'US-06. | La sessió protegeix l'endpoint, el servei valida MP4 i mida, publica vídeo, miniatura i metadades de manera atòmica i el frontend mostra errors i estat de pujada. |
 | 20/10/2026 | Es completa la migració de login, logout, registre i perfils a arquitectura hexagonal. | Els controladors depenen de ports d'entrada, els serveis de ports de sortida i els adaptadors encapsulen persistència i sessió; la suite backend manté 90% o més de cobertura global. |
 | 20/10/2026 | Es completa l'arquitectura hexagonal de les US-06 i US-07 de l'Epic 4. | Els casos d'ús d'upload i edició s'exposen com a ports d'entrada; el servei d'upload ja no depèn de `MultipartFile`, Jackson ni del sistema de fitxers, i els adaptadors conserven la publicació i l'edició atòmiques. |
+| 21/10/2026 | Es corregeix el límit de pujada del frontend Docker. | Nginx aplicava el seu límit multipart per defecte abans que la petició arribés al backend; `client_max_body_size 100M` el fa coherent amb la validació del frontend i els límits de Spring Boot. |
+| 21/10/2026 | S'ordena el catàleg perquè els vídeos nous apareguin al principi. | L'adaptador de catàleg ordena els fitxers MP4 per data de modificació descendent abans d'aplicar la paginació, de manera que una pujada recent és la primera targeta. |
 
 ## 8. Temes pendents
 

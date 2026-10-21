@@ -8,6 +8,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,6 +32,24 @@ class FileVideoCatalogAdapterTest {
         assertEquals(List.of(new VideoSummary(
                 "1", "Test video", "A description", 42, "/media/1.webp", "/media/1.mp4"
         )), adapter.findAll());
+    }
+
+    @Test
+    void listsNewestVideoFirst(@TempDir Path store) throws IOException {
+        Files.writeString(store.resolve("old.json"), "{\"title\":\"Old\",\"meta\":{}}");
+        Files.createFile(store.resolve("old.mp4"));
+        Files.createFile(store.resolve("old.webp"));
+        Files.writeString(store.resolve("new.json"), "{\"title\":\"New\",\"meta\":{}}");
+        Files.createFile(store.resolve("new.mp4"));
+        Files.createFile(store.resolve("new.webp"));
+        Files.setLastModifiedTime(store.resolve("old.mp4"), FileTime.fromMillis(1_000));
+        Files.setLastModifiedTime(store.resolve("new.mp4"), FileTime.fromMillis(2_000));
+
+        FileVideoCatalogAdapter adapter = new FileVideoCatalogAdapter(store.toString(), objectMapper);
+
+        assertEquals(List.of("New", "Old"), adapter.findAll().stream()
+                .map(VideoSummary::title)
+                .toList());
     }
 
     @Test

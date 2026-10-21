@@ -12,11 +12,11 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.List;
 import java.util.ArrayList;
 import java.nio.file.StandardCopyOption;
 import java.util.stream.Stream;
@@ -47,12 +47,25 @@ public class FileVideoCatalogAdapter implements VideoCatalogPort {
         try (Stream<Path> files = Files.list(storeDirectory)) {
             return files
                     .filter(path -> path.getFileName().toString().endsWith(".json"))
-                    .sorted(Comparator.comparing(path -> path.getFileName().toString()))
+                    .sorted(Comparator.comparing(this::videoModificationTime)
+                            .reversed()
+                            .thenComparing(path -> path.getFileName().toString()))
                     .map(this::readVideo)
                     .flatMap(java.util.Optional::stream)
                     .toList();
         } catch (IOException exception) {
             throw new IllegalStateException("Unable to read video store: " + storeDirectory, exception);
+        }
+    }
+
+    private FileTime videoModificationTime(Path metadataPath) {
+        Path videoPath = storeDirectory.resolve(
+                metadataPath.getFileName().toString().replaceFirst("\\.json$", ".mp4")
+        );
+        try {
+            return Files.getLastModifiedTime(videoPath);
+        } catch (IOException exception) {
+            return FileTime.fromMillis(Long.MIN_VALUE);
         }
     }
 

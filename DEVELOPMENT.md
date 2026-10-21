@@ -199,4 +199,7 @@ database (NFR-01 in [REQUIREMENT.md](./REQUIREMENT.md)). The PostgreSQL driver i
   points to the folder containing the `.mp4`/`.webp` files.
 * **Frontend can't reach the API in dev**: make sure the backend is running on port 8080, or adjust
   `VITE_API_DOMAIN` in `.env.development.local`.
+* **Docker upload returns a generic error for files larger than 1 MB**: rebuild the frontend image after
+  confirming that `frontend/nginx.conf` contains `client_max_body_size 100M`. Nginx otherwise applies its
+  default 1 MB request limit before the multipart request reaches Spring Boot.
 * **Port already in use**: change `server.port` (backend) or run `npm run dev -- --port 5174` (frontend).
