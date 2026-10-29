@@ -47,8 +47,9 @@ requires persistent database storage. The production profile uses PostgreSQL
 configuration and also requires the database environment variables documented in
 `DEVELOPMENT.md`.
 
-The `ENV_PROTUBE_STORE_DIR` value must be an absolute path to the directory
-containing the media files and must end with a path separator.
+`ENV_PROTUBE_STORE_DIR` is optional for local development: when omitted, the backend
+uses the repository-level `video-store/` directory. When set, it should point to the
+directory containing the media files and end with a path separator.
 
 ### Frontend
 

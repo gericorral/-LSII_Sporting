@@ -42,7 +42,7 @@ python3 main.py --store=/absolute/path/to/videos --id=10 --videos=../../resource
 
 | Variable                           | Needed for              | Description                                                                                      |
 |------------------------------------|-------------------------|--------------------------------------------------------------------------------------------------|
-| `ENV_PROTUBE_STORE_DIR`            | always                  | Absolute path of the video store folder. **End it with a path separator** (`/` or `\`) — it is used as a `file:` prefix to serve `/media/**`. |
+| `ENV_PROTUBE_STORE_DIR`            | optional locally, required for external/production stores | Store folder override. If omitted during local development, the backend uses `../video-store/` relative to `backend/`; Docker uses the repository `./video-store` mount. End an override with a path separator (`/` or `\`). |
 | `ENV_PROTUBE_GOOGLE_CLIENT_ID`     | Google OAuth login      | Google OAuth client id                                                                           |
 | `ENV_PROTUBE_GOOGLE_CLIENT_SECRET` | Google OAuth login      | Google OAuth client secret                                                                       |
 | `ENV_PROTUBE_DB_USER`              | `prod` profile          | Database user (use `sa` with the default H2 datasource)                                          |
@@ -57,7 +57,7 @@ export ENV_PROTUBE_STORE_DIR=/home/me/protube/videos/
 ```
 
 ```powershell
-# Windows PowerShell (current session)
+# Windows PowerShell (current session, only needed to use another store)
 $env:ENV_PROTUBE_STORE_DIR = "D:\code\videos\"
 ```
 
@@ -79,8 +79,10 @@ mvn spring-boot:run
 * Starts on **http://localhost:8080** with the `dev` profile (active by default through the Maven `dev` profile).
 * `dev` uses an in-memory H2 database and loads initial data (`pro_tube.load_initial_data=true`). All data is lost
   on restart.
-* From IntelliJ you can instead use the shared **ProtubeBackApplication** run configuration (`.run/`) — edit its
-  environment variables to point to your own store folder.
+* From IntelliJ you can instead use the shared **ProtubeBackApplication** run configuration (`.run/`). It
+  resolves the store to `$PROJECT_DIR$/video-store/`, so the same configuration works after every clone.
+* The repository-level `video-store/` directory is ignored by Git because it contains generated media. Each
+  developer must generate or copy the sample files there once, but no configuration path needs to be changed.
 * CORS is open for `/api/**` and `/auth/**`, so the Vite dev server can call the API directly.
 
 ### Frontend

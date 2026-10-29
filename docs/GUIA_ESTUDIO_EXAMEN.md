@@ -241,6 +241,15 @@ visualitzacions, comentaris i likes sense trencar els ports.
 Quan s'edita la metadata d'un vídeo, l'adaptador conserva també el bloc d'analítiques;
 això evita que una edició del títol o la descripció faci desaparèixer les mètriques
 existents.
+
+### Configuració compartida del magatzem de vídeos
+
+La ruta del magatzem ja no depèn del directori personal de cap membre de l'equip.
+En desenvolupament, si no es defineix `ENV_PROTUBE_STORE_DIR`, el backend resol
+`../video-store/` respecte del directori `backend/`. La configuració compartida
+d'IntelliJ utilitza `$PROJECT_DIR$/video-store/`, i Docker munta el mateix directori
+del repositori per defecte. El directori continua ignorat per Git perquè conté fitxers
+multimèdia generats; cada persona només ha de generar o copiar els vídeos una vegada.
 Els tests d'aplicació mockegen ports, mentre que els tests dels adaptadors comproven
 la integració amb HTTP, JDBC i JPA.
 
