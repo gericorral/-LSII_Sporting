@@ -242,6 +242,20 @@ content in this file.
   guide and Word export.
 - 2026-10-29: Preserved the US-11 analytics block when owners edit video metadata,
   with backend coverage for retaining views, comments and likes.
+- 2026-10-29: Implemented US-09 video comments using
+  `prompts/22-implement-video-comments.md`; comments now use hexagonal ports, JDBC
+  persistence, session-derived authorship, public retrieval and authenticated
+  creation with frontend pagination and validation, documented in the Catalan study
+  guide and Word export.
+- 2026-10-29: Fixed the US-09 PostgreSQL compatibility issue using
+  `prompts/23-migrate-legacy-comments-schema.md`; the comment schema initializer now
+  migrates a legacy `text` column to `content` in place, preserves existing rows,
+  detects conflicting dual-column schemas and applies constraints and indexes
+  idempotently.
+- 2026-10-29: Fixed US-09 comment timestamp rendering using
+  `prompts/24-fix-comment-timestamp-format.md`; the frontend now parses the
+  LocalDateTime array emitted by the REST API, remains compatible with ISO strings and
+  displays a safe fallback for invalid or missing timestamps.
 - 2026-10-29: Implemented US-08 video search using
   `prompts/21-implement-video-search.md`; the file-backed catalog now supports
   ranked, case-insensitive title, description and tag queries with paginated frontend

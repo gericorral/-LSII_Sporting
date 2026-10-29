@@ -241,6 +241,7 @@ function VideoDetailPage({
       video={value}
       canEdit={Boolean(loggedUser?.id && loggedUser.id === value.ownerId)}
       onUpdated={onUpdated}
+      loggedUser={loggedUser}
     />
   );
 }

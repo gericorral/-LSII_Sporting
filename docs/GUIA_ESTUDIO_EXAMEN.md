@@ -276,6 +276,56 @@ de resultats com un error. Les targetes, la navegació, la reproducció i la rut
 Els tests cobreixen coincidències exactes, parcials, de descripció i etiquetes,
 majusculació, ordre determinista, paginació, consulta buida i estats de la interfície.
 
+### US-09: comentaris de vídeos
+
+Els comentaris es modelen com una funcionalitat independent amb `Comment`, el port
+d'entrada `CommentUseCase` i el port de sortida `CommentPersistencePort`. El servei
+valida que el vídeo existeixi al catàleg basat en fitxers, rebutja contingut buit o
+superior a 2.000 caràcters i aplica la paginació després de recuperar els comentaris
+ordenats de manera estable, del més nou al més antic.
+
+L'adaptador JDBC crea la taula de comentaris i la seva relació amb `users`, i retorna
+també el nom públic de l'autor. El controlador exposa `GET
+/api/videos/{videoId}/comments` per a tothom i `POST` per a usuaris autenticats.
+L'autor s'obté sempre de `SessionPort`, mai d'un identificador enviat pel frontend;
+això evita la suplantació i manté la lògica d'autenticació fora del domini.
+
+La vista de detall incorpora una secció responsive amb estat de càrrega, error i
+llista buida, avís d'inici de sessió per a visitants anònims, validació client,
+desactivació durant l'enviament i un botó Load more. El text es renderitza com a text
+React, no com HTML, i el comentari creat s'insereix immediatament sense duplicats.
+Els tests cobreixen persistència H2, autenticació, validacions, paginació, errors i
+integració amb el detall del vídeo; la cerca US-08 i les analítiques US-11 no canvien.
+
+### Format de les dates dels comentaris
+
+El backend serialitza el `LocalDateTime` de Java com una matriu numèrica amb any, mes,
+dia, hora, minuts, segons i nanosegons. El frontend no pot passar aquesta matriu
+directament a `new Date` com si fos una cadena ISO, perquè produiria una data
+invàlida. `CommentsSection` accepta tant aquesta representació com cadenes ISO,
+converteix les matrius amb validació dels components i mostra `Date unavailable` si
+la dada és nul·la o incorrecta, evitant ensenyar `Invalid Date`.
+
+Els tests cobreixen les dates persistides retornades per l'API, les dates de
+comentaris acabats de crear i els valors absents o malformats. La correcció és només
+de presentació i no modifica la cerca US-08 ni les analítiques US-11.
+
+### Compatibilitat amb l'esquema PostgreSQL existent
+
+La base de dades de Docker podia contenir una versió anterior de la taula `comments`
+amb la columna `text`, mentre que el model actual utilitza `content`. Com que
+`CREATE TABLE IF NOT EXISTS` no modifica una taula existent, les consultes JDBC
+fallaven amb un error de columna inexistent. L'inicialitzador comprova les columnes
+reals a `information_schema` i renombra `text` a `content` amb `ALTER TABLE`, sense
+recrear la taula ni perdre identificadors, autors, vídeos o dates.
+
+La migració és idempotent: una segona arrencada no torna a renombrar la columna i
+afegeix només les restriccions i l'índex que falten. Si detecta simultàniament `text`
+i `content`, atura l'arrencada de l'inicialitzador amb un error explícit per evitar
+decidir quina dada conservar. Els tests cobreixen l'esquema heretat, la preservació
+de files, les arrencades repetides, l'esquema actual, el conflicte i les operacions
+JDBC posteriors.
+
 ### Configuració compartida del magatzem de vídeos
 
 La ruta del magatzem ja no depèn del directori personal de cap membre de l'equip.
@@ -346,14 +396,15 @@ repositori.
 | 21/10/2026 | Es corregeix el límit de pujada del frontend Docker. | Nginx aplicava el seu límit multipart per defecte abans que la petició arribés al backend; `client_max_body_size 100M` el fa coherent amb la validació del frontend i els límits de Spring Boot. |
 | 21/10/2026 | S'ordena el catàleg perquè els vídeos nous apareguin al principi. | L'adaptador de catàleg ordena els fitxers MP4 per data de modificació descendent abans d'aplicar la paginació, de manera que una pujada recent és la primera targeta. |
 | 29/10/2026 | S'implementa la US-11 amb arquitectura hexagonal. | El backend exposa les analítiques dels vídeos propis mitjançant ports i l'adaptador del magatzem, i el frontend mostra les mètriques i l'estat buit. |
+| 29/10/2026 | S'implementa la US-09 de comentaris amb ports hexagonals i persistència JDBC. | La sessió determina l'autor, el vídeo es valida contra el catàleg actual, i la interfície permet publicar i paginar comentaris sense afectar la cerca ni les analítiques. |
+| 29/10/2026 | Es migra de manera segura l'esquema heretat de comentaris a PostgreSQL. | `text` es renombra a `content` sense perdre files; l'inicialitzador és idempotent i rebutja conflictes entre les dues columnes. |
+| 29/10/2026 | Es corregeix la visualització de les dates dels comentaris. | El frontend interpreta la matriu `LocalDateTime` del backend i gestiona dates ISO, absents o invàlides sense mostrar `Invalid Date`. |
 
 ## 8. Temes pendents
 
 - Protecció de rutes i autorització per recurs.
-- Persistència real d'usuaris, vídeos, comentaris i analítiques.
-- Cerca.
 - Persistència relacional dels vídeos pujats segons NFR-01.
-- Comentaris, respostes i likes.
+- Respostes i likes dels comentaris.
 - Analítiques del contingut propi.
 - Tests E2E dels recorreguts principals.
 - Docker Compose i configuració de producció.

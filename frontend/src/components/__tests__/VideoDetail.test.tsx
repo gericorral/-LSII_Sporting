@@ -9,6 +9,10 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('VideoDetail', () => {
   beforeEach(() => {
+    mockedAxios.get.mockResolvedValue({
+      status: 200,
+      data: { content: [], hasNext: false },
+    });
     mockedAxios.put.mockReset();
     mockedAxios.post.mockReset();
   });
@@ -70,9 +74,7 @@ describe('VideoDetail', () => {
     fireEvent.play(player);
     fireEvent.play(player);
 
-    await waitFor(() =>
-      expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/videos/1/views'))
-    );
+    await waitFor(() => expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/videos/1/views')));
     expect(mockedAxios.post).toHaveBeenCalledTimes(1);
   });
 

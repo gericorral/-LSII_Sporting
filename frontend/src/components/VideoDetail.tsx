@@ -2,14 +2,16 @@ import type { VideoSummary } from '../useAllVideos';
 import { getEnv, resolveMediaUrl } from '../utils/Env';
 import { useState } from 'react';
 import axios from 'axios';
+import CommentsSection from './CommentsSection';
 
 type VideoDetailProps = {
   video: VideoSummary;
   canEdit?: boolean;
   onUpdated?: () => Promise<void>;
+  loggedUser?: { username: string } | null;
 };
 
-const VideoDetail = ({ video, canEdit = false, onUpdated }: VideoDetailProps) => {
+const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: VideoDetailProps) => {
   const [viewRegistered, setViewRegistered] = useState(false);
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(video.title);
@@ -113,6 +115,7 @@ const VideoDetail = ({ video, canEdit = false, onUpdated }: VideoDetailProps) =>
         </>
       )}
       {video.duration !== null && <span>{video.duration}s</span>}
+      <CommentsSection videoId={video.id} loggedUser={loggedUser} />
     </article>
   );
 };
