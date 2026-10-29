@@ -40,3 +40,8 @@ The analytics slice follows the same boundary. `ViewOwnVideoAnalyticsUseCase` is
 `AnalyticsController`, while `VideoAnalyticsPort` hides the file-store implementation from
 `VideoAnalyticsService`. `FileVideoAnalyticsAdapter` reads only metadata owned by the authenticated user and
 defaults absent counters to zero, so users without uploads receive an empty collection rather than an error.
+
+Video playback uses the same boundaries: `RegisterVideoViewUseCase` is invoked by
+`VideoController` and `VideoViewService` delegates to `VideoViewPort`. The
+`FileVideoViewAdapter` atomically updates the JSON analytics block, keeping
+filesystem details and counter persistence outside the application layer.

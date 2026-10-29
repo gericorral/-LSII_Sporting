@@ -234,6 +234,14 @@ antics i els importats pel grabber continuïn funcionant. Si l'usuari no té ví
 l'API retorna una llista buida i React mostra un estat buit; els errors de càrrega es
 mostren explícitament.
 
+Quan el reproductor comença una reproducció, el frontend envia una petició al
+cas d'ús de registre de visualització una sola vegada per obertura del vídeo.
+`RegisterVideoViewUseCase` i `VideoViewService` formen el port d'entrada i la
+regla d'aplicació, mentre que `VideoViewPort` i `FileVideoViewAdapter` amaguen
+l'actualització atòmica del comptador `views` al magatzem de fitxers. Això fa que
+les visualitzacions siguin persistents i que les analítiques les reflecteixin en
+consultes posteriors.
+
 El frontend afegeix la ruta `#analytics`, un hook `useAnalytics` i targetes per vídeo.
 La publicació de nous vídeos inicialitza els comptadors a zero dins del metadata, de
 manera que l'estructura queda preparada per connectar-la a esdeveniments reals de

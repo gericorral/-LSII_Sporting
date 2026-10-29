@@ -10,6 +10,7 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 describe('VideoDetail', () => {
   beforeEach(() => {
     mockedAxios.put.mockReset();
+    mockedAxios.post.mockReset();
   });
 
   it('renders the player and video metadata', () => {
@@ -48,6 +49,31 @@ describe('VideoDetail', () => {
 
     expect(document.querySelector('.video-detail span')).not.toBeInTheDocument();
     expect(screen.getByText('Video 2')).toBeInTheDocument();
+  });
+
+  it('registers one view when playback starts', async () => {
+    mockedAxios.post.mockResolvedValue({ status: 204 });
+    render(
+      <VideoDetail
+        video={{
+          id: '1',
+          title: 'Video 1',
+          description: 'Description',
+          duration: null,
+          thumbnailUrl: '/media/1.webp',
+          videoUrl: '/media/1.mp4',
+        }}
+      />
+    );
+
+    const player = document.querySelector('video')!;
+    fireEvent.play(player);
+    fireEvent.play(player);
+
+    await waitFor(() =>
+      expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/videos/1/views'))
+    );
+    expect(mockedAxios.post).toHaveBeenCalledTimes(1);
   });
 
   it('allows the owner to edit and saves metadata', async () => {

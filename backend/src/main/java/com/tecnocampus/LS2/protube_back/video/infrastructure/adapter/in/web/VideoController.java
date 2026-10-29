@@ -3,6 +3,7 @@ package com.tecnocampus.LS2.protube_back.video.infrastructure.adapter.in.web;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.ListVideosUseCase;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.UpdateVideoMetadataUseCase;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.UploadVideoUseCase;
+import com.tecnocampus.LS2.protube_back.video.domain.port.in.RegisterVideoViewUseCase;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,15 +30,18 @@ public class VideoController {
     private final ListVideosUseCase listVideosUseCase;
     private final UploadVideoUseCase uploadVideoUseCase;
     private final UpdateVideoMetadataUseCase updateVideoMetadataUseCase;
+    private final RegisterVideoViewUseCase registerVideoViewUseCase;
 
     public VideoController(
             ListVideosUseCase listVideosUseCase,
             UploadVideoUseCase uploadVideoUseCase,
-            UpdateVideoMetadataUseCase updateVideoMetadataUseCase
+            UpdateVideoMetadataUseCase updateVideoMetadataUseCase,
+            RegisterVideoViewUseCase registerVideoViewUseCase
     ) {
         this.listVideosUseCase = listVideosUseCase;
         this.uploadVideoUseCase = uploadVideoUseCase;
         this.updateVideoMetadataUseCase = updateVideoMetadataUseCase;
+        this.registerVideoViewUseCase = registerVideoViewUseCase;
     }
 
     @PutMapping("/{id}")
@@ -105,6 +109,16 @@ public class VideoController {
         return listVideosUseCase.getVideo(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{id}/views")
+    public ResponseEntity<Void> registerView(@PathVariable String id) {
+        try {
+            registerVideoViewUseCase.register(id);
+            return ResponseEntity.noContent().build();
+        } catch (RegisterVideoViewUseCase.VideoNotFoundException exception) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     public record UpdateVideoRequest(

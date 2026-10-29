@@ -10,6 +10,7 @@ type VideoDetailProps = {
 };
 
 const VideoDetail = ({ video, canEdit = false, onUpdated }: VideoDetailProps) => {
+  const [viewRegistered, setViewRegistered] = useState(false);
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(video.title);
   const [description, setDescription] = useState(video.description);
@@ -48,11 +49,26 @@ const VideoDetail = ({ video, canEdit = false, onUpdated }: VideoDetailProps) =>
     }
   };
 
+  const registerView = async () => {
+    if (viewRegistered) return;
+    setViewRegistered(true);
+    try {
+      await axios.post(`${getEnv().API_BASE_URL}/videos/${encodeURIComponent(video.id)}/views`);
+    } catch {
+      setViewRegistered(false);
+    }
+  };
+
   return (
     <article className="video-detail">
       <a href="#">&larr; Back to videos</a>
       <h2>{video.title}</h2>
-      <video controls poster={resolveMediaUrl(video.thumbnailUrl)} src={resolveMediaUrl(video.videoUrl)}>
+      <video
+        controls
+        poster={resolveMediaUrl(video.thumbnailUrl)}
+        src={resolveMediaUrl(video.videoUrl)}
+        onPlay={registerView}
+      >
         Your browser does not support video playback.
       </video>
       {canEdit && !editing && (

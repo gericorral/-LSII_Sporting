@@ -3,6 +3,7 @@ package com.tecnocampus.LS2.protube_back.video.infrastructure.adapter.in.web;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.ListVideosUseCase;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.UpdateVideoMetadataUseCase;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.UploadVideoUseCase;
+import com.tecnocampus.LS2.protube_back.video.domain.port.in.RegisterVideoViewUseCase;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 class VideoControllerTest {
@@ -22,8 +24,9 @@ class VideoControllerTest {
     private final ListVideosUseCase listVideosUseCase = mock(ListVideosUseCase.class);
     private final UploadVideoUseCase uploadVideoUseCase = mock(UploadVideoUseCase.class);
     private final UpdateVideoMetadataUseCase updateVideoMetadataUseCase = mock(UpdateVideoMetadataUseCase.class);
+    private final RegisterVideoViewUseCase registerVideoViewUseCase = mock(RegisterVideoViewUseCase.class);
     private final VideoController videoController = new VideoController(
-            listVideosUseCase, uploadVideoUseCase, updateVideoMetadataUseCase
+            listVideosUseCase, uploadVideoUseCase, updateVideoMetadataUseCase, registerVideoViewUseCase
     );
 
     @Test
@@ -143,5 +146,18 @@ class VideoControllerTest {
         assertEquals(400, videoController.updateVideo(
                 "1", new VideoController.UpdateVideoRequest("", "Description", List.of(), ""), session
         ).getStatusCode().value());
+    }
+
+    @Test
+    void registersVideoViewThroughTheInputPort() {
+        assertEquals(204, videoController.registerView("1").getStatusCode().value());
+    }
+
+    @Test
+    void returnsNotFoundWhenRegisteringViewForMissingVideo() {
+        doThrow(new RegisterVideoViewUseCase.VideoNotFoundException("not found"))
+                .when(registerVideoViewUseCase).register("missing");
+
+        assertEquals(404, videoController.registerView("missing").getStatusCode().value());
     }
 }

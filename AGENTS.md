@@ -232,6 +232,9 @@ content in this file.
   Catalan study guide and Word export.
 - 2026-10-21: Changed the video catalog ordering so newly published videos appear
   first, based on the uploaded MP4 modification time.
+- 2026-10-29: Added hexagonal video view tracking for US-11; playback now records
+  one persisted view per opened video through input and output ports, documented
+  in the Catalan study guide.
 - 2026-10-29: Implemented US-11 video analytics with
   `prompts/19-implement-video-analytics.md`; the analytics slice uses input and
   output ports, reads owner-scoped counters from the shared video metadata, and
