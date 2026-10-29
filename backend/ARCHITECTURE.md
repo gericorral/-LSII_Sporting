@@ -35,3 +35,8 @@ contracts. `ListVideosUseCase`, `UploadVideoUseCase` and `UpdateVideoMetadataUse
 catalog and publication adapters implement output ports, so JSON serialization, thumbnail generation, atomic file
 moves and multipart handling remain outside the application services. This keeps EPIC 4 independent of Spring
 multipart types, Jackson and filesystem APIs.
+
+The analytics slice follows the same boundary. `ViewOwnVideoAnalyticsUseCase` is the input port used by
+`AnalyticsController`, while `VideoAnalyticsPort` hides the file-store implementation from
+`VideoAnalyticsService`. `FileVideoAnalyticsAdapter` reads only metadata owned by the authenticated user and
+defaults absent counters to zero, so users without uploads receive an empty collection rather than an error.

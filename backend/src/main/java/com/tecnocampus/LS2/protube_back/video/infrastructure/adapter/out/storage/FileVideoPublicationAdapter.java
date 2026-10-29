@@ -50,7 +50,7 @@ public class FileVideoPublicationAdapter implements VideoPublicationPort {
             }
             writeThumbnail(temporary.get(1));
             objectMapper.writeValue(temporary.get(2).toFile(),
-                    new UploadMetadata(title, new Metadata(description), ownerId));
+                    new UploadMetadata(title, new Metadata(description), ownerId, new Analytics(0, 0, 0)));
             for (int index = 0; index < temporary.size(); index++) {
                 moveAtomically(temporary.get(index), published.get(index));
             }
@@ -102,9 +102,12 @@ public class FileVideoPublicationAdapter implements VideoPublicationPort {
         });
     }
 
-    private record UploadMetadata(String title, Metadata meta, UUID ownerId) {
+    private record UploadMetadata(String title, Metadata meta, UUID ownerId, Analytics analytics) {
     }
 
     private record Metadata(String description) {
+    }
+
+    private record Analytics(long views, long comments, long likes) {
     }
 }

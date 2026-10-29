@@ -117,6 +117,16 @@ describe('App routes', () => {
     expect(await screen.findByRole('heading', { name: 'Upload a video' })).toBeInTheDocument();
   });
 
+  it('shows analytics after authenticating from the analytics route', async () => {
+    mockedAxios.get.mockResolvedValue({ data: [] });
+    window.location.hash = '#analytics';
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
+    expect(await screen.findByRole('heading', { name: 'Video analytics' })).toBeInTheDocument();
+    expect(await screen.findByText('You have not uploaded any videos yet.')).toBeInTheDocument();
+  });
+
   it('opens a public profile route', () => {
     mockedAxios.get.mockResolvedValue({ data: {} });
     window.location.hash = '#profile/42';

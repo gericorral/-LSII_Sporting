@@ -4,7 +4,7 @@
 > després de cada canvi de codi. No substitueix el codi: resumeix què fa
 > l'aplicació, quines peces es modifiquen i quines decisions s'han de saber justificar.
 
-**Última actualització:** 20 d'octubre de 2026
+**Última actualització:** 29 d'octubre de 2026
 
 ## 1. Què és ProTube
 
@@ -218,6 +218,29 @@ La persistència queda darrere de `UserPersistencePort`,
 són els adaptadors que implementen aquests contractes. `HttpSessionAdapter` encapsula
 la sessió Servlet i implementa `SessionPort`. D'aquesta manera es pot substituir la
 persistència o la tecnologia de sessió sense modificar la lògica dels casos d'ús.
+
+### US-11: analítiques dels vídeos propis
+
+La pantalla d'analítiques només és accessible per a una sessió autenticada i consulta
+`GET /api/analytics/me`. El controlador utilitza `SessionPort` per obtenir l'usuari
+actual i depèn del port d'entrada `ViewOwnVideoAnalyticsUseCase`; per tant, no coneix
+ni el sistema de fitxers ni cap repositori concret.
+
+`VideoAnalyticsService` coordina la consulta mitjançant el port de sortida
+`VideoAnalyticsPort`. L'adaptador de fitxers llegeix els JSON dels vídeos del
+magatzem compartit, filtra per `ownerId` i exposa les mètriques de visualitzacions,
+comentaris i likes. Els comptadors absents es tracten com zero perquè els vídeos
+antics i els importats pel grabber continuïn funcionant. Si l'usuari no té vídeos,
+l'API retorna una llista buida i React mostra un estat buit; els errors de càrrega es
+mostren explícitament.
+
+El frontend afegeix la ruta `#analytics`, un hook `useAnalytics` i targetes per vídeo.
+La publicació de nous vídeos inicialitza els comptadors a zero dins del metadata, de
+manera que l'estructura queda preparada per connectar-la a esdeveniments reals de
+visualitzacions, comentaris i likes sense trencar els ports.
+Quan s'edita la metadata d'un vídeo, l'adaptador conserva també el bloc d'analítiques;
+això evita que una edició del títol o la descripció faci desaparèixer les mètriques
+existents.
 Els tests d'aplicació mockegen ports, mentre que els tests dels adaptadors comproven
 la integració amb HTTP, JDBC i JPA.
 
@@ -279,6 +302,7 @@ repositori.
 | 20/10/2026 | Es completa l'arquitectura hexagonal de les US-06 i US-07 de l'Epic 4. | Els casos d'ús d'upload i edició s'exposen com a ports d'entrada; el servei d'upload ja no depèn de `MultipartFile`, Jackson ni del sistema de fitxers, i els adaptadors conserven la publicació i l'edició atòmiques. |
 | 21/10/2026 | Es corregeix el límit de pujada del frontend Docker. | Nginx aplicava el seu límit multipart per defecte abans que la petició arribés al backend; `client_max_body_size 100M` el fa coherent amb la validació del frontend i els límits de Spring Boot. |
 | 21/10/2026 | S'ordena el catàleg perquè els vídeos nous apareguin al principi. | L'adaptador de catàleg ordena els fitxers MP4 per data de modificació descendent abans d'aplicar la paginació, de manera que una pujada recent és la primera targeta. |
+| 29/10/2026 | S'implementa la US-11 amb arquitectura hexagonal. | El backend exposa les analítiques dels vídeos propis mitjançant ports i l'adaptador del magatzem, i el frontend mostra les mètriques i l'estat buit. |
 
 ## 8. Temes pendents
 

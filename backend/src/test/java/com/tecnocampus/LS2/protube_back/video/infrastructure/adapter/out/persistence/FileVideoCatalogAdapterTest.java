@@ -131,7 +131,7 @@ class FileVideoCatalogAdapterTest {
     void updatesMetadataOnlyForTheOwner(@TempDir Path store) throws IOException {
         UUID ownerId = UUID.randomUUID();
         Files.writeString(store.resolve("1.json"), """
-                {"title":"Old","meta":{"description":"Old description"},"ownerId":"%s","tags":["old"],"category":"Old"}
+                {"title":"Old","meta":{"description":"Old description"},"ownerId":"%s","tags":["old"],"category":"Old","analytics":{"views":12,"comments":3,"likes":4}}
                 """.formatted(ownerId));
         Files.createFile(store.resolve("1.mp4"));
         Files.createFile(store.resolve("1.webp"));
@@ -147,5 +147,9 @@ class FileVideoCatalogAdapterTest {
         assertEquals(List.of("new", "live"), updated.tags());
         assertEquals("New category", updated.category());
         assertEquals("New description", updated.description());
+        var metadata = objectMapper.readTree(Files.readString(store.resolve("1.json")));
+        assertEquals(12, metadata.path("analytics").path("views").asInt());
+        assertEquals(3, metadata.path("analytics").path("comments").asInt());
+        assertEquals(4, metadata.path("analytics").path("likes").asInt());
     }
 }

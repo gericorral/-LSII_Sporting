@@ -147,6 +147,9 @@ public class FileVideoCatalogAdapter implements VideoCatalogPort {
                 updated.put("ownerId", ownerId.toString());
                 updated.put("category", category);
                 updated.set("tags", objectMapper.valueToTree(tags));
+                if (metadata.has("analytics")) {
+                    updated.set("analytics", metadata.get("analytics"));
+                }
                 if (metadata.hasNonNull("duration")) {
                     updated.set("duration", metadata.get("duration"));
                 }
