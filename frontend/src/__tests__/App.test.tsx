@@ -27,6 +27,9 @@ describe('App routes', () => {
       value: [],
       hasNext: false,
       loadMore: jest.fn(),
+      refresh: jest.fn(),
+      query: '',
+      search: jest.fn(),
     });
     mockedUseVideo.mockReturnValue({ loading: 'loading', message: '', value: null });
   });
@@ -59,6 +62,9 @@ describe('App routes', () => {
       value: [],
       hasNext: false,
       loadMore: jest.fn(),
+      refresh: jest.fn(),
+      query: '',
+      search: jest.fn(),
     });
     const { rerender } = render(<App />);
     expect(screen.getByText('Loading...')).toBeInTheDocument();
@@ -69,6 +75,9 @@ describe('App routes', () => {
       value: [],
       hasNext: false,
       loadMore: jest.fn(),
+      refresh: jest.fn(),
+      query: '',
+      search: jest.fn(),
     });
     rerender(<App />);
     expect(screen.getByText('network error')).toBeInTheDocument();
@@ -95,11 +104,62 @@ describe('App routes', () => {
       value: [],
       hasNext: true,
       loadMore,
+      refresh: jest.fn(),
+      query: '',
+      search: jest.fn(),
     });
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Load more videos' }));
     expect(loadMore).toHaveBeenCalled();
+  });
+
+  it('submits and clears a video search', () => {
+    const search = jest.fn();
+    mockedUseAllVideos.mockReturnValue({
+      loading: 'success',
+      message: '',
+      value: [],
+      hasNext: false,
+      loadMore: jest.fn(),
+      refresh: jest.fn(),
+      query: 'travel',
+      search,
+    });
+
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Search videos'), { target: { value: '  travel  ' } });
+    fireEvent.submit(screen.getByRole('button', { name: 'Search' }).closest('form')!);
+    expect(search).toHaveBeenCalledWith('  travel  ');
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    expect(search).toHaveBeenCalledWith('');
+    expect(screen.getByRole('status')).toHaveTextContent('No videos found.');
+  });
+
+  it('renders matching video cards in the normal catalog', () => {
+    mockedUseAllVideos.mockReturnValue({
+      loading: 'success',
+      message: '',
+      value: [
+        {
+          id: '1',
+          title: 'Travel',
+          description: 'A guide',
+          duration: 10,
+          thumbnailUrl: '/thumb',
+          videoUrl: '/video',
+        },
+      ],
+      hasNext: false,
+      loadMore: jest.fn(),
+      refresh: jest.fn(),
+      query: '',
+      search: jest.fn(),
+    });
+    render(<App />);
+
+    expect(screen.getByRole('heading', { name: 'Travel' })).toBeInTheDocument();
   });
 
   it('redirects unauthenticated upload access to login', () => {

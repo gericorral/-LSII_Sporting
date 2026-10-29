@@ -250,6 +250,32 @@ Quan s'edita la metadata d'un vídeo, l'adaptador conserva també el bloc d'anal
 això evita que una edició del títol o la descripció faci desaparèixer les mètriques
 existents.
 
+### US-08: cerca de vídeos
+
+La cerca reutilitza el mateix endpoint paginat `GET /api/videos`, amb el paràmetre
+opcional `query`, i funciona tant per a usuaris autenticats com anònims. El controlador
+continua depenent del port d'entrada `ListVideosUseCase`; el servei valida la paginació
+i el port de sortida `VideoCatalogPort` encapsula la consulta del catàleg. Com que el
+catàleg actual és basat en fitxers, `FileVideoCatalogAdapter` llegeix la metadata
+publicable i filtra abans de paginar.
+
+La puntuació prioritza una coincidència exacta del títol, després una coincidència
+parcial del títol, la descripció i finalment les etiquetes. La consulta ignora espais
+inicials i finals i no distingeix majúscules de minúscules. Les coincidències amb la
+mateixa puntuació es desempatent pel títol i l'identificador, de manera que la
+resposta és determinista. Una consulta buida conserva l'ordre i el comportament del
+catàleg normal.
+
+El frontend afegeix un formulari de cerca accessible al capçal del catàleg. Enter i el
+botó Search reinicien la pàgina a zero, Clear torna al catàleg complet i Load more
+manté la consulta activa. El hook ignora respostes antigues quan hi ha una cerca més
+recent, i mostra estats de càrrega, error i «No videos found.» sense tractar l'absència
+de resultats com un error. Les targetes, la navegació, la reproducció i la ruta
+`#analytics` continuen reutilitzant els components existents.
+
+Els tests cobreixen coincidències exactes, parcials, de descripció i etiquetes,
+majusculació, ordre determinista, paginació, consulta buida i estats de la interfície.
+
 ### Configuració compartida del magatzem de vídeos
 
 La ruta del magatzem ja no depèn del directori personal de cap membre de l'equip.

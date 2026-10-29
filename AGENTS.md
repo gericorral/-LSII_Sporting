@@ -242,3 +242,7 @@ content in this file.
   guide and Word export.
 - 2026-10-29: Preserved the US-11 analytics block when owners edit video metadata,
   with backend coverage for retaining views, comments and likes.
+- 2026-10-29: Implemented US-08 video search using
+  `prompts/21-implement-video-search.md`; the file-backed catalog now supports
+  ranked, case-insensitive title, description and tag queries with paginated frontend
+  results, documented in the Catalan study guide and Word export.

@@ -56,6 +56,40 @@ public class FileVideoCatalogAdapter implements VideoCatalogPort {
         } catch (IOException exception) {
             throw new IllegalStateException("Unable to read video store: " + storeDirectory, exception);
         }
+
+    }
+
+    @Override
+    public List<VideoSummary> search(String query) {
+        String normalizedQuery = query == null ? "" : query.trim().toLowerCase(java.util.Locale.ROOT);
+        if (normalizedQuery.isEmpty()) {
+            return findAll();
+        }
+        return findAll().stream()
+                .map(video -> new ScoredVideo(video, relevance(video, normalizedQuery)))
+                .filter(scored -> scored.score() > 0)
+                .sorted(Comparator.comparingInt(ScoredVideo::score).reversed()
+                        .thenComparing(scored -> scored.video().title(), String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(scored -> scored.video().id()))
+                .map(ScoredVideo::video)
+                .toList();
+    }
+
+    private int relevance(VideoSummary video, String query) {
+        String title = video.title().toLowerCase(java.util.Locale.ROOT);
+        String description = video.description().toLowerCase(java.util.Locale.ROOT);
+        int score = 0;
+        if (title.equals(query)) score += 1000;
+        else if (title.contains(query)) score += 500;
+        if (description.contains(query)) score += 100;
+        if (video.tags().stream().map(tag -> tag.toLowerCase(java.util.Locale.ROOT))
+                .anyMatch(tag -> tag.contains(query))) {
+            score += 50;
+        }
+        return score;
+    }
+
+    private record ScoredVideo(VideoSummary video, int score) {
     }
 
     private FileTime videoModificationTime(Path metadataPath) {

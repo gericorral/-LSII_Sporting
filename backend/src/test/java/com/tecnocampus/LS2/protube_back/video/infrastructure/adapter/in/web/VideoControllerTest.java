@@ -41,6 +41,14 @@ class VideoControllerTest {
     }
 
     @Test
+    void passesSearchQueryToTheInputPort() {
+        when(listVideosUseCase.listVideos(0, 12, "travel"))
+                .thenReturn(new VideoPage(List.of(), 0, 12, 0, 0, false));
+
+        assertEquals(0, videoController.getVideos(0, 12, "travel").getBody().totalElements());
+    }
+
+    @Test
     void returnsVideoFromTheInputPort() {
         VideoSummary video = new VideoSummary(
                 "1", "Video 1", "Description", 30, "/media/1.webp", "/media/1.mp4"

@@ -114,6 +114,39 @@
   text-align: left;
 }
 
+.video-search {
+  align-items: center;
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.video-search label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.video-search input {
+  background: #181818;
+  border: 1px solid #444;
+  border-radius: 999px 0 0 999px;
+  color: #fff;
+  font: inherit;
+  min-width: min(45vw, 24rem);
+  padding: 0.55rem 0.8rem;
+}
+
+.video-search button {
+  background: #272727;
+  border: 1px solid #444;
+  color: #f1f1f1;
+  cursor: pointer;
+  padding: 0.55rem 0.8rem;
+}
+
 .catalog-toolbar a {
   color: #f1f1f1;
   font-size: 0.9rem;

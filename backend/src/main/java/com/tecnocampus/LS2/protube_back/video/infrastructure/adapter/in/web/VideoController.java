@@ -93,15 +93,22 @@ public class VideoController {
         }
     }
 
+    public ResponseEntity<VideoPage> getVideos(int page, int size) {
+        return getVideos(page, size, "");
+    }
+
     @GetMapping
     public ResponseEntity<VideoPage> getVideos(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "") String query
     ) {
         if (page < 0 || size < 1 || size > 100) {
             return ResponseEntity.badRequest().build();
         }
-        return ResponseEntity.ok(listVideosUseCase.listVideos(page, size));
+        return ResponseEntity.ok(query == null || query.isBlank()
+                ? listVideosUseCase.listVideos(page, size)
+                : listVideosUseCase.listVideos(page, size, query));
     }
 
     @GetMapping("/{id}")

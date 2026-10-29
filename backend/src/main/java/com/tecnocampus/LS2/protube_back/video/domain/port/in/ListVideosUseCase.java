@@ -7,6 +7,8 @@ public interface ListVideosUseCase {
 
     VideoPage listVideos(int page, int size);
 
+    VideoPage listVideos(int page, int size, String query);
+
     Optional<VideoSummary> getVideo(String id);
 
     record VideoPage(

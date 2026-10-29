@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import axios, { AxiosError } from 'axios';
 import { getEnv } from './utils/Env';
 
@@ -32,11 +32,18 @@ export function useAllVideos() {
   const [loading, setLoading] = useState<LoadingState>('idle');
   const [hasNext, setHasNext] = useState(false);
   const [nextPage, setNextPage] = useState(0);
+  const [query, setQuery] = useState('');
+  const requestId = useRef(0);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (nextQuery = '') => {
+    const normalizedQuery = nextQuery.trim();
+    const currentRequest = ++requestId.current;
     try {
       setLoading('loading');
-      const response = await axios.get<VideoPage>(ALL_VIDEOS_URL, { params: { page: 0, size: 12 } });
+      const response = await axios.get<VideoPage>(ALL_VIDEOS_URL, {
+        params: { page: 0, size: 12, ...(normalizedQuery ? { query: normalizedQuery } : {}) },
+      });
+      if (currentRequest !== requestId.current) return;
       if (response.status === 200) {
         setValue(response.data.content);
         setHasNext(response.data.hasNext);
@@ -45,7 +52,9 @@ export function useAllVideos() {
       setLoading('success');
     } catch (error: unknown) {
       setLoading('error');
-      setMessage('Error fetching videos: ' + (error as AxiosError).message);
+      if (currentRequest === requestId.current) {
+        setMessage('Error fetching videos: ' + (error as AxiosError).message);
+      }
     }
   }, []);
 
@@ -58,7 +67,7 @@ export function useAllVideos() {
     try {
       setLoading('loading');
       const response = await axios.get<VideoPage>(ALL_VIDEOS_URL, {
-        params: { page: nextPage, size: 12 },
+        params: { page: nextPage, size: 12, ...(query ? { query } : {}) },
       });
       if (response.status === 200) {
         setValue((current) => [...current, ...response.data.content]);
@@ -72,5 +81,14 @@ export function useAllVideos() {
     }
   };
 
-  return { value, message, loading, hasNext, loadMore, refresh };
+  const search = useCallback(
+    (nextQuery: string) => {
+      const normalizedQuery = nextQuery.trim();
+      setQuery(normalizedQuery);
+      return refresh(normalizedQuery);
+    },
+    [refresh]
+  );
+
+  return { value, message, loading, hasNext, loadMore, refresh, query, search };
 }

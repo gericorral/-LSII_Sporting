@@ -137,7 +137,8 @@ function VideoCatalog({
   loggedUser: { id?: string; username: string; email: string } | null;
   onLogout: () => void;
 }) {
-  const { loading, message, value, hasNext, loadMore, refresh } = useAllVideos();
+  const { loading, message, value, hasNext, loadMore, refresh, query, search } = useAllVideos();
+  const [searchText, setSearchText] = useState('');
   if (videoId) {
     return <VideoDetailPage id={videoId} loggedUser={loggedUser} onUpdated={refresh} />;
   }
@@ -155,7 +156,36 @@ function VideoCatalog({
       return (
         <>
           <div className="catalog-toolbar">
-            <h2>Available videos</h2>
+            <div>
+              <h2>{query ? `Search results for "${query}"` : 'Available videos'}</h2>
+              <form
+                className="video-search"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  search(searchText);
+                }}
+              >
+                <label htmlFor="video-search-input">Search videos</label>
+                <input
+                  id="video-search-input"
+                  value={searchText}
+                  onChange={(event) => setSearchText(event.target.value)}
+                  placeholder="Search videos"
+                />
+                <button type="submit">Search</button>
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchText('');
+                      search('');
+                    }}
+                  >
+                    Clear
+                  </button>
+                )}
+              </form>
+            </div>
             <nav className="catalog-actions">
               {loggedUser ? (
                 <>
@@ -174,7 +204,7 @@ function VideoCatalog({
               )}
             </nav>
           </div>
-          <VideoGrid videos={value} />
+          {value.length > 0 ? <VideoGrid videos={value} /> : <p role="status">No videos found.</p>}
           {hasNext && (
             <button className="load-more-button" type="button" onClick={loadMore}>
               Load more videos
