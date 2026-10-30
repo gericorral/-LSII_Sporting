@@ -260,3 +260,10 @@ content in this file.
   `prompts/21-implement-video-search.md`; the file-backed catalog now supports
   ranked, case-insensitive title, description and tag queries with paginated frontend
   results, documented in the Catalan study guide and Word export.
+- 2026-10-30: Implemented US-10 comment replies and likes using
+  `prompts/25-implement-comment-replies-likes.md`; replies now use parent comment
+  relationships and likes are persisted per user through the hexagonal comment
+  slice, documented in the Catalan study guide and Word export.
+- 2026-10-30: Connected US-10 comment creation and replies to the video analytics
+  counter through a dedicated hexagonal `VideoCommentPort`; replies are visibly
+  indented below their parent comment in the frontend.

@@ -1,9 +1,11 @@
 package com.tecnocampus.LS2.protube_back.comment.application.service;
 
 import com.tecnocampus.LS2.protube_back.comment.domain.model.Comment;
+import com.tecnocampus.LS2.protube_back.comment.domain.model.CommentLike;
 import com.tecnocampus.LS2.protube_back.comment.domain.port.in.CommentUseCase;
 import com.tecnocampus.LS2.protube_back.comment.domain.port.out.CommentPersistencePort;
 import com.tecnocampus.LS2.protube_back.video.domain.port.out.VideoCatalogPort;
+import com.tecnocampus.LS2.protube_back.video.domain.port.out.VideoCommentPort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,20 +17,30 @@ public class CommentService implements CommentUseCase {
 
     private final CommentPersistencePort commentPersistencePort;
     private final VideoCatalogPort videoCatalogPort;
+    private final VideoCommentPort videoCommentPort;
 
     public CommentService(
             CommentPersistencePort commentPersistencePort,
-            VideoCatalogPort videoCatalogPort
+            VideoCatalogPort videoCatalogPort,
+            VideoCommentPort videoCommentPort
     ) {
         this.commentPersistencePort = commentPersistencePort;
         this.videoCatalogPort = videoCatalogPort;
+        this.videoCommentPort = videoCommentPort;
     }
 
     @Override
     public CommentPage list(String videoId, int page, int size) {
+        return list(videoId, page, size, null);
+    }
+
+    @Override
+    public CommentPage list(String videoId, int page, int size, UUID viewerId) {
         validatePagination(page, size);
         ensureVideoExists(videoId);
-        List<Comment> comments = commentPersistencePort.findByVideoId(videoId);
+        List<Comment> comments = viewerId == null
+                ? commentPersistencePort.findByVideoId(videoId)
+                : commentPersistencePort.findByVideoId(videoId, viewerId);
         long from = (long) page * size;
         int fromIndex = (int) Math.min(from, comments.size());
         int toIndex = Math.min(fromIndex + size, comments.size());
@@ -45,10 +57,25 @@ public class CommentService implements CommentUseCase {
 
     @Override
     public Comment create(String videoId, UUID authorId, String content) {
+        return create(videoId, authorId, null, content);
+    }
+
+    @Override
+    public Comment reply(String videoId, UUID authorId, UUID parentCommentId, String content) {
+        if (parentCommentId == null) {
+            throw new InvalidCommentException("Parent comment is required.");
+        }
+        return create(videoId, authorId, parentCommentId, content);
+    }
+
+    private Comment create(String videoId, UUID authorId, UUID parentCommentId, String content) {
         if (authorId == null) {
             throw new InvalidCommentException("Authentication is required.");
         }
         ensureVideoExists(videoId);
+        if (parentCommentId != null && !commentPersistencePort.existsInVideo(parentCommentId, videoId)) {
+            throw new InvalidCommentException("Parent comment was not found for this video.");
+        }
         String normalizedContent = content == null ? "" : content.trim();
         if (normalizedContent.isEmpty()) {
             throw new InvalidCommentException("Comment cannot be empty.");
@@ -56,7 +83,26 @@ public class CommentService implements CommentUseCase {
         if (normalizedContent.length() > MAX_CONTENT_LENGTH) {
             throw new InvalidCommentException("Comment must be at most 2000 characters.");
         }
-        return commentPersistencePort.save(videoId, authorId, normalizedContent);
+        Comment saved = parentCommentId == null
+                ? commentPersistencePort.save(videoId, authorId, normalizedContent)
+                : commentPersistencePort.save(videoId, authorId, parentCommentId, normalizedContent);
+        if (!videoCommentPort.incrementComments(videoId)) {
+            throw new VideoNotFoundException(videoId);
+        }
+        return saved;
+    }
+
+    @Override
+    public LikeResult toggleLike(String videoId, UUID commentId, UUID userId) {
+        if (userId == null) {
+            throw new InvalidCommentException("Authentication is required.");
+        }
+        ensureVideoExists(videoId);
+        if (commentId == null || !commentPersistencePort.existsInVideo(commentId, videoId)) {
+            throw new InvalidCommentException("Comment was not found for this video.");
+        }
+        CommentLike result = commentPersistencePort.toggleLike(commentId, userId);
+        return new LikeResult(result.commentId(), result.likeCount(), result.likedByCurrentUser());
     }
 
     private void ensureVideoExists(String videoId) {

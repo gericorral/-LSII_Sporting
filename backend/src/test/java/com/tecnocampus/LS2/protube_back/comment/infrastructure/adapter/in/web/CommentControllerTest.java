@@ -26,6 +26,16 @@ class CommentControllerTest {
     }
 
     @Test
+    void listsCommentsWithViewerIdentityWhenAuthenticated() {
+        when(session.currentUserId()).thenReturn(userId);
+        when(useCase.list("1", 0, 20, userId)).thenReturn(new CommentUseCase.CommentPage(
+                List.of(), 0, 20, 0, 0, false));
+
+        assertEquals(200, controller.list("1", 0, 20).getStatusCode().value());
+        verify(useCase).list("1", 0, 20, userId);
+    }
+
+    @Test
     void createsCommentUsingSessionIdentity() {
         when(session.currentUserId()).thenReturn(userId);
         Comment comment = new Comment(UUID.randomUUID(), "1", userId, "player", "hello", null);
@@ -46,7 +56,40 @@ class CommentControllerTest {
                 new CommentUseCase.InvalidCommentException("Comment cannot be empty."));
         assertEquals(400, controller.create("1", new CommentController.CreateCommentRequest(" "))
                 .getStatusCode().value());
-        when(useCase.list("missing", 0, 20)).thenThrow(new CommentUseCase.VideoNotFoundException("missing"));
+        when(useCase.list("missing", 0, 20, userId))
+                .thenThrow(new CommentUseCase.VideoNotFoundException("missing"));
         assertEquals(404, controller.list("missing", 0, 20).getStatusCode().value());
+    }
+
+    @Test
+    void createsRepliesAndTogglesLikesUsingTheSessionIdentity() {
+        when(session.currentUserId()).thenReturn(userId);
+        UUID parentId = UUID.randomUUID();
+        when(useCase.reply("1", userId, parentId, "reply"))
+                .thenReturn(new Comment(UUID.randomUUID(), "1", userId, "player", "reply", null, parentId, 0, false));
+
+        assertEquals(201, controller.create("1",
+                new CommentController.CreateCommentRequest("reply", parentId)).getStatusCode().value());
+        verify(useCase).reply("1", userId, parentId, "reply");
+
+        when(useCase.toggleLike("1", parentId, userId))
+                .thenReturn(new CommentUseCase.LikeResult(parentId, 1, true));
+        assertEquals(200, controller.toggleLike("1", parentId).getStatusCode().value());
+    }
+
+    @Test
+    void protectsLikeEndpointAndMapsLikeErrors() {
+        when(session.currentUserId()).thenReturn(null);
+        assertEquals(401, controller.toggleLike("1", UUID.randomUUID()).getStatusCode().value());
+
+        when(session.currentUserId()).thenReturn(userId);
+        UUID commentId = UUID.randomUUID();
+        when(useCase.toggleLike("1", commentId, userId))
+                .thenThrow(new CommentUseCase.InvalidCommentException("Comment was not found for this video."));
+        assertEquals(400, controller.toggleLike("1", commentId).getStatusCode().value());
+        reset(useCase);
+        when(useCase.toggleLike("1", commentId, userId))
+                .thenThrow(new CommentUseCase.VideoNotFoundException("missing"));
+        assertEquals(404, controller.toggleLike("1", commentId).getStatusCode().value());
     }
 }

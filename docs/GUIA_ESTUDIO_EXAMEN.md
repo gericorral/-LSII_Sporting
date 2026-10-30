@@ -310,6 +310,32 @@ Els tests cobreixen les dates persistides retornades per l'API, les dates de
 comentaris acabats de crear i els valors absents o malformats. La correcció és només
 de presentació i no modifica la cerca US-08 ni les analítiques US-11.
 
+### US-10: respostes i likes dels comentaris
+
+US-10 amplia la mateixa funcionalitat hexagonal de comentaris sense posar la lògica
+de negoci al controlador. `CommentService` valida que una resposta tingui un
+comentari pare del mateix vídeo, manté l'autoria derivada de la sessió i delega la
+persistència a `CommentPersistencePort`. `JdbcCommentRepository` desa la relació
+pare-fill i utilitza `comment_likes` amb una clau composta d'usuari i comentari,
+de manera que un usuari no pot crear likes duplicats; el canvi de like retorna el
+nou comptador i l'estat de l'usuari actual.
+
+La lectura de comentaris continua sent pública i compatible amb comentaris arrel,
+però, quan hi ha sessió, també inclou l'estat `likedByCurrentUser`. El controlador
+només coordina les rutes HTTP i `SessionPort` proporciona la identitat. El frontend
+renderitza les respostes de forma anidada, permet contestar i actualitza el like
+després de la resposta del servidor. Els tests cobreixen la validació de pares,
+la persistència i alternança de likes, l'autenticació de les rutes i la interacció
+de respostes i likes; US-09 i US-11 es mantenen separats.
+
+Cada comentari nou, incloses les respostes, incrementa de manera atòmica el
+comptador `analytics.comments` del metadata del vídeo. El cas d'ús de comentaris
+depèn del port de sortida `VideoCommentPort`, i `FileVideoCommentAdapter` amaga
+l'actualització del JSON i el moviment temporal. Això permet que la pantalla
+d'analítiques de l'owner reflecteixi també la participació real. En la interfície,
+les respostes tenen una vora i un marge lateral per identificar visualment que
+pertanyen al comentari original.
+
 ### Compatibilitat amb l'esquema PostgreSQL existent
 
 La base de dades de Docker podia contenir una versió anterior de la taula `comments`

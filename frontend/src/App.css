@@ -297,6 +297,13 @@
   padding-bottom: 1rem;
 }
 
+.comment-reply {
+  border-bottom: 0;
+  border-left: 2px solid #3f3f3f;
+  margin-left: 1.5rem;
+  padding: 0.75rem 0 0.75rem 1rem;
+}
+
 .comment strong {
   margin-right: 0.75rem;
 }

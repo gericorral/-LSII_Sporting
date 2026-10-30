@@ -9,6 +9,12 @@ public record Comment(
         UUID authorId,
         String authorName,
         String content,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        UUID parentCommentId,
+        long likeCount,
+        boolean likedByCurrentUser
 ) {
+    public Comment(UUID id, String videoId, UUID authorId, String authorName, String content, LocalDateTime createdAt) {
+        this(id, videoId, authorId, authorName, content, createdAt, null, 0, false);
+    }
 }

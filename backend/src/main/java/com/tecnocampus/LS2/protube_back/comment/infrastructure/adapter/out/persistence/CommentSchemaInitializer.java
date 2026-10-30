@@ -31,6 +31,7 @@ public class CommentSchemaInitializer {
                 )
                 """);
         migrateLegacyTextColumn();
+        ensureColumn("parent_comment_id", "ALTER TABLE comments ADD COLUMN parent_comment_id UUID");
         ensureConstraint(
                 "fk_comments_author",
                 """
@@ -56,6 +57,29 @@ public class CommentSchemaInitializer {
                 CREATE INDEX IF NOT EXISTS idx_comments_video_created
                 ON comments (video_id, created_at DESC, id DESC)
                 """);
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS comment_likes (
+                    comment_id UUID NOT NULL,
+                    user_id UUID NOT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (comment_id, user_id),
+                    CONSTRAINT fk_comment_likes_comment FOREIGN KEY (comment_id)
+                        REFERENCES comments(id) ON DELETE CASCADE,
+                    CONSTRAINT fk_comment_likes_user FOREIGN KEY (user_id)
+                        REFERENCES users(id) ON DELETE CASCADE
+                )
+                """);
+        jdbcTemplate.execute("""
+                CREATE INDEX IF NOT EXISTS idx_comment_likes_comment
+                ON comment_likes (comment_id)
+                """);
+        ensureConstraint(
+                "fk_comments_parent",
+                """
+                ALTER TABLE comments ADD CONSTRAINT fk_comments_parent
+                    FOREIGN KEY (parent_comment_id) REFERENCES comments(id) ON DELETE CASCADE
+                """
+        );
     }
 
     private void migrateLegacyTextColumn() {
@@ -79,6 +103,12 @@ public class CommentSchemaInitializer {
                   AND LOWER(column_name) = ?
                 """, Integer.class, columnName.toLowerCase());
         return count != null && count > 0;
+    }
+
+    private void ensureColumn(String columnName, String sql) {
+        if (!hasColumn(columnName)) {
+            jdbcTemplate.execute(sql);
+        }
     }
 
     private void ensureConstraint(String constraintName, String sql) {

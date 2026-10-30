@@ -9,6 +9,9 @@ export type Comment = {
   authorName: string;
   content: string;
   createdAt: string | number[] | null;
+  parentCommentId?: string | null;
+  likeCount?: number;
+  likedByCurrentUser?: boolean;
 };
 
 type CommentPage = {
@@ -62,5 +65,24 @@ export function useComments(videoId: string) {
     setComments((current) => (current.some((item) => item.id === comment.id) ? current : [comment, ...current]));
   };
 
-  return { comments, loading, message, hasNext, loadMore, addComment };
+  const updateLike = async (commentId: string) => {
+    const response = await axios.post<{ commentId: string; likeCount: number; likedByCurrentUser: boolean }>(
+      `${getEnv().API_BASE_URL}/videos/${encodeURIComponent(videoId)}/comments/${encodeURIComponent(commentId)}/like`,
+      {},
+      { withCredentials: true }
+    );
+    setComments((current) =>
+      current.map((comment) =>
+        comment.id === commentId
+          ? {
+              ...comment,
+              likeCount: response.data.likeCount,
+              likedByCurrentUser: response.data.likedByCurrentUser,
+            }
+          : comment
+      )
+    );
+  };
+
+  return { comments, loading, message, hasNext, loadMore, addComment, updateLike };
 }

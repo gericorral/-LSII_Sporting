@@ -127,4 +127,47 @@ describe('CommentsSection', () => {
       params: { page: 1, size: 20 },
     });
   });
+
+  it('likes a comment and posts a nested reply', async () => {
+    mockedAxios.get.mockResolvedValue({
+      status: 200,
+      data: {
+        content: [{ ...existingComment, likeCount: 0, likedByCurrentUser: false }],
+        hasNext: false,
+      },
+    });
+    mockedAxios.post
+      .mockResolvedValueOnce({
+        status: 200,
+        data: { commentId: 'comment-1', likeCount: 1, likedByCurrentUser: true },
+      })
+      .mockResolvedValueOnce({
+        status: 201,
+        data: {
+          ...existingComment,
+          id: 'reply-1',
+          content: 'Nested reply',
+          parentCommentId: 'comment-1',
+        },
+      });
+
+    render(<CommentsSection videoId="video-1" loggedUser={{ username: 'Player' }} />);
+
+    await screen.findByText('Useful video');
+    fireEvent.click(screen.getByRole('button', { name: 'Like (0)' }));
+    expect(await screen.findByRole('button', { name: 'Unlike (1)' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reply' }));
+    fireEvent.change(screen.getByLabelText('Reply'), { target: { value: 'Nested reply' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Post reply' }));
+
+    await waitFor(() => expect(mockedAxios.post).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText('Nested reply')).toBeInTheDocument();
+    expect(mockedAxios.post).toHaveBeenNthCalledWith(
+      2,
+      'other/videos/video-1/comments',
+      { content: 'Nested reply', parentCommentId: 'comment-1' },
+      { withCredentials: true }
+    );
+  });
 });

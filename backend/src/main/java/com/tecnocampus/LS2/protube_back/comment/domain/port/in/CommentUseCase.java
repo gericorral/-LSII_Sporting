@@ -8,7 +8,16 @@ import java.util.UUID;
 public interface CommentUseCase {
     CommentPage list(String videoId, int page, int size);
 
+    CommentPage list(String videoId, int page, int size, UUID viewerId);
+
     Comment create(String videoId, UUID authorId, String content);
+
+    Comment reply(String videoId, UUID authorId, UUID parentCommentId, String content);
+
+    LikeResult toggleLike(String videoId, UUID commentId, UUID userId);
+
+    record LikeResult(UUID commentId, long likeCount, boolean likedByCurrentUser) {
+    }
 
     record CommentPage(
             List<Comment> content,
