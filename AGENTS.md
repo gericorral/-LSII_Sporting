@@ -267,6 +267,12 @@ content in this file.
 - 2026-10-30: Connected US-10 comment creation and replies to the video analytics
   counter through a dedicated hexagonal `VideoCommentPort`; replies are visibly
   indented below their parent comment in the frontend.
+- 2026-11-01: Migrated video metadata, asset references, views and analytics to
+  PostgreSQL using `prompts/27-migrate-video-persistence-to-postgresql.md`;
+  Flyway now manages the schema, JDBC adapters implement the existing hexagonal
+  output ports, development uses PostgreSQL, and an E2E integration test verifies
+  metadata survives a backend restart. The change was generated with AI and
+  documented in the Catalan study guide and Word export.
 - 2026-11-01: Added Playwright E2E coverage using `prompts/26-add-e2e-tests.md`;
   the browser suite exercises registration, upload, search, playback navigation and
   comments through the Docker Compose stack while preserving the backend's hexagonal
@@ -276,3 +282,10 @@ content in this file.
   Playwright test now asserts that the upload form is rendered before filling it.
 - 2026-11-01: Made the E2E video-detail title assertion exact so Playwright does not
   confuse the search-results heading with the selected video heading.
+- 2026-11-01: Fixed Docker persistence by storing PostgreSQL in the ignored
+  repository-level `postgres-data/` bind mount, so database records survive
+  `docker compose down` followed by `docker compose up --build`.
+- 2026-11-01: Fixed PostgreSQL comment persistence by binding UUID video
+  identifiers as `UUID` values in `JdbcCommentRepository`; listing and creating
+  comments now work with the migrated schema and the analytics view counts the
+  persisted rows.

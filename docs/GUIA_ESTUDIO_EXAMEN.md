@@ -352,6 +352,21 @@ decidir quina dada conservar. Els tests cobreixen l'esquema heretat, la preserva
 de files, les arrencades repetides, l'esquema actual, el conflicte i les operacions
 JDBC posteriors.
 
+### Compatibilitat dels identificadors de vídeo dels comentaris
+
+Després de migrar el catàleg a PostgreSQL, `comments.video_id` és una clau
+`UUID`, mentre que el port de comentaris continua rebent els identificadors com
+a `String` perquè també és compatible amb l'adaptador anterior. L'adaptador
+`JdbcCommentRepository` converteix els identificadors que tenen format UUID
+abans d'enllaçar-los en les consultes de lectura, inserció i validació de
+respostes; els identificadors no UUID continuen funcionant en els tests i
+escenaris heretats.
+
+Aquesta conversió evita els errors PostgreSQL `uuid = character varying` i
+permet que els comentaris es desin realment. Com que
+`video_analytics_summary` compta les files de `comments`, el mateix comentari
+persistit incrementa el comptador que consulta la pantalla d'analítiques.
+
 ### Configuració compartida del magatzem de vídeos
 
 La ruta del magatzem ja no depèn del directori personal de cap membre de l'equip.
@@ -434,6 +449,10 @@ repositori.
 | 01/11/2026 | S'afegeixen proves E2E amb Playwright per als recorreguts principals de l'MVP. | Les proves obren el frontend real servit per Docker, registren un usuari, pugen un vídeo, el cerquen, obren el detall i publiquen un comentari. La prova valida el sistema complet a través d'HTTP, mantenint la separació entre ports, serveis i adaptadors hexagonals; el fitxer MP4 de prova es crea en memòria per no versionar mitjans generats. |
 | 01/11/2026 | Es corregeix la sessió del frontend després del registre i es reforça la navegació E2E a la pantalla de pujada. | El compte creat queda disponible tant com a usuari registrat com com a usuari autenticat; les rutes de pujada i analítiques comparteixen el mateix estat derivat i la prova Playwright comprova que realment s'ha renderitzat el formulari abans d'emplenar-lo. |
 | 01/11/2026 | Es fa exacte el selector del títol en la prova E2E del detall de vídeo. | Playwright podia trobar alhora el títol de la targeta i el títol del detall perquè els selectors de rol permeten coincidències parcials per defecte; exigir `exact: true` evita l'ambigüitat i valida la pantalla correcta. |
+| 01/11/2026 | Es corregeix la persistència local de Docker per a PostgreSQL. | Compose munta PostgreSQL a `postgres-data/`, separat de `video-store/`; així els registres de la base de dades i els fitxers multimèdia sobreviuen a `docker compose down` seguit de `up --build`, sempre que no s'esborrin les carpetes ni s'utilitzi `down -v`. |
+| 01/11/2026 | Es migren les dades de vídeo i analítica a PostgreSQL amb Flyway i adaptadors JDBC hexagonals. | PostgreSQL passa a ser la font de veritat de la identitat del vídeo, els metadades, les referències als fitxers, les visualitzacions i els comptadors. Els fitxers físics continuen al `video-store`, però els serveis només coneixen els ports de sortida i no depenen de JDBC ni del sistema de fitxers. |
+| 01/11/2026 | S'afegeix una prova d'integració de persistència després de reiniciar el backend. | La prova publica un vídeo, reinicia només el contenidor del backend i comprova que el catàleg el troba després; així es verifica que les dades de domini sobreviuen perquè estan a PostgreSQL i no a memòria o JSON. |
+| 01/11/2026 | Es corregeix la persistència dels comentaris amb identificadors UUID. | El repositori JDBC adapta els identificadors de vídeo al tipus PostgreSQL abans de consultar o inserir; així desapareix l'HTTP 500, els comentaris es guarden i la vista d'analítiques els compta des de la base de dades. |
 
 ## 8. Temes pendents
 

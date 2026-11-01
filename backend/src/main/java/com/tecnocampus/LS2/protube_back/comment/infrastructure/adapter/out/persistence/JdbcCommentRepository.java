@@ -26,6 +26,7 @@ public class JdbcCommentRepository implements CommentPersistencePort {
 
     @Override
     public List<Comment> findByVideoId(String videoId, UUID viewerId) {
+        Object videoIdParameter = videoIdParameter(videoId);
         RowMapper<Comment> mapper = (rs, rowNum) -> map(rs.getObject("id", UUID.class),
                 rs.getString("video_id"),
                 rs.getObject("author_id", UUID.class),
@@ -45,7 +46,7 @@ public class JdbcCommentRepository implements CommentPersistencePort {
                     JOIN users u ON u.id = c.author_id
                     WHERE c.video_id = ?
                     ORDER BY c.created_at DESC, c.id DESC
-                    """, mapper, videoId);
+                    """, mapper, videoIdParameter);
         }
         return jdbcTemplate.query("""
                 SELECT c.id, c.video_id, c.author_id, u.username, c.content, c.created_at,
@@ -57,7 +58,7 @@ public class JdbcCommentRepository implements CommentPersistencePort {
                 JOIN users u ON u.id = c.author_id
                 WHERE c.video_id = ?
                 ORDER BY c.created_at DESC, c.id DESC
-                """, mapper, viewerId, videoId);
+                """, mapper, viewerId, videoIdParameter);
     }
 
     @Override
@@ -68,10 +69,11 @@ public class JdbcCommentRepository implements CommentPersistencePort {
     @Override
     public Comment save(String videoId, UUID authorId, UUID parentCommentId, String content) {
         UUID id = UUID.randomUUID();
+        Object videoIdParameter = videoIdParameter(videoId);
         jdbcTemplate.update("""
                 INSERT INTO comments (id, video_id, author_id, parent_comment_id, content)
                 VALUES (?, ?, ?, ?, ?)
-                """, id, videoId, authorId, parentCommentId, content);
+                """, id, videoIdParameter, authorId, parentCommentId, content);
         return jdbcTemplate.queryForObject("""
                 SELECT c.id, c.video_id, c.author_id, u.username, c.content, c.created_at,
                        c.parent_comment_id, 0 AS like_count, FALSE AS liked_by_current_user
@@ -91,10 +93,19 @@ public class JdbcCommentRepository implements CommentPersistencePort {
 
     @Override
     public boolean existsInVideo(UUID commentId, String videoId) {
+        Object videoIdParameter = videoIdParameter(videoId);
         Integer count = jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM comments WHERE id = ? AND video_id = ?
-                """, Integer.class, commentId, videoId);
+                """, Integer.class, commentId, videoIdParameter);
         return count != null && count > 0;
+    }
+
+    private Object videoIdParameter(String videoId) {
+        try {
+            return UUID.fromString(videoId);
+        } catch (IllegalArgumentException exception) {
+            return videoId;
+        }
     }
 
     @Override
