@@ -128,6 +128,24 @@ npm run format                            # Prettier
 
 The MVP requires **more than 50% coverage** on both apps.
 
+### End-to-end tests
+
+The Playwright suite in `e2e/` runs against the complete Docker Compose stack through
+the browser. It covers registration, authenticated upload, catalog search, playback
+navigation and commenting without importing frontend components or backend classes.
+
+```powershell
+docker compose up --build -d
+cd e2e
+npm ci
+npx playwright install chromium
+npm test
+docker compose down -v
+```
+
+The upload scenario uses an in-memory synthetic MP4 payload. It exercises the real
+multipart contract and storage adapter without committing generated media.
+
 ### CI
 
 `.github/workflows/main.yml` runs on every PR and push to `main`:
@@ -135,6 +153,7 @@ The MVP requires **more than 50% coverage** on both apps.
 1. Frontend: `npm ci` → `npm run build` → `npm run test` → `npm run lint`
 2. Backend: `./mvnw clean verify -Pcoverage`
 3. Uploads both coverage reports as build artifacts.
+4. Starts Docker Compose and runs the Playwright E2E suite against the complete stack.
 
 Before opening a PR, run the same steps locally so the pipeline stays green.
 

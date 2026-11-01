@@ -27,6 +27,7 @@ function ContentApp() {
   const [hash, setHash] = useState(() => window.location.hash);
   const [registeredUser, setRegisteredUser] = useState<{ id?: string; username: string; email: string } | null>(null);
   const [loggedUser, setLoggedUser] = useState<{ id?: string; username: string; email: string } | null>(null);
+  const authenticatedUser = loggedUser || registeredUser;
 
   useEffect(() => {
     const onHashChange = () => setHash(window.location.hash);
@@ -67,7 +68,7 @@ function ContentApp() {
   }
 
   if (uploading) {
-    return loggedUser ? (
+    return authenticatedUser ? (
       <UploadForm
         onUploaded={() => {
           setHash('');
@@ -85,7 +86,7 @@ function ContentApp() {
   }
 
   if (analytics) {
-    return loggedUser ? (
+    return authenticatedUser ? (
       <AnalyticsPage
         onBack={() => {
           setHash('');
@@ -110,14 +111,19 @@ function ContentApp() {
         <a href="#">Continue to videos</a>
       </section>
     ) : (
-      <RegistrationForm onRegistered={setRegisteredUser} />
+      <RegistrationForm
+        onRegistered={(user) => {
+          setRegisteredUser(user);
+          setLoggedUser(user);
+        }}
+      />
     );
   }
 
   return (
     <VideoCatalog
       videoId={videoId}
-      loggedUser={loggedUser || registeredUser}
+      loggedUser={authenticatedUser}
       onLogout={() => {
         axios.post(`${getEnv().API_BASE_URL}/auth/logout`, {}, { withCredentials: true }).finally(() => {
           setLoggedUser(null);

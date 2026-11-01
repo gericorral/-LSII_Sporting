@@ -267,3 +267,12 @@ content in this file.
 - 2026-10-30: Connected US-10 comment creation and replies to the video analytics
   counter through a dedicated hexagonal `VideoCommentPort`; replies are visibly
   indented below their parent comment in the frontend.
+- 2026-11-01: Added Playwright E2E coverage using `prompts/26-add-e2e-tests.md`;
+  the browser suite exercises registration, upload, search, playback navigation and
+  comments through the Docker Compose stack while preserving the backend's hexagonal
+  ports and adapters.
+- 2026-11-01: Fixed the post-registration frontend session state so the E2E upload
+  flow and authenticated analytics navigation use the same derived user state; the
+  Playwright test now asserts that the upload form is rendered before filling it.
+- 2026-11-01: Made the E2E video-detail title assertion exact so Playwright does not
+  confuse the search-results heading with the selected video heading.

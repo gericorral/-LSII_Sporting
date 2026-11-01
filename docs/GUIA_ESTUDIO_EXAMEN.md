@@ -4,7 +4,7 @@
 > després de cada canvi de codi. No substitueix el codi: resumeix què fa
 > l'aplicació, quines peces es modifiquen i quines decisions s'han de saber justificar.
 
-**Última actualització:** 29 d'octubre de 2026
+**Última actualització:** 1 de novembre de 2026
 
 ## 1. Què és ProTube
 
@@ -378,6 +378,12 @@ repositori.
 
 ## 6. Preguntes de repàs
 
+- Com comprova la suite E2E el recorregut complet sense importar classes del frontend
+  ni del backend?
+- Quines capes travessa una prova Playwright des del navegador fins a l'adaptador
+  d'emmagatzematge?
+- Per què la suite utilitza un MP4 sintètic en memòria i no un fitxer multimèdia
+  versionat?
 - Què passa des que l'usuari obre la pantalla principal fins que veu les targetes?
 - Quina responsabilitat té cada capa del backend?
 - Per què el catàleg no ha de llegir fitxers directament des del controlador?
@@ -425,6 +431,9 @@ repositori.
 | 29/10/2026 | S'implementa la US-09 de comentaris amb ports hexagonals i persistència JDBC. | La sessió determina l'autor, el vídeo es valida contra el catàleg actual, i la interfície permet publicar i paginar comentaris sense afectar la cerca ni les analítiques. |
 | 29/10/2026 | Es migra de manera segura l'esquema heretat de comentaris a PostgreSQL. | `text` es renombra a `content` sense perdre files; l'inicialitzador és idempotent i rebutja conflictes entre les dues columnes. |
 | 29/10/2026 | Es corregeix la visualització de les dates dels comentaris. | El frontend interpreta la matriu `LocalDateTime` del backend i gestiona dates ISO, absents o invàlides sense mostrar `Invalid Date`. |
+| 01/11/2026 | S'afegeixen proves E2E amb Playwright per als recorreguts principals de l'MVP. | Les proves obren el frontend real servit per Docker, registren un usuari, pugen un vídeo, el cerquen, obren el detall i publiquen un comentari. La prova valida el sistema complet a través d'HTTP, mantenint la separació entre ports, serveis i adaptadors hexagonals; el fitxer MP4 de prova es crea en memòria per no versionar mitjans generats. |
+| 01/11/2026 | Es corregeix la sessió del frontend després del registre i es reforça la navegació E2E a la pantalla de pujada. | El compte creat queda disponible tant com a usuari registrat com com a usuari autenticat; les rutes de pujada i analítiques comparteixen el mateix estat derivat i la prova Playwright comprova que realment s'ha renderitzat el formulari abans d'emplenar-lo. |
+| 01/11/2026 | Es fa exacte el selector del títol en la prova E2E del detall de vídeo. | Playwright podia trobar alhora el títol de la targeta i el títol del detall perquè els selectors de rol permeten coincidències parcials per defecte; exigir `exact: true` evita l'ambigüitat i valida la pantalla correcta. |
 
 ## 8. Temes pendents
 
@@ -432,5 +441,5 @@ repositori.
 - Persistència relacional dels vídeos pujats segons NFR-01.
 - Respostes i likes dels comentaris.
 - Analítiques del contingut propi.
-- Tests E2E dels recorreguts principals.
+- Tests E2E dels recorreguts principals (implementats amb Playwright; cal executar-los en CI i en una instal·lació Docker local).
 - Docker Compose i configuració de producció.
