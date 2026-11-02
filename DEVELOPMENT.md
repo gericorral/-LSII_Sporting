@@ -179,6 +179,11 @@ single origin (http://localhost:8080). The Maven `prod` profile:
 `frontend/.env.production` leaves `VITE_API_DOMAIN`/`VITE_MEDIA_DOMAIN` empty, so the built SPA calls the API with
 relative URLs (`/api`, `/media`) on the same host.
 
+Docker Compose uses the `prod` Spring profile for the shared local stack. At startup, `VideoStoreDatabaseImporter`
+imports the JSON metadata and local asset references from `video-store/` into PostgreSQL idempotently. The
+`JdbcVideoCatalogAdapter` then queries PostgreSQL for the catalog, while the `.mp4` and thumbnail files continue to be
+served from the mounted `video-store/` directory.
+
 ### Run directly with Maven
 
 ```bash

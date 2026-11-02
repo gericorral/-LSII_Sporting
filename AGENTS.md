@@ -301,3 +301,14 @@ content in this file.
   greeting, with an initial-based fallback when no avatar URL is configured.
 - 2026-11-02: Synchronized the existing own-profile avatar into the authenticated
   frontend state when the profile page loads, not only after saving changes.
+- 2026-11-02: Made the Flyway video persistence migration compatible with databases
+  created by older application versions; it now creates the comments table before
+  creating the analytics view, so Docker startup no longer requires deleting the
+  persistent PostgreSQL data directory.
+- 2026-11-02: Configured Docker Compose to import the shared `video-store` metadata
+  into PostgreSQL at startup; the production catalog now queries PostgreSQL while
+  the `.mp4` and thumbnail binaries remain in the mounted file store.
+- 2026-11-02: Documented the catalog repair in
+  `prompts/30-import-video-store-catalog-to-postgresql.md`; the approved prompt
+  records the idempotent metadata importer, PostgreSQL-backed catalog and separate
+  physical media store.

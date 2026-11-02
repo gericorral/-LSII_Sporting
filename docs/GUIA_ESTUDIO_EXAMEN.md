@@ -468,6 +468,8 @@ repositori.
 | 01/11/2026 | Es corregeix la persistència dels comentaris amb identificadors UUID. | El repositori JDBC adapta els identificadors de vídeo al tipus PostgreSQL abans de consultar o inserir; així desapareix l'HTTP 500, els comentaris es guarden i la vista d'analítiques els compta des de la base de dades. |
 | 02/11/2026 | Es configura el catàleg segons l'entorn d'execució. | En desenvolupament, `FileVideoCatalogAdapter` llegeix els vídeos i miniatures del `video-store`; en producció, `JdbcVideoCatalogAdapter` consulta PostgreSQL. Això evita que un adaptador JDBC buit amagui el catàleg local de fitxers. |
 | 02/11/2026 | Es limita el nom visible del perfil a 50 caràcters. | El frontend limita l'entrada i el backend valida el mateix límit abans de persistir-lo, evitant noms excessivament llargs que trenquin el disseny. |
+| 02/11/2026 | Es fa compatible la migració Flyway de vídeos amb bases PostgreSQL persistents antigues. | `V2__video_persistence.sql` crea la taula `comments` si encara no existeix abans de construir `video_analytics_summary`. Això permet que una instal·lació nova i una base conservada per Docker arrenquin sense esborrar `postgres-data`; les migracions idempotents mantenen les dades existents. |
+| 02/11/2026 | Es corregeix el catàleg buit de Docker en instal·lacions noves. | Compose utilitza el perfil `prod` i `VideoStoreDatabaseImporter` importa de manera idempotent la metadata i les referències dels assets des de `video-store` a PostgreSQL. `JdbcVideoCatalogAdapter` consulta la base de dades, mentre els fitxers `.mp4` i les miniatures continuen al magatzem muntat. |
 
 ## 8. Temes pendents
 
