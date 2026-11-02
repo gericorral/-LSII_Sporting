@@ -32,6 +32,11 @@ la sessió amb el `displayName` retornat pel backend. La capçalera mostra aques
 nom com a salutació (`Hi, ...`), mentre que el `username` es conserva per a
 l'identificador públic amb el format `@username`. Això evita que la interfície
 mostri el nom tècnic del compte quan l'usuari ha configurat un nom diferent.
+Si el perfil té un avatar, també es mostra una versió petita del mateix avatar al
+costat de la salutació; si no n'hi ha cap, es mostra la inicial del nom.
+En carregar el perfil propi, el frontend sincronitza el nom i l'avatar amb
+l'estat global de la sessió, de manera que la capçalera també reflecteix els
+valors ja desats abans de tornar al catàleg.
 
 ### Backend
 

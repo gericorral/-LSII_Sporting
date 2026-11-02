@@ -18,7 +18,7 @@ export type Profile = {
 type ProfilePageProps = {
   userId?: string;
   editable: boolean;
-  onProfileUpdated?: (displayName: string | null) => void;
+  onProfileUpdated?: (displayName: string | null, avatarPath: string | null) => void;
   onBack: () => void;
 };
 
@@ -46,6 +46,9 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
       .then((response) => {
         setProfile(response.data);
         setForm(response.data);
+        if (editable) {
+          onProfileUpdated?.(response.data.displayName, response.data.avatarPath);
+        }
         setMessage('');
       })
       .catch(() => setMessage('Unable to load this profile.'));
@@ -70,7 +73,7 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
       );
       setProfile(response.data);
       setForm(response.data);
-      onProfileUpdated?.(response.data.displayName);
+      onProfileUpdated?.(response.data.displayName, response.data.avatarPath);
       setMessage('Profile saved.');
     } catch (error: unknown) {
       if (axios.isAxiosError<{ message?: string }>(error)) {

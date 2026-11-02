@@ -297,3 +297,7 @@ content in this file.
 - 2026-11-02: Updated the authenticated frontend state after profile saves so the
   header greeting uses the saved display name while the username remains the
   public account identifier.
+- 2026-11-02: Displayed the saved profile avatar beside the authenticated header
+  greeting, with an initial-based fallback when no avatar URL is configured.
+- 2026-11-02: Synchronized the existing own-profile avatar into the authenticated
+  frontend state when the profile page loads, not only after saving changes.

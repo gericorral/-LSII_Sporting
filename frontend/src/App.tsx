@@ -26,10 +26,10 @@ function App() {
 function ContentApp() {
   const [hash, setHash] = useState(() => window.location.hash);
   const [registeredUser, setRegisteredUser] = useState<
-    { id?: string; username: string; email: string; displayName?: string | null } | null
+    { id?: string; username: string; email: string; displayName?: string | null; avatarPath?: string | null } | null
   >(null);
   const [loggedUser, setLoggedUser] = useState<
-    { id?: string; username: string; email: string; displayName?: string | null } | null
+    { id?: string; username: string; email: string; displayName?: string | null; avatarPath?: string | null } | null
   >(null);
   const authenticatedUser = loggedUser || registeredUser;
 
@@ -63,9 +63,9 @@ function ContentApp() {
       <ProfilePage
         userId={profileId}
         editable={!profileId}
-        onProfileUpdated={(displayName) => {
-          setLoggedUser((user) => (user ? { ...user, displayName } : user));
-          setRegisteredUser((user) => (user ? { ...user, displayName } : user));
+        onProfileUpdated={(displayName, avatarPath) => {
+          setLoggedUser((user) => (user ? { ...user, displayName, avatarPath } : user));
+          setRegisteredUser((user) => (user ? { ...user, displayName, avatarPath } : user));
         }}
         onBack={() => {
           setHash('');
@@ -148,7 +148,13 @@ function VideoCatalog({
   onLogout,
 }: {
   videoId: string | null;
-  loggedUser: { id?: string; username: string; email: string; displayName?: string | null } | null;
+  loggedUser: {
+    id?: string;
+    username: string;
+    email: string;
+    displayName?: string | null;
+    avatarPath?: string | null;
+  } | null;
   onLogout: () => void;
 }) {
   const { loading, message, value, hasNext, loadMore, refresh, query, search } = useAllVideos();
@@ -203,7 +209,16 @@ function VideoCatalog({
             <nav className="catalog-actions">
               {loggedUser ? (
                 <>
-                  <a href="#profile">Hi, {loggedUser.displayName || loggedUser.username}</a>
+                  <a className="catalog-profile-link" href="#profile">
+                    {loggedUser.avatarPath ? (
+                      <img className="catalog-profile-avatar" src={loggedUser.avatarPath} alt="Profile avatar" />
+                    ) : (
+                      <span className="catalog-profile-avatar catalog-profile-avatar-placeholder" aria-hidden="true">
+                        {(loggedUser.displayName || loggedUser.username).charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    <span>Hi, {loggedUser.displayName || loggedUser.username}</span>
+                  </a>
                   <a href="#upload">Upload video</a>
                   <a href="#analytics">Analytics</a>
                   <button type="button" onClick={onLogout}>
@@ -236,7 +251,13 @@ function VideoDetailPage({
   onUpdated,
 }: {
   id: string;
-  loggedUser: { id?: string; username: string; email: string; displayName?: string | null } | null;
+  loggedUser: {
+    id?: string;
+    username: string;
+    email: string;
+    displayName?: string | null;
+    avatarPath?: string | null;
+  } | null;
   onUpdated: () => Promise<void>;
 }) {
   const { loading, message, value } = useVideo(id);

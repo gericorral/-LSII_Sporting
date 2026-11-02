@@ -54,7 +54,19 @@ describe('ProfilePage', () => {
     fireEvent.change(screen.getByLabelText('Display name'), { target: { value: 'Updated' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save profile' }));
 
-    await waitFor(() => expect(onProfileUpdated).toHaveBeenCalledWith('Updated'));
+    await waitFor(() => expect(onProfileUpdated).toHaveBeenCalledWith('Updated', null));
+  });
+
+  it('notifies the app with the existing avatar when loading the own profile', async () => {
+    const profileWithAvatar = { ...profile, avatarPath: 'https://example.com/avatar.png' };
+    mockedAxios.get.mockResolvedValue({ data: profileWithAvatar });
+    const onProfileUpdated = jest.fn();
+
+    render(<ProfilePage editable onProfileUpdated={onProfileUpdated} onBack={jest.fn()} />);
+
+    await waitFor(() =>
+      expect(onProfileUpdated).toHaveBeenCalledWith('Player One', 'https://example.com/avatar.png')
+    );
   });
 
   it('shows public profiles without edit controls', async () => {

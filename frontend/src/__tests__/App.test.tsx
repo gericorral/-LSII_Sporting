@@ -234,7 +234,7 @@ describe('App routes', () => {
       username: 'player_1',
       displayName: 'Player One',
       description: null,
-      avatarPath: null,
+      avatarPath: 'https://example.com/avatar.png',
       website: null,
       location: null,
       publicProfile: true,
@@ -244,7 +244,7 @@ describe('App routes', () => {
       username: 'player_1',
       displayName: 'Updated Name',
       description: null,
-      avatarPath: null,
+      avatarPath: 'https://example.com/avatar.png',
       website: null,
       location: null,
       publicProfile: true,
@@ -261,6 +261,34 @@ describe('App routes', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Back to videos' }));
 
     await waitFor(() => expect(screen.getByText('Hi, Updated Name')).toBeInTheDocument());
+    expect(screen.getByRole('img', { name: 'Profile avatar' })).toHaveAttribute(
+      'src',
+      'https://example.com/avatar.png'
+    );
+  });
+
+  it('loads the existing avatar into the catalog greeting from the own profile', async () => {
+    mockedAxios.get.mockResolvedValue({
+      data: {
+        userId: '1',
+        username: 'player_1',
+        displayName: 'Player One',
+        description: null,
+        avatarPath: 'https://example.com/avatar.png',
+        website: null,
+        location: null,
+        publicProfile: true,
+      },
+    });
+    window.location.hash = '#login';
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
+    window.location.hash = '#profile';
+
+    await screen.findByDisplayValue('Player One');
+    fireEvent.click(screen.getByRole('button', { name: 'Back to videos' }));
+
+    await waitFor(() => expect(screen.getByRole('img', { name: 'Profile avatar' })).toBeInTheDocument());
   });
 
   it('shows video detail states', () => {
