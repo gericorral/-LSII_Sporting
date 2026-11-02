@@ -18,10 +18,11 @@ export type Profile = {
 type ProfilePageProps = {
   userId?: string;
   editable: boolean;
+  onProfileUpdated?: (displayName: string | null) => void;
   onBack: () => void;
 };
 
-export default function ProfilePage({ userId, editable, onBack }: ProfilePageProps) {
+export default function ProfilePage({ userId, editable, onProfileUpdated, onBack }: ProfilePageProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [form, setForm] = useState<Profile>({
     userId: '',
@@ -69,6 +70,7 @@ export default function ProfilePage({ userId, editable, onBack }: ProfilePagePro
       );
       setProfile(response.data);
       setForm(response.data);
+      onProfileUpdated?.(response.data.displayName);
       setMessage('Profile saved.');
     } catch (error: unknown) {
       if (axios.isAxiosError<{ message?: string }>(error)) {

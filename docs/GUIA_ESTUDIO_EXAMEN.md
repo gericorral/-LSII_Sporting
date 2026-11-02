@@ -4,7 +4,7 @@
 > després de cada canvi de codi. No substitueix el codi: resumeix què fa
 > l'aplicació, quines peces es modifiquen i quines decisions s'han de saber justificar.
 
-**Última actualització:** 1 de novembre de 2026
+**Última actualització:** 2 de novembre de 2026
 
 ## 1. Què és ProTube
 
@@ -24,6 +24,14 @@ El frontend és una SPA feta amb React, TypeScript i Vite. Mostra la interfície
 gestiona els estats de càrrega i error, recull les accions de l'usuari i consulta el
 backend. Les variables d'entorn permeten canviar el domini de l'API i dels fitxers
 multimèdia sense modificar la interfície.
+
+### Actualització del nom mostrat
+
+Quan un usuari desa el seu perfil, el frontend actualitza també l'estat global de
+la sessió amb el `displayName` retornat pel backend. La capçalera mostra aquest
+nom com a salutació (`Hi, ...`), mentre que el `username` es conserva per a
+l'identificador públic amb el format `@username`. Això evita que la interfície
+mostri el nom tècnic del compte quan l'usuari ha configurat un nom diferent.
 
 ### Backend
 

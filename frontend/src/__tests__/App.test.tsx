@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from '../App';
 import { useAllVideos } from '../useAllVideos';
 import { useVideo } from '../useVideo';
@@ -226,6 +226,41 @@ describe('App routes', () => {
       {},
       { withCredentials: true }
     );
+  });
+
+  it('uses the saved display name in the catalog greeting', async () => {
+    mockedAxios.get.mockResolvedValue({ data: {
+      userId: '1',
+      username: 'player_1',
+      displayName: 'Player One',
+      description: null,
+      avatarPath: null,
+      website: null,
+      location: null,
+      publicProfile: true,
+    } });
+    mockedAxios.put.mockResolvedValue({ data: {
+      userId: '1',
+      username: 'player_1',
+      displayName: 'Updated Name',
+      description: null,
+      avatarPath: null,
+      website: null,
+      location: null,
+      publicProfile: true,
+    } });
+    window.location.hash = '#login';
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
+    window.location.hash = '#profile';
+
+    expect(await screen.findByDisplayValue('Player One')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Display name'), { target: { value: 'Updated Name' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save profile' }));
+    await screen.findByText('Profile saved.');
+    fireEvent.click(screen.getByRole('button', { name: 'Back to videos' }));
+
+    await waitFor(() => expect(screen.getByText('Hi, Updated Name')).toBeInTheDocument());
   });
 
   it('shows video detail states', () => {

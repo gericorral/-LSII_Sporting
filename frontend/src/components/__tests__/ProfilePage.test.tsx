@@ -44,6 +44,19 @@ describe('ProfilePage', () => {
     );
   });
 
+  it('notifies the app when the display name changes', async () => {
+    mockedAxios.get.mockResolvedValue({ data: profile });
+    mockedAxios.put.mockResolvedValue({ data: { ...profile, displayName: 'Updated' } });
+    const onProfileUpdated = jest.fn();
+    render(<ProfilePage editable onProfileUpdated={onProfileUpdated} onBack={jest.fn()} />);
+
+    await screen.findByDisplayValue('Player One');
+    fireEvent.change(screen.getByLabelText('Display name'), { target: { value: 'Updated' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save profile' }));
+
+    await waitFor(() => expect(onProfileUpdated).toHaveBeenCalledWith('Updated'));
+  });
+
   it('shows public profiles without edit controls', async () => {
     mockedAxios.get.mockResolvedValue({ data: profile });
     render(<ProfilePage userId="1" editable={false} onBack={jest.fn()} />);
