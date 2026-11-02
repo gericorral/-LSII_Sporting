@@ -289,3 +289,8 @@ content in this file.
   identifiers as `UUID` values in `JdbcCommentRepository`; listing and creating
   comments now work with the migrated schema and the analytics view counts the
   persisted rows.
+- 2026-11-02: Selected the video catalog adapter by environment; development uses
+  `FileVideoCatalogAdapter` for the shared `video-store`, while production uses
+  `JdbcVideoCatalogAdapter` for PostgreSQL persistence.
+- 2026-11-02: Limited profile display names to 50 characters in both frontend
+  and backend validation to prevent excessively long names from breaking the UI.

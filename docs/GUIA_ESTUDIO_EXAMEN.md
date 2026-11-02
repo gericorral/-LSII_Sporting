@@ -453,6 +453,8 @@ repositori.
 | 01/11/2026 | Es migren les dades de vídeo i analítica a PostgreSQL amb Flyway i adaptadors JDBC hexagonals. | PostgreSQL passa a ser la font de veritat de la identitat del vídeo, els metadades, les referències als fitxers, les visualitzacions i els comptadors. Els fitxers físics continuen al `video-store`, però els serveis només coneixen els ports de sortida i no depenen de JDBC ni del sistema de fitxers. |
 | 01/11/2026 | S'afegeix una prova d'integració de persistència després de reiniciar el backend. | La prova publica un vídeo, reinicia només el contenidor del backend i comprova que el catàleg el troba després; així es verifica que les dades de domini sobreviuen perquè estan a PostgreSQL i no a memòria o JSON. |
 | 01/11/2026 | Es corregeix la persistència dels comentaris amb identificadors UUID. | El repositori JDBC adapta els identificadors de vídeo al tipus PostgreSQL abans de consultar o inserir; així desapareix l'HTTP 500, els comentaris es guarden i la vista d'analítiques els compta des de la base de dades. |
+| 02/11/2026 | Es configura el catàleg segons l'entorn d'execució. | En desenvolupament, `FileVideoCatalogAdapter` llegeix els vídeos i miniatures del `video-store`; en producció, `JdbcVideoCatalogAdapter` consulta PostgreSQL. Això evita que un adaptador JDBC buit amagui el catàleg local de fitxers. |
+| 02/11/2026 | Es limita el nom visible del perfil a 50 caràcters. | El frontend limita l'entrada i el backend valida el mateix límit abans de persistir-lo, evitant noms excessivament llargs que trenquin el disseny. |
 
 ## 8. Temes pendents
 

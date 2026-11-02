@@ -81,7 +81,7 @@ class ProfileControllerTest {
     void validatesOtherProfileFields() {
         when(session.currentUserId()).thenReturn(userId);
         assertEquals(400, controller.updateOwnProfile(new ProfileController.ProfileRequest(
-                "x".repeat(101), null, null, null, null, true)).getStatusCode().value());
+                "x".repeat(51), null, null, null, null, true)).getStatusCode().value());
         assertEquals(400, controller.updateOwnProfile(new ProfileController.ProfileRequest(
                 null, null, null, "x".repeat(501), null, true)).getStatusCode().value());
         assertEquals(400, controller.updateOwnProfile(new ProfileController.ProfileRequest(

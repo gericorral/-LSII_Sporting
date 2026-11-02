@@ -90,6 +90,7 @@ describe('ProfilePage', () => {
 
     await screen.findByRole('heading', { name: 'player_1' });
     expect(screen.getByLabelText('Display name')).toHaveValue('');
+    expect(screen.getByLabelText('Display name')).toHaveAttribute('maxLength', '50');
     expect(screen.getByLabelText('Website')).toHaveValue('');
     expect(screen.getByLabelText('Location')).toHaveValue('');
   });

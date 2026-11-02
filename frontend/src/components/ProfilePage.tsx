@@ -2,6 +2,8 @@ import { FormEvent, useEffect, useState } from 'react';
 import axios from 'axios';
 import { getEnv } from '../utils/Env';
 
+const MAX_DISPLAY_NAME_LENGTH = 50;
+
 export type Profile = {
   userId: string;
   username: string;
@@ -117,7 +119,7 @@ export default function ProfilePage({ userId, editable, onBack }: ProfilePagePro
           <input
             id="display-name"
             value={form.displayName || ''}
-            maxLength={100}
+            maxLength={MAX_DISPLAY_NAME_LENGTH}
             onChange={(event) => setForm({ ...form, displayName: event.target.value })}
           />
           <label htmlFor="description">Description</label>

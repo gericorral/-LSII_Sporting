@@ -3,6 +3,7 @@ package com.tecnocampus.LS2.protube_back.video.infrastructure.adapter.out.persis
 import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
 import com.tecnocampus.LS2.protube_back.video.domain.port.out.VideoCatalogPort;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 @Repository
 @Primary
+@Profile("prod")
 public class JdbcVideoCatalogAdapter implements VideoCatalogPort {
     private final JdbcTemplate jdbcTemplate;
 

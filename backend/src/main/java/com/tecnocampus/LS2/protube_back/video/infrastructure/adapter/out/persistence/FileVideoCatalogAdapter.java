@@ -7,6 +7,7 @@ import com.tecnocampus.LS2.protube_back.video.domain.port.out.VideoCatalogPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -22,6 +23,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.stream.Stream;
 
 @Component
+@Profile("dev")
 public class FileVideoCatalogAdapter implements VideoCatalogPort {
 
     private static final Logger LOG = LoggerFactory.getLogger(FileVideoCatalogAdapter.class);
