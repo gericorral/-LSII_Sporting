@@ -10,6 +10,7 @@ import axios from 'axios';
 import { getEnv } from './utils/Env';
 import ProfilePage from './components/ProfilePage';
 import UploadForm from './components/UploadForm';
+import AnalyticsPage from './components/AnalyticsPage';
 
 function App() {
   return (
@@ -24,8 +25,13 @@ function App() {
 
 function ContentApp() {
   const [hash, setHash] = useState(() => window.location.hash);
-  const [registeredUser, setRegisteredUser] = useState<{ id?: string; username: string; email: string } | null>(null);
-  const [loggedUser, setLoggedUser] = useState<{ id?: string; username: string; email: string } | null>(null);
+  const [registeredUser, setRegisteredUser] = useState<
+    { id?: string; username: string; email: string; displayName?: string | null; avatarPath?: string | null } | null
+  >(null);
+  const [loggedUser, setLoggedUser] = useState<
+    { id?: string; username: string; email: string; displayName?: string | null; avatarPath?: string | null } | null
+  >(null);
+  const authenticatedUser = loggedUser || registeredUser;
 
   useEffect(() => {
     const onHashChange = () => setHash(window.location.hash);
@@ -38,6 +44,7 @@ function ContentApp() {
   const loggingIn = hash === '#login';
   const profileId = getProfileId(hash);
   const uploading = hash === '#upload';
+  const analytics = hash === '#analytics';
 
   if (loggingIn) {
     return (
@@ -56,6 +63,10 @@ function ContentApp() {
       <ProfilePage
         userId={profileId}
         editable={!profileId}
+        onProfileUpdated={(displayName, avatarPath) => {
+          setLoggedUser((user) => (user ? { ...user, displayName, avatarPath } : user));
+          setRegisteredUser((user) => (user ? { ...user, displayName, avatarPath } : user));
+        }}
         onBack={() => {
           setHash('');
           window.location.hash = '';
@@ -65,7 +76,7 @@ function ContentApp() {
   }
 
   if (uploading) {
-    return loggedUser ? (
+    return authenticatedUser ? (
       <UploadForm
         onUploaded={() => {
           setHash('');
@@ -82,6 +93,24 @@ function ContentApp() {
     );
   }
 
+  if (analytics) {
+    return authenticatedUser ? (
+      <AnalyticsPage
+        onBack={() => {
+          setHash('');
+          window.location.hash = '';
+        }}
+      />
+    ) : (
+      <LoginForm
+        onLoggedIn={(user) => {
+          setLoggedUser(user);
+          window.location.hash = '#analytics';
+        }}
+      />
+    );
+  }
+
   if (registering) {
     return registeredUser ? (
       <section className="registration-panel" aria-live="polite">
@@ -90,14 +119,19 @@ function ContentApp() {
         <a href="#">Continue to videos</a>
       </section>
     ) : (
-      <RegistrationForm onRegistered={setRegisteredUser} />
+      <RegistrationForm
+        onRegistered={(user) => {
+          setRegisteredUser(user);
+          setLoggedUser(user);
+        }}
+      />
     );
   }
 
   return (
     <VideoCatalog
       videoId={videoId}
-      loggedUser={loggedUser || registeredUser}
+      loggedUser={authenticatedUser}
       onLogout={() => {
         axios.post(`${getEnv().API_BASE_URL}/auth/logout`, {}, { withCredentials: true }).finally(() => {
           setLoggedUser(null);
@@ -114,10 +148,17 @@ function VideoCatalog({
   onLogout,
 }: {
   videoId: string | null;
-  loggedUser: { id?: string; username: string; email: string } | null;
+  loggedUser: {
+    id?: string;
+    username: string;
+    email: string;
+    displayName?: string | null;
+    avatarPath?: string | null;
+  } | null;
   onLogout: () => void;
 }) {
-  const { loading, message, value, hasNext, loadMore, refresh } = useAllVideos();
+  const { loading, message, value, hasNext, loadMore, refresh, query, search } = useAllVideos();
+  const [searchText, setSearchText] = useState('');
   if (videoId) {
     return <VideoDetailPage id={videoId} loggedUser={loggedUser} onUpdated={refresh} />;
   }
@@ -135,12 +176,51 @@ function VideoCatalog({
       return (
         <>
           <div className="catalog-toolbar">
-            <h2>Available videos</h2>
+            <div>
+              <h2>{query ? `Search results for "${query}"` : 'Available videos'}</h2>
+              <form
+                className="video-search"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  search(searchText);
+                }}
+              >
+                <label htmlFor="video-search-input">Search videos</label>
+                <input
+                  id="video-search-input"
+                  value={searchText}
+                  onChange={(event) => setSearchText(event.target.value)}
+                  placeholder="Search videos"
+                />
+                <button type="submit">Search</button>
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchText('');
+                      search('');
+                    }}
+                  >
+                    Clear
+                  </button>
+                )}
+              </form>
+            </div>
             <nav className="catalog-actions">
               {loggedUser ? (
                 <>
-                  <a href="#profile">Hi, {loggedUser.username}</a>
+                  <a className="catalog-profile-link" href="#profile">
+                    {loggedUser.avatarPath ? (
+                      <img className="catalog-profile-avatar" src={loggedUser.avatarPath} alt="Profile avatar" />
+                    ) : (
+                      <span className="catalog-profile-avatar catalog-profile-avatar-placeholder" aria-hidden="true">
+                        {(loggedUser.displayName || loggedUser.username).charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    <span>Hi, {loggedUser.displayName || loggedUser.username}</span>
+                  </a>
                   <a href="#upload">Upload video</a>
+                  <a href="#analytics">Analytics</a>
                   <button type="button" onClick={onLogout}>
                     Log out
                   </button>
@@ -153,7 +233,7 @@ function VideoCatalog({
               )}
             </nav>
           </div>
-          <VideoGrid videos={value} />
+          {value.length > 0 ? <VideoGrid videos={value} /> : <p role="status">No videos found.</p>}
           {hasNext && (
             <button className="load-more-button" type="button" onClick={loadMore}>
               Load more videos
@@ -171,7 +251,13 @@ function VideoDetailPage({
   onUpdated,
 }: {
   id: string;
-  loggedUser: { id?: string; username: string; email: string } | null;
+  loggedUser: {
+    id?: string;
+    username: string;
+    email: string;
+    displayName?: string | null;
+    avatarPath?: string | null;
+  } | null;
   onUpdated: () => Promise<void>;
 }) {
   const { loading, message, value } = useVideo(id);
@@ -190,6 +276,7 @@ function VideoDetailPage({
       video={value}
       canEdit={Boolean(loggedUser?.id && loggedUser.id === value.ownerId)}
       onUpdated={onUpdated}
+      loggedUser={loggedUser}
     />
   );
 }

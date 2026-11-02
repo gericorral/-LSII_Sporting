@@ -4,7 +4,7 @@
 > després de cada canvi de codi. No substitueix el codi: resumeix què fa
 > l'aplicació, quines peces es modifiquen i quines decisions s'han de saber justificar.
 
-**Última actualització:** 20 d'octubre de 2026
+**Última actualització:** 2 de novembre de 2026
 
 ## 1. Què és ProTube
 
@@ -24,6 +24,19 @@ El frontend és una SPA feta amb React, TypeScript i Vite. Mostra la interfície
 gestiona els estats de càrrega i error, recull les accions de l'usuari i consulta el
 backend. Les variables d'entorn permeten canviar el domini de l'API i dels fitxers
 multimèdia sense modificar la interfície.
+
+### Actualització del nom mostrat
+
+Quan un usuari desa el seu perfil, el frontend actualitza també l'estat global de
+la sessió amb el `displayName` retornat pel backend. La capçalera mostra aquest
+nom com a salutació (`Hi, ...`), mentre que el `username` es conserva per a
+l'identificador públic amb el format `@username`. Això evita que la interfície
+mostri el nom tècnic del compte quan l'usuari ha configurat un nom diferent.
+Si el perfil té un avatar, també es mostra una versió petita del mateix avatar al
+costat de la salutació; si no n'hi ha cap, es mostra la inicial del nom.
+En carregar el perfil propi, el frontend sincronitza el nom i l'avatar amb
+l'estat global de la sessió, de manera que la capçalera també reflecteix els
+valors ja desats abans de tornar al catàleg.
 
 ### Backend
 
@@ -218,6 +231,163 @@ La persistència queda darrere de `UserPersistencePort`,
 són els adaptadors que implementen aquests contractes. `HttpSessionAdapter` encapsula
 la sessió Servlet i implementa `SessionPort`. D'aquesta manera es pot substituir la
 persistència o la tecnologia de sessió sense modificar la lògica dels casos d'ús.
+
+### US-11: analítiques dels vídeos propis
+
+La pantalla d'analítiques només és accessible per a una sessió autenticada i consulta
+`GET /api/analytics/me`. El controlador utilitza `SessionPort` per obtenir l'usuari
+actual i depèn del port d'entrada `ViewOwnVideoAnalyticsUseCase`; per tant, no coneix
+ni el sistema de fitxers ni cap repositori concret.
+
+`VideoAnalyticsService` coordina la consulta mitjançant el port de sortida
+`VideoAnalyticsPort`. L'adaptador de fitxers llegeix els JSON dels vídeos del
+magatzem compartit, filtra per `ownerId` i exposa les mètriques de visualitzacions,
+comentaris i likes. Els comptadors absents es tracten com zero perquè els vídeos
+antics i els importats pel grabber continuïn funcionant. Si l'usuari no té vídeos,
+l'API retorna una llista buida i React mostra un estat buit; els errors de càrrega es
+mostren explícitament.
+
+Quan el reproductor comença una reproducció, el frontend envia una petició al
+cas d'ús de registre de visualització una sola vegada per obertura del vídeo.
+`RegisterVideoViewUseCase` i `VideoViewService` formen el port d'entrada i la
+regla d'aplicació, mentre que `VideoViewPort` i `FileVideoViewAdapter` amaguen
+l'actualització atòmica del comptador `views` al magatzem de fitxers. Això fa que
+les visualitzacions siguin persistents i que les analítiques les reflecteixin en
+consultes posteriors.
+
+El frontend afegeix la ruta `#analytics`, un hook `useAnalytics` i targetes per vídeo.
+La publicació de nous vídeos inicialitza els comptadors a zero dins del metadata, de
+manera que l'estructura queda preparada per connectar-la a esdeveniments reals de
+visualitzacions, comentaris i likes sense trencar els ports.
+Quan s'edita la metadata d'un vídeo, l'adaptador conserva també el bloc d'analítiques;
+això evita que una edició del títol o la descripció faci desaparèixer les mètriques
+existents.
+
+### US-08: cerca de vídeos
+
+La cerca reutilitza el mateix endpoint paginat `GET /api/videos`, amb el paràmetre
+opcional `query`, i funciona tant per a usuaris autenticats com anònims. El controlador
+continua depenent del port d'entrada `ListVideosUseCase`; el servei valida la paginació
+i el port de sortida `VideoCatalogPort` encapsula la consulta del catàleg. Com que el
+catàleg actual és basat en fitxers, `FileVideoCatalogAdapter` llegeix la metadata
+publicable i filtra abans de paginar.
+
+La puntuació prioritza una coincidència exacta del títol, després una coincidència
+parcial del títol, la descripció i finalment les etiquetes. La consulta ignora espais
+inicials i finals i no distingeix majúscules de minúscules. Les coincidències amb la
+mateixa puntuació es desempatent pel títol i l'identificador, de manera que la
+resposta és determinista. Una consulta buida conserva l'ordre i el comportament del
+catàleg normal.
+
+El frontend afegeix un formulari de cerca accessible al capçal del catàleg. Enter i el
+botó Search reinicien la pàgina a zero, Clear torna al catàleg complet i Load more
+manté la consulta activa. El hook ignora respostes antigues quan hi ha una cerca més
+recent, i mostra estats de càrrega, error i «No videos found.» sense tractar l'absència
+de resultats com un error. Les targetes, la navegació, la reproducció i la ruta
+`#analytics` continuen reutilitzant els components existents.
+
+Els tests cobreixen coincidències exactes, parcials, de descripció i etiquetes,
+majusculació, ordre determinista, paginació, consulta buida i estats de la interfície.
+
+### US-09: comentaris de vídeos
+
+Els comentaris es modelen com una funcionalitat independent amb `Comment`, el port
+d'entrada `CommentUseCase` i el port de sortida `CommentPersistencePort`. El servei
+valida que el vídeo existeixi al catàleg basat en fitxers, rebutja contingut buit o
+superior a 2.000 caràcters i aplica la paginació després de recuperar els comentaris
+ordenats de manera estable, del més nou al més antic.
+
+L'adaptador JDBC crea la taula de comentaris i la seva relació amb `users`, i retorna
+també el nom públic de l'autor. El controlador exposa `GET
+/api/videos/{videoId}/comments` per a tothom i `POST` per a usuaris autenticats.
+L'autor s'obté sempre de `SessionPort`, mai d'un identificador enviat pel frontend;
+això evita la suplantació i manté la lògica d'autenticació fora del domini.
+
+La vista de detall incorpora una secció responsive amb estat de càrrega, error i
+llista buida, avís d'inici de sessió per a visitants anònims, validació client,
+desactivació durant l'enviament i un botó Load more. El text es renderitza com a text
+React, no com HTML, i el comentari creat s'insereix immediatament sense duplicats.
+Els tests cobreixen persistència H2, autenticació, validacions, paginació, errors i
+integració amb el detall del vídeo; la cerca US-08 i les analítiques US-11 no canvien.
+
+### Format de les dates dels comentaris
+
+El backend serialitza el `LocalDateTime` de Java com una matriu numèrica amb any, mes,
+dia, hora, minuts, segons i nanosegons. El frontend no pot passar aquesta matriu
+directament a `new Date` com si fos una cadena ISO, perquè produiria una data
+invàlida. `CommentsSection` accepta tant aquesta representació com cadenes ISO,
+converteix les matrius amb validació dels components i mostra `Date unavailable` si
+la dada és nul·la o incorrecta, evitant ensenyar `Invalid Date`.
+
+Els tests cobreixen les dates persistides retornades per l'API, les dates de
+comentaris acabats de crear i els valors absents o malformats. La correcció és només
+de presentació i no modifica la cerca US-08 ni les analítiques US-11.
+
+### US-10: respostes i likes dels comentaris
+
+US-10 amplia la mateixa funcionalitat hexagonal de comentaris sense posar la lògica
+de negoci al controlador. `CommentService` valida que una resposta tingui un
+comentari pare del mateix vídeo, manté l'autoria derivada de la sessió i delega la
+persistència a `CommentPersistencePort`. `JdbcCommentRepository` desa la relació
+pare-fill i utilitza `comment_likes` amb una clau composta d'usuari i comentari,
+de manera que un usuari no pot crear likes duplicats; el canvi de like retorna el
+nou comptador i l'estat de l'usuari actual.
+
+La lectura de comentaris continua sent pública i compatible amb comentaris arrel,
+però, quan hi ha sessió, també inclou l'estat `likedByCurrentUser`. El controlador
+només coordina les rutes HTTP i `SessionPort` proporciona la identitat. El frontend
+renderitza les respostes de forma anidada, permet contestar i actualitza el like
+després de la resposta del servidor. Els tests cobreixen la validació de pares,
+la persistència i alternança de likes, l'autenticació de les rutes i la interacció
+de respostes i likes; US-09 i US-11 es mantenen separats.
+
+Cada comentari nou, incloses les respostes, incrementa de manera atòmica el
+comptador `analytics.comments` del metadata del vídeo. El cas d'ús de comentaris
+depèn del port de sortida `VideoCommentPort`, i `FileVideoCommentAdapter` amaga
+l'actualització del JSON i el moviment temporal. Això permet que la pantalla
+d'analítiques de l'owner reflecteixi també la participació real. En la interfície,
+les respostes tenen una vora i un marge lateral per identificar visualment que
+pertanyen al comentari original.
+
+### Compatibilitat amb l'esquema PostgreSQL existent
+
+La base de dades de Docker podia contenir una versió anterior de la taula `comments`
+amb la columna `text`, mentre que el model actual utilitza `content`. Com que
+`CREATE TABLE IF NOT EXISTS` no modifica una taula existent, les consultes JDBC
+fallaven amb un error de columna inexistent. L'inicialitzador comprova les columnes
+reals a `information_schema` i renombra `text` a `content` amb `ALTER TABLE`, sense
+recrear la taula ni perdre identificadors, autors, vídeos o dates.
+
+La migració és idempotent: una segona arrencada no torna a renombrar la columna i
+afegeix només les restriccions i l'índex que falten. Si detecta simultàniament `text`
+i `content`, atura l'arrencada de l'inicialitzador amb un error explícit per evitar
+decidir quina dada conservar. Els tests cobreixen l'esquema heretat, la preservació
+de files, les arrencades repetides, l'esquema actual, el conflicte i les operacions
+JDBC posteriors.
+
+### Compatibilitat dels identificadors de vídeo dels comentaris
+
+Després de migrar el catàleg a PostgreSQL, `comments.video_id` és una clau
+`UUID`, mentre que el port de comentaris continua rebent els identificadors com
+a `String` perquè també és compatible amb l'adaptador anterior. L'adaptador
+`JdbcCommentRepository` converteix els identificadors que tenen format UUID
+abans d'enllaçar-los en les consultes de lectura, inserció i validació de
+respostes; els identificadors no UUID continuen funcionant en els tests i
+escenaris heretats.
+
+Aquesta conversió evita els errors PostgreSQL `uuid = character varying` i
+permet que els comentaris es desin realment. Com que
+`video_analytics_summary` compta les files de `comments`, el mateix comentari
+persistit incrementa el comptador que consulta la pantalla d'analítiques.
+
+### Configuració compartida del magatzem de vídeos
+
+La ruta del magatzem ja no depèn del directori personal de cap membre de l'equip.
+En desenvolupament, si no es defineix `ENV_PROTUBE_STORE_DIR`, el backend resol
+`../video-store/` respecte del directori `backend/`. La configuració compartida
+d'IntelliJ utilitza `$PROJECT_DIR$/video-store/`, i Docker munta el mateix directori
+del repositori per defecte. El directori continua ignorat per Git perquè conté fitxers
+multimèdia generats; cada persona només ha de generar o copiar els vídeos una vegada.
 Els tests d'aplicació mockegen ports, mentre que els tests dels adaptadors comproven
 la integració amb HTTP, JDBC i JPA.
 
@@ -236,6 +406,12 @@ repositori.
 
 ## 6. Preguntes de repàs
 
+- Com comprova la suite E2E el recorregut complet sense importar classes del frontend
+  ni del backend?
+- Quines capes travessa una prova Playwright des del navegador fins a l'adaptador
+  d'emmagatzematge?
+- Per què la suite utilitza un MP4 sintètic en memòria i no un fitxer multimèdia
+  versionat?
 - Què passa des que l'usuari obre la pantalla principal fins que veu les targetes?
 - Quina responsabilitat té cada capa del backend?
 - Per què el catàleg no ha de llegir fitxers directament des del controlador?
@@ -279,14 +455,25 @@ repositori.
 | 20/10/2026 | Es completa l'arquitectura hexagonal de les US-06 i US-07 de l'Epic 4. | Els casos d'ús d'upload i edició s'exposen com a ports d'entrada; el servei d'upload ja no depèn de `MultipartFile`, Jackson ni del sistema de fitxers, i els adaptadors conserven la publicació i l'edició atòmiques. |
 | 21/10/2026 | Es corregeix el límit de pujada del frontend Docker. | Nginx aplicava el seu límit multipart per defecte abans que la petició arribés al backend; `client_max_body_size 100M` el fa coherent amb la validació del frontend i els límits de Spring Boot. |
 | 21/10/2026 | S'ordena el catàleg perquè els vídeos nous apareguin al principi. | L'adaptador de catàleg ordena els fitxers MP4 per data de modificació descendent abans d'aplicar la paginació, de manera que una pujada recent és la primera targeta. |
+| 29/10/2026 | S'implementa la US-11 amb arquitectura hexagonal. | El backend exposa les analítiques dels vídeos propis mitjançant ports i l'adaptador del magatzem, i el frontend mostra les mètriques i l'estat buit. |
+| 29/10/2026 | S'implementa la US-09 de comentaris amb ports hexagonals i persistència JDBC. | La sessió determina l'autor, el vídeo es valida contra el catàleg actual, i la interfície permet publicar i paginar comentaris sense afectar la cerca ni les analítiques. |
+| 29/10/2026 | Es migra de manera segura l'esquema heretat de comentaris a PostgreSQL. | `text` es renombra a `content` sense perdre files; l'inicialitzador és idempotent i rebutja conflictes entre les dues columnes. |
+| 29/10/2026 | Es corregeix la visualització de les dates dels comentaris. | El frontend interpreta la matriu `LocalDateTime` del backend i gestiona dates ISO, absents o invàlides sense mostrar `Invalid Date`. |
+| 01/11/2026 | S'afegeixen proves E2E amb Playwright per als recorreguts principals de l'MVP. | Les proves obren el frontend real servit per Docker, registren un usuari, pugen un vídeo, el cerquen, obren el detall i publiquen un comentari. La prova valida el sistema complet a través d'HTTP, mantenint la separació entre ports, serveis i adaptadors hexagonals; el fitxer MP4 de prova es crea en memòria per no versionar mitjans generats. |
+| 01/11/2026 | Es corregeix la sessió del frontend després del registre i es reforça la navegació E2E a la pantalla de pujada. | El compte creat queda disponible tant com a usuari registrat com com a usuari autenticat; les rutes de pujada i analítiques comparteixen el mateix estat derivat i la prova Playwright comprova que realment s'ha renderitzat el formulari abans d'emplenar-lo. |
+| 01/11/2026 | Es fa exacte el selector del títol en la prova E2E del detall de vídeo. | Playwright podia trobar alhora el títol de la targeta i el títol del detall perquè els selectors de rol permeten coincidències parcials per defecte; exigir `exact: true` evita l'ambigüitat i valida la pantalla correcta. |
+| 01/11/2026 | Es corregeix la persistència local de Docker per a PostgreSQL. | Compose munta PostgreSQL a `postgres-data/`, separat de `video-store/`; així els registres de la base de dades i els fitxers multimèdia sobreviuen a `docker compose down` seguit de `up --build`, sempre que no s'esborrin les carpetes ni s'utilitzi `down -v`. |
+| 01/11/2026 | Es migren les dades de vídeo i analítica a PostgreSQL amb Flyway i adaptadors JDBC hexagonals. | PostgreSQL passa a ser la font de veritat de la identitat del vídeo, els metadades, les referències als fitxers, les visualitzacions i els comptadors. Els fitxers físics continuen al `video-store`, però els serveis només coneixen els ports de sortida i no depenen de JDBC ni del sistema de fitxers. |
+| 01/11/2026 | S'afegeix una prova d'integració de persistència després de reiniciar el backend. | La prova publica un vídeo, reinicia només el contenidor del backend i comprova que el catàleg el troba després; així es verifica que les dades de domini sobreviuen perquè estan a PostgreSQL i no a memòria o JSON. |
+| 01/11/2026 | Es corregeix la persistència dels comentaris amb identificadors UUID. | El repositori JDBC adapta els identificadors de vídeo al tipus PostgreSQL abans de consultar o inserir; així desapareix l'HTTP 500, els comentaris es guarden i la vista d'analítiques els compta des de la base de dades. |
+| 02/11/2026 | Es configura el catàleg segons l'entorn d'execució. | En desenvolupament, `FileVideoCatalogAdapter` llegeix els vídeos i miniatures del `video-store`; en producció, `JdbcVideoCatalogAdapter` consulta PostgreSQL. Això evita que un adaptador JDBC buit amagui el catàleg local de fitxers. |
+| 02/11/2026 | Es limita el nom visible del perfil a 50 caràcters. | El frontend limita l'entrada i el backend valida el mateix límit abans de persistir-lo, evitant noms excessivament llargs que trenquin el disseny. |
 
 ## 8. Temes pendents
 
 - Protecció de rutes i autorització per recurs.
-- Persistència real d'usuaris, vídeos, comentaris i analítiques.
-- Cerca.
 - Persistència relacional dels vídeos pujats segons NFR-01.
-- Comentaris, respostes i likes.
+- Respostes i likes dels comentaris.
 - Analítiques del contingut propi.
-- Tests E2E dels recorreguts principals.
+- Tests E2E dels recorreguts principals (implementats amb Playwright; cal executar-los en CI i en una instal·lació Docker local).
 - Docker Compose i configuració de producció.

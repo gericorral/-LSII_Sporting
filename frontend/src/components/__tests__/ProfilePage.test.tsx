@@ -44,6 +44,31 @@ describe('ProfilePage', () => {
     );
   });
 
+  it('notifies the app when the display name changes', async () => {
+    mockedAxios.get.mockResolvedValue({ data: profile });
+    mockedAxios.put.mockResolvedValue({ data: { ...profile, displayName: 'Updated' } });
+    const onProfileUpdated = jest.fn();
+    render(<ProfilePage editable onProfileUpdated={onProfileUpdated} onBack={jest.fn()} />);
+
+    await screen.findByDisplayValue('Player One');
+    fireEvent.change(screen.getByLabelText('Display name'), { target: { value: 'Updated' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save profile' }));
+
+    await waitFor(() => expect(onProfileUpdated).toHaveBeenCalledWith('Updated', null));
+  });
+
+  it('notifies the app with the existing avatar when loading the own profile', async () => {
+    const profileWithAvatar = { ...profile, avatarPath: 'https://example.com/avatar.png' };
+    mockedAxios.get.mockResolvedValue({ data: profileWithAvatar });
+    const onProfileUpdated = jest.fn();
+
+    render(<ProfilePage editable onProfileUpdated={onProfileUpdated} onBack={jest.fn()} />);
+
+    await waitFor(() =>
+      expect(onProfileUpdated).toHaveBeenCalledWith('Player One', 'https://example.com/avatar.png')
+    );
+  });
+
   it('shows public profiles without edit controls', async () => {
     mockedAxios.get.mockResolvedValue({ data: profile });
     render(<ProfilePage userId="1" editable={false} onBack={jest.fn()} />);
@@ -90,6 +115,7 @@ describe('ProfilePage', () => {
 
     await screen.findByRole('heading', { name: 'player_1' });
     expect(screen.getByLabelText('Display name')).toHaveValue('');
+    expect(screen.getByLabelText('Display name')).toHaveAttribute('maxLength', '50');
     expect(screen.getByLabelText('Website')).toHaveValue('');
     expect(screen.getByLabelText('Location')).toHaveValue('');
   });

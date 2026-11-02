@@ -12,6 +12,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/profiles")
 public class ProfileController {
+    private static final int MAX_DISPLAY_NAME_LENGTH = 50;
     private final ProfileUseCase profileUseCase;
     private final SessionPort sessionPort;
 
@@ -59,8 +60,9 @@ public class ProfileController {
             String website, String location, Boolean publicProfile
     ) {
         Map<String, String> validationError() {
-            if (displayName != null && displayName.length() > 100)
-                return Map.of("field", "displayName", "message", "Display name must be at most 100 characters.");
+            if (displayName != null && displayName.length() > MAX_DISPLAY_NAME_LENGTH)
+                return Map.of("field", "displayName", "message",
+                        "Display name must be at most " + MAX_DISPLAY_NAME_LENGTH + " characters.");
             if (description != null && description.length() > 2000)
                 return Map.of("field", "description", "message", "Description must be at most 2000 characters.");
             if (website != null && website.length() > 500)

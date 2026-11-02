@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from '../App';
 import { useAllVideos } from '../useAllVideos';
 import { useVideo } from '../useVideo';
@@ -27,6 +27,9 @@ describe('App routes', () => {
       value: [],
       hasNext: false,
       loadMore: jest.fn(),
+      refresh: jest.fn(),
+      query: '',
+      search: jest.fn(),
     });
     mockedUseVideo.mockReturnValue({ loading: 'loading', message: '', value: null });
   });
@@ -59,6 +62,9 @@ describe('App routes', () => {
       value: [],
       hasNext: false,
       loadMore: jest.fn(),
+      refresh: jest.fn(),
+      query: '',
+      search: jest.fn(),
     });
     const { rerender } = render(<App />);
     expect(screen.getByText('Loading...')).toBeInTheDocument();
@@ -69,6 +75,9 @@ describe('App routes', () => {
       value: [],
       hasNext: false,
       loadMore: jest.fn(),
+      refresh: jest.fn(),
+      query: '',
+      search: jest.fn(),
     });
     rerender(<App />);
     expect(screen.getByText('network error')).toBeInTheDocument();
@@ -95,11 +104,62 @@ describe('App routes', () => {
       value: [],
       hasNext: true,
       loadMore,
+      refresh: jest.fn(),
+      query: '',
+      search: jest.fn(),
     });
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Load more videos' }));
     expect(loadMore).toHaveBeenCalled();
+  });
+
+  it('submits and clears a video search', () => {
+    const search = jest.fn();
+    mockedUseAllVideos.mockReturnValue({
+      loading: 'success',
+      message: '',
+      value: [],
+      hasNext: false,
+      loadMore: jest.fn(),
+      refresh: jest.fn(),
+      query: 'travel',
+      search,
+    });
+
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText('Search videos'), { target: { value: '  travel  ' } });
+    fireEvent.submit(screen.getByRole('button', { name: 'Search' }).closest('form')!);
+    expect(search).toHaveBeenCalledWith('  travel  ');
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    expect(search).toHaveBeenCalledWith('');
+    expect(screen.getByRole('status')).toHaveTextContent('No videos found.');
+  });
+
+  it('renders matching video cards in the normal catalog', () => {
+    mockedUseAllVideos.mockReturnValue({
+      loading: 'success',
+      message: '',
+      value: [
+        {
+          id: '1',
+          title: 'Travel',
+          description: 'A guide',
+          duration: 10,
+          thumbnailUrl: '/thumb',
+          videoUrl: '/video',
+        },
+      ],
+      hasNext: false,
+      loadMore: jest.fn(),
+      refresh: jest.fn(),
+      query: '',
+      search: jest.fn(),
+    });
+    render(<App />);
+
+    expect(screen.getByRole('heading', { name: 'Travel' })).toBeInTheDocument();
   });
 
   it('redirects unauthenticated upload access to login', () => {
@@ -115,6 +175,16 @@ describe('App routes', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
     expect(await screen.findByRole('heading', { name: 'Upload a video' })).toBeInTheDocument();
+  });
+
+  it('shows analytics after authenticating from the analytics route', async () => {
+    mockedAxios.get.mockResolvedValue({ data: [] });
+    window.location.hash = '#analytics';
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
+    expect(await screen.findByRole('heading', { name: 'Video analytics' })).toBeInTheDocument();
+    expect(await screen.findByText('You have not uploaded any videos yet.')).toBeInTheDocument();
   });
 
   it('opens a public profile route', () => {
@@ -156,6 +226,69 @@ describe('App routes', () => {
       {},
       { withCredentials: true }
     );
+  });
+
+  it('uses the saved display name in the catalog greeting', async () => {
+    mockedAxios.get.mockResolvedValue({ data: {
+      userId: '1',
+      username: 'player_1',
+      displayName: 'Player One',
+      description: null,
+      avatarPath: 'https://example.com/avatar.png',
+      website: null,
+      location: null,
+      publicProfile: true,
+    } });
+    mockedAxios.put.mockResolvedValue({ data: {
+      userId: '1',
+      username: 'player_1',
+      displayName: 'Updated Name',
+      description: null,
+      avatarPath: 'https://example.com/avatar.png',
+      website: null,
+      location: null,
+      publicProfile: true,
+    } });
+    window.location.hash = '#login';
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
+    window.location.hash = '#profile';
+
+    expect(await screen.findByDisplayValue('Player One')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Display name'), { target: { value: 'Updated Name' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save profile' }));
+    await screen.findByText('Profile saved.');
+    fireEvent.click(screen.getByRole('button', { name: 'Back to videos' }));
+
+    await waitFor(() => expect(screen.getByText('Hi, Updated Name')).toBeInTheDocument());
+    expect(screen.getByRole('img', { name: 'Profile avatar' })).toHaveAttribute(
+      'src',
+      'https://example.com/avatar.png'
+    );
+  });
+
+  it('loads the existing avatar into the catalog greeting from the own profile', async () => {
+    mockedAxios.get.mockResolvedValue({
+      data: {
+        userId: '1',
+        username: 'player_1',
+        displayName: 'Player One',
+        description: null,
+        avatarPath: 'https://example.com/avatar.png',
+        website: null,
+        location: null,
+        publicProfile: true,
+      },
+    });
+    window.location.hash = '#login';
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
+    window.location.hash = '#profile';
+
+    await screen.findByDisplayValue('Player One');
+    fireEvent.click(screen.getByRole('button', { name: 'Back to videos' }));
+
+    await waitFor(() => expect(screen.getByRole('img', { name: 'Profile avatar' })).toBeInTheDocument());
   });
 
   it('shows video detail states', () => {

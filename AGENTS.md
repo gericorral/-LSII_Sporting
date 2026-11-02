@@ -47,8 +47,9 @@ requires persistent database storage. The production profile uses PostgreSQL
 configuration and also requires the database environment variables documented in
 `DEVELOPMENT.md`.
 
-The `ENV_PROTUBE_STORE_DIR` value must be an absolute path to the directory
-containing the media files and must end with a path separator.
+`ENV_PROTUBE_STORE_DIR` is optional for local development: when omitted, the backend
+uses the repository-level `video-store/` directory. When set, it should point to the
+directory containing the media files and end with a path separator.
 
 ### Frontend
 
@@ -231,3 +232,72 @@ content in this file.
   Catalan study guide and Word export.
 - 2026-10-21: Changed the video catalog ordering so newly published videos appear
   first, based on the uploaded MP4 modification time.
+- 2026-10-29: Added hexagonal video view tracking for US-11; playback now records
+  one persisted view per opened video through input and output ports, documented
+  in the Catalan study guide.
+- 2026-10-29: Implemented US-11 video analytics with
+  `prompts/19-implement-video-analytics.md`; the analytics slice uses input and
+  output ports, reads owner-scoped counters from the shared video metadata, and
+  exposes an authenticated frontend analytics page documented in the Catalan study
+  guide and Word export.
+- 2026-10-29: Preserved the US-11 analytics block when owners edit video metadata,
+  with backend coverage for retaining views, comments and likes.
+- 2026-10-29: Implemented US-09 video comments using
+  `prompts/22-implement-video-comments.md`; comments now use hexagonal ports, JDBC
+  persistence, session-derived authorship, public retrieval and authenticated
+  creation with frontend pagination and validation, documented in the Catalan study
+  guide and Word export.
+- 2026-10-29: Fixed the US-09 PostgreSQL compatibility issue using
+  `prompts/23-migrate-legacy-comments-schema.md`; the comment schema initializer now
+  migrates a legacy `text` column to `content` in place, preserves existing rows,
+  detects conflicting dual-column schemas and applies constraints and indexes
+  idempotently.
+- 2026-10-29: Fixed US-09 comment timestamp rendering using
+  `prompts/24-fix-comment-timestamp-format.md`; the frontend now parses the
+  LocalDateTime array emitted by the REST API, remains compatible with ISO strings and
+  displays a safe fallback for invalid or missing timestamps.
+- 2026-10-29: Implemented US-08 video search using
+  `prompts/21-implement-video-search.md`; the file-backed catalog now supports
+  ranked, case-insensitive title, description and tag queries with paginated frontend
+  results, documented in the Catalan study guide and Word export.
+- 2026-10-30: Implemented US-10 comment replies and likes using
+  `prompts/25-implement-comment-replies-likes.md`; replies now use parent comment
+  relationships and likes are persisted per user through the hexagonal comment
+  slice, documented in the Catalan study guide and Word export.
+- 2026-10-30: Connected US-10 comment creation and replies to the video analytics
+  counter through a dedicated hexagonal `VideoCommentPort`; replies are visibly
+  indented below their parent comment in the frontend.
+- 2026-11-01: Migrated video metadata, asset references, views and analytics to
+  PostgreSQL using `prompts/27-migrate-video-persistence-to-postgresql.md`;
+  Flyway now manages the schema, JDBC adapters implement the existing hexagonal
+  output ports, development uses PostgreSQL, and an E2E integration test verifies
+  metadata survives a backend restart. The change was generated with AI and
+  documented in the Catalan study guide and Word export.
+- 2026-11-01: Added Playwright E2E coverage using `prompts/26-add-e2e-tests.md`;
+  the browser suite exercises registration, upload, search, playback navigation and
+  comments through the Docker Compose stack while preserving the backend's hexagonal
+  ports and adapters.
+- 2026-11-01: Fixed the post-registration frontend session state so the E2E upload
+  flow and authenticated analytics navigation use the same derived user state; the
+  Playwright test now asserts that the upload form is rendered before filling it.
+- 2026-11-01: Made the E2E video-detail title assertion exact so Playwright does not
+  confuse the search-results heading with the selected video heading.
+- 2026-11-01: Fixed Docker persistence by storing PostgreSQL in the ignored
+  repository-level `postgres-data/` bind mount, so database records survive
+  `docker compose down` followed by `docker compose up --build`.
+- 2026-11-01: Fixed PostgreSQL comment persistence by binding UUID video
+  identifiers as `UUID` values in `JdbcCommentRepository`; listing and creating
+  comments now work with the migrated schema and the analytics view counts the
+  persisted rows.
+- 2026-11-02: Selected the video catalog adapter by environment; development uses
+  `FileVideoCatalogAdapter` for the shared `video-store`, while production uses
+  `JdbcVideoCatalogAdapter` for PostgreSQL persistence.
+- 2026-11-02: Limited profile display names to 50 characters in both frontend
+  and backend validation to prevent excessively long names from breaking the UI.
+- 2026-11-02: Updated the authenticated frontend state after profile saves so the
+  header greeting uses the saved display name while the username remains the
+  public account identifier.
+- 2026-11-02: Displayed the saved profile avatar beside the authenticated header
+  greeting, with an initial-based fallback when no avatar URL is configured.
+- 2026-11-02: Synchronized the existing own-profile avatar into the authenticated
+  frontend state when the profile page loads, not only after saving changes.

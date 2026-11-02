@@ -72,4 +72,16 @@ class VideoApplicationServiceTest {
 
         assertEquals(Optional.of(video), videoApplicationService.getVideo("1"));
     }
+
+    @Test
+    void searchesThroughTheOutputPortAndPaginatesResults() {
+        List<VideoSummary> videos = List.of(
+                new VideoSummary("1", "Travel", "", 30, "/media/1.webp", "/media/1.mp4"),
+                new VideoSummary("2", "Travel guide", "", 31, "/media/2.webp", "/media/2.mp4")
+        );
+        when(videoCatalogPort.search("travel")).thenReturn(videos);
+
+        assertEquals(new VideoPage(List.of(videos.get(1)), 1, 1, 2, 2, false),
+                videoApplicationService.listVideos(1, 1, " travel "));
+    }
 }

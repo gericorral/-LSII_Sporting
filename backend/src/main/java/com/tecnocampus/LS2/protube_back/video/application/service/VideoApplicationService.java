@@ -19,10 +19,18 @@ public class VideoApplicationService implements ListVideosUseCase {
 
     @Override
     public VideoPage listVideos(int page, int size) {
+        return listVideos(page, size, "");
+    }
+
+    @Override
+    public VideoPage listVideos(int page, int size, String query) {
         if (page < 0 || size < 1 || size > 100) {
             throw new IllegalArgumentException("Page must be non-negative and size must be between 1 and 100");
         }
-        List<VideoSummary> videos = videoCatalogPort.findAll();
+        String normalizedQuery = query == null ? "" : query.trim();
+        List<VideoSummary> videos = normalizedQuery.isEmpty()
+                ? videoCatalogPort.findAll()
+                : videoCatalogPort.search(normalizedQuery);
         long requestedFromIndex = (long) page * size;
         int fromIndex = (int) Math.min(requestedFromIndex, videos.size());
         int toIndex = Math.min(fromIndex + size, videos.size());

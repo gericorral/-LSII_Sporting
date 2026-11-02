@@ -31,7 +31,19 @@ The backend is organized by business module and uses a Ports and Adapters struct
 7. Shared technical configuration belongs in `shared` or module infrastructure, not in the domain.
 
 The video catalog, upload and metadata-management slices follow this structure while preserving their existing HTTP
-contracts. `ListVideosUseCase`, `UploadVideoUseCase` and `UpdateVideoMetadataUseCase` are input ports. The file
-catalog and publication adapters implement output ports, so JSON serialization, thumbnail generation, atomic file
-moves and multipart handling remain outside the application services. This keeps EPIC 4 independent of Spring
-multipart types, Jackson and filesystem APIs.
+contracts. `ListVideosUseCase`, `UploadVideoUseCase` and `UpdateVideoMetadataUseCase` are input ports. The JDBC
+catalog and publication adapters implement output ports, while the local storage adapter owns thumbnail generation,
+atomic file moves and multipart handling. PostgreSQL stores video metadata and asset keys; the physical media store
+remains an infrastructure detail. This keeps EPIC 4 independent of Spring JDBC, multipart types, Jackson and
+filesystem APIs.
+
+The analytics slice follows the same boundary. `ViewOwnVideoAnalyticsUseCase` is the input port used by
+`AnalyticsController`, while `VideoAnalyticsPort` hides the file-store implementation from
+`VideoAnalyticsService`. `FileVideoAnalyticsAdapter` reads only metadata owned by the authenticated user and
+defaults absent counters to zero, so users without uploads receive an empty collection rather than an error.
+
+Video playback uses the same boundaries: `RegisterVideoViewUseCase` is invoked by
+`VideoController` and `VideoViewService` delegates to `VideoViewPort`. The
+`JdbcVideoViewAdapter` records one row in `video_views`, while
+`JdbcVideoAnalyticsAdapter` reads the database view derived from videos, comments,
+views and likes. Counter persistence therefore remains outside the application layer.

@@ -131,7 +131,7 @@ class FileVideoCatalogAdapterTest {
     void updatesMetadataOnlyForTheOwner(@TempDir Path store) throws IOException {
         UUID ownerId = UUID.randomUUID();
         Files.writeString(store.resolve("1.json"), """
-                {"title":"Old","meta":{"description":"Old description"},"ownerId":"%s","tags":["old"],"category":"Old"}
+                {"title":"Old","meta":{"description":"Old description"},"ownerId":"%s","tags":["old"],"category":"Old","analytics":{"views":12,"comments":3,"likes":4}}
                 """.formatted(ownerId));
         Files.createFile(store.resolve("1.mp4"));
         Files.createFile(store.resolve("1.webp"));
@@ -147,5 +147,43 @@ class FileVideoCatalogAdapterTest {
         assertEquals(List.of("new", "live"), updated.tags());
         assertEquals("New category", updated.category());
         assertEquals("New description", updated.description());
+        var metadata = objectMapper.readTree(Files.readString(store.resolve("1.json")));
+        assertEquals(12, metadata.path("analytics").path("views").asInt());
+        assertEquals(3, metadata.path("analytics").path("comments").asInt());
+        assertEquals(4, metadata.path("analytics").path("likes").asInt());
+    }
+
+    @Test
+    void searchesCaseInsensitivelyAndRanksTitleMatchesBeforeDescriptionAndTags(@TempDir Path store)
+            throws IOException {
+        writeVideo(store, "tag", "Other title", "No match", List.of("travel"));
+        writeVideo(store, "description", "Other title", "Travel guide", List.of());
+        writeVideo(store, "partial", "Travel stories", "No match", List.of());
+        writeVideo(store, "exact", "Travel", "No match", List.of());
+
+        FileVideoCatalogAdapter adapter = new FileVideoCatalogAdapter(store.toString(), objectMapper);
+
+        assertEquals(List.of("exact", "partial", "description", "tag"),
+                adapter.search("  TRAVEL  ").stream().map(VideoSummary::id).toList());
+    }
+
+    @Test
+    void returnsAllVideosForAnEmptyQueryAndNoVideosForNoMatch(@TempDir Path store) throws IOException {
+        writeVideo(store, "1", "Title", "Description", List.of("tag"));
+        FileVideoCatalogAdapter adapter = new FileVideoCatalogAdapter(store.toString(), objectMapper);
+
+        assertEquals(1, adapter.search("   ").size());
+        assertEquals(1, adapter.search(null).size());
+        assertEquals(List.of(), adapter.search("missing"));
+    }
+
+    private void writeVideo(Path store, String id, String title, String description, List<String> tags)
+            throws IOException {
+        var metadata = objectMapper.createObjectNode().put("title", title);
+        metadata.set("meta", objectMapper.createObjectNode().put("description", description));
+        metadata.set("tags", objectMapper.valueToTree(tags));
+        Files.writeString(store.resolve(id + ".json"), metadata.toString());
+        Files.createFile(store.resolve(id + ".mp4"));
+        Files.createFile(store.resolve(id + ".webp"));
     }
 }

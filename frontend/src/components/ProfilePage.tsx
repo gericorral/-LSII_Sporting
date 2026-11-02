@@ -2,6 +2,8 @@ import { FormEvent, useEffect, useState } from 'react';
 import axios from 'axios';
 import { getEnv } from '../utils/Env';
 
+const MAX_DISPLAY_NAME_LENGTH = 50;
+
 export type Profile = {
   userId: string;
   username: string;
@@ -16,10 +18,11 @@ export type Profile = {
 type ProfilePageProps = {
   userId?: string;
   editable: boolean;
+  onProfileUpdated?: (displayName: string | null, avatarPath: string | null) => void;
   onBack: () => void;
 };
 
-export default function ProfilePage({ userId, editable, onBack }: ProfilePageProps) {
+export default function ProfilePage({ userId, editable, onProfileUpdated, onBack }: ProfilePageProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [form, setForm] = useState<Profile>({
     userId: '',
@@ -43,6 +46,9 @@ export default function ProfilePage({ userId, editable, onBack }: ProfilePagePro
       .then((response) => {
         setProfile(response.data);
         setForm(response.data);
+        if (editable) {
+          onProfileUpdated?.(response.data.displayName, response.data.avatarPath);
+        }
         setMessage('');
       })
       .catch(() => setMessage('Unable to load this profile.'));
@@ -67,6 +73,7 @@ export default function ProfilePage({ userId, editable, onBack }: ProfilePagePro
       );
       setProfile(response.data);
       setForm(response.data);
+      onProfileUpdated?.(response.data.displayName, response.data.avatarPath);
       setMessage('Profile saved.');
     } catch (error: unknown) {
       if (axios.isAxiosError<{ message?: string }>(error)) {
@@ -117,7 +124,7 @@ export default function ProfilePage({ userId, editable, onBack }: ProfilePagePro
           <input
             id="display-name"
             value={form.displayName || ''}
-            maxLength={100}
+            maxLength={MAX_DISPLAY_NAME_LENGTH}
             onChange={(event) => setForm({ ...form, displayName: event.target.value })}
           />
           <label htmlFor="description">Description</label>

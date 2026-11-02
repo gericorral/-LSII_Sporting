@@ -25,8 +25,8 @@ the MVP spec see [REQUIREMENT.md](./REQUIREMENT.md).
 
 ## 1. Generate the video store
 
-The backend reads videos from a *store* folder: one `.mp4` / `.webp` / `.json` triple per video, produced by the
-video grabber. Do this once before running the backend.
+The video grabber writes physical media to the shared *store* folder. The running backend uses PostgreSQL for video
+identity and metadata, while `video_assets` stores the corresponding media keys.
 
 ```bash
 cd tooling/videoGrabber
@@ -42,12 +42,13 @@ python3 main.py --store=/absolute/path/to/videos --id=10 --videos=../../resource
 
 | Variable                           | Needed for              | Description                                                                                      |
 |------------------------------------|-------------------------|--------------------------------------------------------------------------------------------------|
-| `ENV_PROTUBE_STORE_DIR`            | always                  | Absolute path of the video store folder. **End it with a path separator** (`/` or `\`) — it is used as a `file:` prefix to serve `/media/**`. |
+| `ENV_PROTUBE_STORE_DIR`            | optional locally, required for external/production stores | Store folder override. If omitted during local development, the backend uses `../video-store/` relative to `backend/`; Docker uses the repository `./video-store` mount. End an override with a path separator (`/` or `\`). |
 | `ENV_PROTUBE_GOOGLE_CLIENT_ID`     | Google OAuth login      | Google OAuth client id                                                                           |
 | `ENV_PROTUBE_GOOGLE_CLIENT_SECRET` | Google OAuth login      | Google OAuth client secret                                                                       |
-| `ENV_PROTUBE_DB_USER`              | `prod` profile          | Database user (use `sa` with the default H2 datasource)                                          |
-| `ENV_PROTUBE_DB_PWD`               | `prod` profile          | Database password (empty with the default H2 datasource)                                         |
-| `ENV_PROTUBE_DB`                   | `prod` + PostgreSQL     | PostgreSQL database name (see [Using PostgreSQL](#using-postgresql))                              |
+| `ENV_PROTUBE_DB_HOST`              | `dev`/`prod` profiles   | PostgreSQL host (defaults to `localhost` locally and `db` in Docker)                             |
+| `ENV_PROTUBE_DB_USER`              | `dev`/`prod` profiles   | PostgreSQL database user                                                                           |
+| `ENV_PROTUBE_DB_PWD`               | `dev`/`prod` profiles   | PostgreSQL database password                                                                       |
+| `ENV_PROTUBE_DB`                   | `dev`/`prod` profiles   | PostgreSQL database name (see [Using PostgreSQL](#using-postgresql))                              |
 
 Never commit real secrets. Set them in your shell, your OS, or your (local, uncommitted) IDE run configuration.
 
@@ -57,7 +58,7 @@ export ENV_PROTUBE_STORE_DIR=/home/me/protube/videos/
 ```
 
 ```powershell
-# Windows PowerShell (current session)
+# Windows PowerShell (current session, only needed to use another store)
 $env:ENV_PROTUBE_STORE_DIR = "D:\code\videos\"
 ```
 
@@ -77,10 +78,12 @@ mvn spring-boot:run
 ```
 
 * Starts on **http://localhost:8080** with the `dev` profile (active by default through the Maven `dev` profile).
-* `dev` uses an in-memory H2 database and loads initial data (`pro_tube.load_initial_data=true`). All data is lost
-  on restart.
-* From IntelliJ you can instead use the shared **ProtubeBackApplication** run configuration (`.run/`) — edit its
-  environment variables to point to your own store folder.
+* `dev` and `prod` both use PostgreSQL. Flyway applies the versioned schema migrations at startup; data is retained
+  across backend restarts. The default development connection is `localhost:5432/protube`.
+* From IntelliJ you can instead use the shared **ProtubeBackApplication** run configuration (`.run/`). It
+  resolves the store to `$PROJECT_DIR$/video-store/`, so the same configuration works after every clone.
+* The repository-level `video-store/` directory is ignored by Git because it contains generated media. Each
+  developer must generate or copy the sample files there once, but no configuration path needs to be changed.
 * CORS is open for `/api/**` and `/auth/**`, so the Vite dev server can call the API directly.
 
 ### Frontend
@@ -126,6 +129,32 @@ npm run format                            # Prettier
 
 The MVP requires **more than 50% coverage** on both apps.
 
+### End-to-end tests
+
+The Playwright suite in `e2e/` runs against the complete Docker Compose stack through
+the browser. It covers registration, authenticated upload, catalog search, playback
+navigation and commenting without importing frontend components or backend classes.
+
+```powershell
+docker compose up --build -d
+cd e2e
+npm ci
+npx playwright install chromium
+npm test
+docker compose down
+```
+
+The upload scenario uses an in-memory synthetic MP4 payload. It exercises the real
+multipart contract and storage adapter without committing generated media.
+
+`postgres-persistence.spec.ts` additionally uploads a video, restarts only the backend container, and verifies that
+the catalog can still find the video. The media files remain in the local store while video identity, metadata,
+asset references, views and analytics are persisted in PostgreSQL.
+
+Compose persists PostgreSQL in the repository-level `postgres-data/` directory and media in `video-store/`. Both
+directories are ignored by Git and survive `docker compose down` and subsequent `docker compose up --build` runs.
+Do not delete either directory or use `docker compose down -v` when you need to preserve local data.
+
 ### CI
 
 `.github/workflows/main.yml` runs on every PR and push to `main`:
@@ -133,6 +162,7 @@ The MVP requires **more than 50% coverage** on both apps.
 1. Frontend: `npm ci` → `npm run build` → `npm run test` → `npm run lint`
 2. Backend: `./mvnw clean verify -Pcoverage`
 3. Uploads both coverage reports as build artifacts.
+4. Starts Docker Compose and runs the Playwright E2E suite against the complete stack.
 
 Before opening a PR, run the same steps locally so the pipeline stays green.
 
@@ -143,7 +173,8 @@ single origin (http://localhost:8080). The Maven `prod` profile:
 
 1. Downloads Node/npm into `backend/target/`, runs `npm install` and `npm run build:prod` in `frontend/`.
 2. Copies `frontend/dist/` into the jar's `static/` folder.
-3. Activates the Spring `prod` profile (`pro_tube.load_initial_data=false`, `ddl-auto=update`).
+3. Activates the Spring `prod` profile (`pro_tube.load_initial_data=false`, `ddl-auto=validate`) and applies Flyway
+   migrations before starting the application.
 
 `frontend/.env.production` leaves `VITE_API_DOMAIN`/`VITE_MEDIA_DOMAIN` empty, so the built SPA calls the API with
 relative URLs (`/api`, `/media`) on the same host.
@@ -173,13 +204,14 @@ To only preview the production frontend bundle, without the backend: `cd fronten
 
 ### Using PostgreSQL
 
-The `prod` profile still points to an in-memory H2 database, which is only a placeholder — the MVP requires a real
-database (NFR-01 in [REQUIREMENT.md](./REQUIREMENT.md)). The PostgreSQL driver is already a dependency. To switch:
+Both `dev` and `prod` profiles use PostgreSQL and apply Flyway migrations at startup. PostgreSQL is required for
+durable domain data (NFR-01 in [REQUIREMENT.md](./REQUIREMENT.md)). To run locally:
 
-1. Start a PostgreSQL server (e.g. `docker run -d --name protube-db -p 5432:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=protube postgres:16`).
-2. In `backend/src/main/resources/application.properties`, in the `prod` section, uncomment the PostgreSQL
-   `spring.datasource.url` line and remove the H2 one.
-3. Set `ENV_PROTUBE_DB` (e.g. `protube`), `ENV_PROTUBE_DB_USER` (e.g. `postgres`) and `ENV_PROTUBE_DB_PWD`.
+1. Start a PostgreSQL server (e.g. `docker run -d --name protube-db -p 5432:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=protube postgres:16`) or use `docker compose up -d`.
+2. Set `ENV_PROTUBE_DB_HOST` (for example `localhost`), `ENV_PROTUBE_DB` (for example `protube`),
+   `ENV_PROTUBE_DB_USER` (for example `postgres`) and `ENV_PROTUBE_DB_PWD`.
+3. Start the backend. Flyway creates the schema on a clean database or baselines the existing schema before applying
+   the video persistence migration.
 
 ## 6. Workflow reminders
 
