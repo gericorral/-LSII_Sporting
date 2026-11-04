@@ -52,7 +52,7 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
         setMessage('');
       })
       .catch(() => setMessage('Unable to load this profile.'));
-  }, [userId]);
+  }, [editable, onProfileUpdated, userId]);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

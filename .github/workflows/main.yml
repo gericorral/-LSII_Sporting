@@ -12,6 +12,21 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: protube
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d protube"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -45,6 +60,11 @@ jobs:
 
       - name: Build and test backend with coverage
         working-directory: backend
+        env:
+          ENV_PROTUBE_DB_HOST: localhost
+          ENV_PROTUBE_DB: protube
+          ENV_PROTUBE_DB_USER: postgres
+          ENV_PROTUBE_DB_PWD: secret
         run: |
           ./mvnw clean verify -Pcoverage
 

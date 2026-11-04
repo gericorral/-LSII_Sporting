@@ -64,9 +64,7 @@ describe('ProfilePage', () => {
 
     render(<ProfilePage editable onProfileUpdated={onProfileUpdated} onBack={jest.fn()} />);
 
-    await waitFor(() =>
-      expect(onProfileUpdated).toHaveBeenCalledWith('Player One', 'https://example.com/avatar.png')
-    );
+    await waitFor(() => expect(onProfileUpdated).toHaveBeenCalledWith('Player One', 'https://example.com/avatar.png'));
   });
 
   it('shows public profiles without edit controls', async () => {

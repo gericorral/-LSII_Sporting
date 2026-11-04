@@ -3,7 +3,7 @@ import { useAllVideos } from './useAllVideos';
 import VideoGrid from './components/VideoGrid';
 import VideoDetail from './components/VideoDetail';
 import { useVideo } from './useVideo';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import RegistrationForm from './components/RegistrationForm';
 import LoginForm from './components/LoginForm';
 import axios from 'axios';
@@ -25,12 +25,20 @@ function App() {
 
 function ContentApp() {
   const [hash, setHash] = useState(() => window.location.hash);
-  const [registeredUser, setRegisteredUser] = useState<
-    { id?: string; username: string; email: string; displayName?: string | null; avatarPath?: string | null } | null
-  >(null);
-  const [loggedUser, setLoggedUser] = useState<
-    { id?: string; username: string; email: string; displayName?: string | null; avatarPath?: string | null } | null
-  >(null);
+  const [registeredUser, setRegisteredUser] = useState<{
+    id?: string;
+    username: string;
+    email: string;
+    displayName?: string | null;
+    avatarPath?: string | null;
+  } | null>(null);
+  const [loggedUser, setLoggedUser] = useState<{
+    id?: string;
+    username: string;
+    email: string;
+    displayName?: string | null;
+    avatarPath?: string | null;
+  } | null>(null);
   const authenticatedUser = loggedUser || registeredUser;
 
   useEffect(() => {
@@ -45,6 +53,13 @@ function ContentApp() {
   const profileId = getProfileId(hash);
   const uploading = hash === '#upload';
   const analytics = hash === '#analytics';
+  const handleProfileUpdated = useCallback(
+    (displayName: string | null | undefined, avatarPath: string | null | undefined) => {
+      setLoggedUser((user) => (user ? { ...user, displayName, avatarPath } : user));
+      setRegisteredUser((user) => (user ? { ...user, displayName, avatarPath } : user));
+    },
+    []
+  );
 
   if (loggingIn) {
     return (
@@ -63,10 +78,7 @@ function ContentApp() {
       <ProfilePage
         userId={profileId}
         editable={!profileId}
-        onProfileUpdated={(displayName, avatarPath) => {
-          setLoggedUser((user) => (user ? { ...user, displayName, avatarPath } : user));
-          setRegisteredUser((user) => (user ? { ...user, displayName, avatarPath } : user));
-        }}
+        onProfileUpdated={handleProfileUpdated}
         onBack={() => {
           setHash('');
           window.location.hash = '';

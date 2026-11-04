@@ -4,7 +4,28 @@
 > després de cada canvi de codi. No substitueix el codi: resumeix què fa
 > l'aplicació, quines peces es modifiquen i quines decisions s'han de saber justificar.
 
-**Última actualització:** 2 de novembre de 2026
+**Última actualització:** 4 de novembre de 2026
+
+### Qualitat del codi del perfil i format del frontend
+
+El frontend manté els fitxers TypeScript/TSX amb el format definit per Prettier,
+incloent els tipus d'estat de `App` i les proves de navegació i perfil. A més,
+`ProfilePage` declara totes les dependències del seu `useEffect`, mentre que
+`App` estabilitza el callback que sincronitza el nom i l'avatar de la sessió.
+Això evita avisos de linter i reexecucions inesperades de l'efecte, sense canviar
+el comportament funcional. Les proves i la compilació del frontend continuen
+verificant aquest flux.
+
+### Cobertura dels adaptadors JDBC i de l'importador
+
+Els adaptadors JDBC de vídeos, publicació, visualitzacions, comentaris i analítiques
+ara tenen proves de les rutes d'èxit, errors d'identificador, autorització i
+persistència. L'importador del `video-store` també es prova amb fitxers temporals per
+verificar que ignora metadades incompletes o invàlides i importa correctament tags,
+categories i miniatures WebP o PNG. Aquestes proves utilitzen mocks de les dependències
+JDBC i no introdueixen H2 com a substitut de PostgreSQL; el context de l'aplicació i
+la integració continuen funcionant amb PostgreSQL. L'objectiu és mantenir el llindar
+global de JaCoCo per sobre del 90%.
 
 ## 1. Què és ProTube
 
@@ -422,6 +443,19 @@ repositori.
 - Quins estats ha de mostrar una pantalla mentre una petició carrega o falla?
 - Quins tests afegiries abans de donar per acabada una funcionalitat?
 
+### CI del backend i PostgreSQL
+
+Els tests d'arrencada del backend utilitzen la mateixa tecnologia de persistència que
+l'aplicació: PostgreSQL amb Flyway. La pipeline de GitHub Actions declara PostgreSQL
+com a servei, espera que el healthcheck el marqui com a disponible i passa les
+variables de connexió al procés Maven. Això evita que el context de Spring falli per
+un `Connection refused` a `localhost:5432` i no introdueix una base de dades
+alternativa només per als tests.
+
+El perfil Maven `coverage` existeix explícitament perquè la comanda de CI
+`mvn clean verify -Pcoverage` sigui reproducible. JaCoCo continua aplicando els
+llindars definits al `pom.xml`; el perfil només fa vàlida la comanda del pipeline.
+
 ## 7. Registre de canvis per estudiar
 
 | Data | Canvi funcional | Què cal entendre |
@@ -468,6 +502,9 @@ repositori.
 | 01/11/2026 | Es corregeix la persistència dels comentaris amb identificadors UUID. | El repositori JDBC adapta els identificadors de vídeo al tipus PostgreSQL abans de consultar o inserir; així desapareix l'HTTP 500, els comentaris es guarden i la vista d'analítiques els compta des de la base de dades. |
 | 02/11/2026 | Es configura el catàleg segons l'entorn d'execució. | En desenvolupament, `FileVideoCatalogAdapter` llegeix els vídeos i miniatures del `video-store`; en producció, `JdbcVideoCatalogAdapter` consulta PostgreSQL. Això evita que un adaptador JDBC buit amagui el catàleg local de fitxers. |
 | 02/11/2026 | Es limita el nom visible del perfil a 50 caràcters. | El frontend limita l'entrada i el backend valida el mateix límit abans de persistir-lo, evitant noms excessivament llargs que trenquin el disseny. |
+| 02/11/2026 | Es fa compatible la migració Flyway de vídeos amb bases PostgreSQL persistents antigues. | `V2__video_persistence.sql` crea la taula `comments` si encara no existeix abans de construir `video_analytics_summary`. Això permet que una instal·lació nova i una base conservada per Docker arrenquin sense esborrar `postgres-data`; les migracions idempotents mantenen les dades existents. |
+| 02/11/2026 | Es corregeix el catàleg buit de Docker en instal·lacions noves. | Compose utilitza el perfil `prod` i `VideoStoreDatabaseImporter` importa de manera idempotent la metadata i les referències dels assets des de `video-store` a PostgreSQL. `JdbcVideoCatalogAdapter` consulta la base de dades, mentre els fitxers `.mp4` i les miniatures continuen al magatzem muntat. |
+| 04/11/2026 | Es corregeix el test d'arrencada del backend a la CI sense substituir PostgreSQL. | GitHub Actions inicia un servei PostgreSQL saludable abans de Maven i li passa les credencials de la base de dades; el perfil `coverage` també queda definit al `pom.xml` perquè la verificació amb JaCoCo no produeixi un avís de perfil inexistent. |
 
 ## 8. Temes pendents
 
