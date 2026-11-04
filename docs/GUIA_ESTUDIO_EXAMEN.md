@@ -6,6 +6,17 @@
 
 **Última actualització:** 4 de novembre de 2026
 
+### Cobertura dels adaptadors JDBC i de l'importador
+
+Els adaptadors JDBC de vídeos, publicació, visualitzacions, comentaris i analítiques
+ara tenen proves de les rutes d'èxit, errors d'identificador, autorització i
+persistència. L'importador del `video-store` també es prova amb fitxers temporals per
+verificar que ignora metadades incompletes o invàlides i importa correctament tags,
+categories i miniatures WebP o PNG. Aquestes proves utilitzen mocks de les dependències
+JDBC i no introdueixen H2 com a substitut de PostgreSQL; el context de l'aplicació i
+la integració continuen funcionant amb PostgreSQL. L'objectiu és mantenir el llindar
+global de JaCoCo per sobre del 90%.
+
 ## 1. Què és ProTube
 
 ProTube és una aplicació web per veure vídeos i, segons la funcionalitat

@@ -312,3 +312,7 @@ content in this file.
   `prompts/30-import-video-store-catalog-to-postgresql.md`; the approved prompt
   records the idempotent metadata importer, PostgreSQL-backed catalog and separate
   physical media store.
+- 2026-11-04: Raised backend coverage above 90% using the approved
+  `prompts/10-enforce-global-coverage.md`; JDBC video adapters and the PostgreSQL
+  video-store importer now have focused tests, with the AI-assisted change
+  documented in this file and the Catalan study guide.
