@@ -6,6 +6,16 @@
 
 **Última actualització:** 4 de novembre de 2026
 
+### Qualitat del codi del perfil i format del frontend
+
+El frontend manté els fitxers TypeScript/TSX amb el format definit per Prettier,
+incloent els tipus d'estat de `App` i les proves de navegació i perfil. A més,
+`ProfilePage` declara totes les dependències del seu `useEffect`, mentre que
+`App` estabilitza el callback que sincronitza el nom i l'avatar de la sessió.
+Això evita avisos de linter i reexecucions inesperades de l'efecte, sense canviar
+el comportament funcional. Les proves i la compilació del frontend continuen
+verificant aquest flux.
+
 ### Cobertura dels adaptadors JDBC i de l'importador
 
 Els adaptadors JDBC de vídeos, publicació, visualitzacions, comentaris i analítiques

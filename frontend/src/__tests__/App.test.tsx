@@ -229,26 +229,30 @@ describe('App routes', () => {
   });
 
   it('uses the saved display name in the catalog greeting', async () => {
-    mockedAxios.get.mockResolvedValue({ data: {
-      userId: '1',
-      username: 'player_1',
-      displayName: 'Player One',
-      description: null,
-      avatarPath: 'https://example.com/avatar.png',
-      website: null,
-      location: null,
-      publicProfile: true,
-    } });
-    mockedAxios.put.mockResolvedValue({ data: {
-      userId: '1',
-      username: 'player_1',
-      displayName: 'Updated Name',
-      description: null,
-      avatarPath: 'https://example.com/avatar.png',
-      website: null,
-      location: null,
-      publicProfile: true,
-    } });
+    mockedAxios.get.mockResolvedValue({
+      data: {
+        userId: '1',
+        username: 'player_1',
+        displayName: 'Player One',
+        description: null,
+        avatarPath: 'https://example.com/avatar.png',
+        website: null,
+        location: null,
+        publicProfile: true,
+      },
+    });
+    mockedAxios.put.mockResolvedValue({
+      data: {
+        userId: '1',
+        username: 'player_1',
+        displayName: 'Updated Name',
+        description: null,
+        avatarPath: 'https://example.com/avatar.png',
+        website: null,
+        location: null,
+        publicProfile: true,
+      },
+    });
     window.location.hash = '#login';
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
