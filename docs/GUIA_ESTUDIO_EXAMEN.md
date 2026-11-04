@@ -4,7 +4,7 @@
 > després de cada canvi de codi. No substitueix el codi: resumeix què fa
 > l'aplicació, quines peces es modifiquen i quines decisions s'han de saber justificar.
 
-**Última actualització:** 2 de novembre de 2026
+**Última actualització:** 4 de novembre de 2026
 
 ## 1. Què és ProTube
 
@@ -422,6 +422,19 @@ repositori.
 - Quins estats ha de mostrar una pantalla mentre una petició carrega o falla?
 - Quins tests afegiries abans de donar per acabada una funcionalitat?
 
+### CI del backend i PostgreSQL
+
+Els tests d'arrencada del backend utilitzen la mateixa tecnologia de persistència que
+l'aplicació: PostgreSQL amb Flyway. La pipeline de GitHub Actions declara PostgreSQL
+com a servei, espera que el healthcheck el marqui com a disponible i passa les
+variables de connexió al procés Maven. Això evita que el context de Spring falli per
+un `Connection refused` a `localhost:5432` i no introdueix una base de dades
+alternativa només per als tests.
+
+El perfil Maven `coverage` existeix explícitament perquè la comanda de CI
+`mvn clean verify -Pcoverage` sigui reproducible. JaCoCo continua aplicando els
+llindars definits al `pom.xml`; el perfil només fa vàlida la comanda del pipeline.
+
 ## 7. Registre de canvis per estudiar
 
 | Data | Canvi funcional | Què cal entendre |
@@ -470,6 +483,7 @@ repositori.
 | 02/11/2026 | Es limita el nom visible del perfil a 50 caràcters. | El frontend limita l'entrada i el backend valida el mateix límit abans de persistir-lo, evitant noms excessivament llargs que trenquin el disseny. |
 | 02/11/2026 | Es fa compatible la migració Flyway de vídeos amb bases PostgreSQL persistents antigues. | `V2__video_persistence.sql` crea la taula `comments` si encara no existeix abans de construir `video_analytics_summary`. Això permet que una instal·lació nova i una base conservada per Docker arrenquin sense esborrar `postgres-data`; les migracions idempotents mantenen les dades existents. |
 | 02/11/2026 | Es corregeix el catàleg buit de Docker en instal·lacions noves. | Compose utilitza el perfil `prod` i `VideoStoreDatabaseImporter` importa de manera idempotent la metadata i les referències dels assets des de `video-store` a PostgreSQL. `JdbcVideoCatalogAdapter` consulta la base de dades, mentre els fitxers `.mp4` i les miniatures continuen al magatzem muntat. |
+| 04/11/2026 | Es corregeix el test d'arrencada del backend a la CI sense substituir PostgreSQL. | GitHub Actions inicia un servei PostgreSQL saludable abans de Maven i li passa les credencials de la base de dades; el perfil `coverage` també queda definit al `pom.xml` perquè la verificació amb JaCoCo no produeixi un avís de perfil inexistent. |
 
 ## 8. Temes pendents
 
