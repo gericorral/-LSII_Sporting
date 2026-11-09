@@ -49,6 +49,14 @@ class VideoControllerTest {
     }
 
     @Test
+    void treatsNullSearchQueryAsTheFullCatalog() {
+        when(listVideosUseCase.listVideos(0, 12)).thenReturn(new VideoPage(
+                List.of(), 0, 12, 0, 0, false));
+
+        assertEquals(200, videoController.getVideos(0, 12, null).getStatusCode().value());
+    }
+
+    @Test
     void returnsVideoFromTheInputPort() {
         VideoSummary video = new VideoSummary(
                 "1", "Video 1", "Description", 30, "/media/1.webp", "/media/1.mp4"

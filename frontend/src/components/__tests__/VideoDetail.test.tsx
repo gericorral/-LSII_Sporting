@@ -37,6 +37,46 @@ describe('VideoDetail', () => {
     expect(document.querySelector('video')).toHaveAttribute('src', '/media/1.mp4');
   });
 
+  it('loads the rating and lets an authenticated user rate the video', async () => {
+    mockedAxios.get.mockImplementation((url) => {
+      if (String(url).includes('/rating')) {
+        return Promise.resolve({
+          status: 200,
+          data: { videoId: '1', averageRating: 4, ratingCount: 2, userRating: 3 },
+        });
+      }
+      return Promise.resolve({ status: 200, data: { content: [], hasNext: false } });
+    });
+    mockedAxios.put.mockResolvedValue({
+      status: 200,
+      data: { videoId: '1', averageRating: 4.33, ratingCount: 3, userRating: 5 },
+    });
+    render(
+      <VideoDetail
+        loggedUser={{ username: 'player' }}
+        video={{
+          id: '1',
+          title: 'Video 1',
+          description: 'A description',
+          duration: null,
+          thumbnailUrl: '/media/1.webp',
+          videoUrl: '/media/1.mp4',
+        }}
+      />
+    );
+
+    expect(await screen.findByText('2 ratings')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Rate 5 stars' }));
+    await waitFor(() =>
+      expect(mockedAxios.put).toHaveBeenCalledWith(
+        expect.stringContaining('/videos/1/rating'),
+        { rating: 5 },
+        { withCredentials: true }
+      )
+    );
+    expect(await screen.findByText('3 ratings')).toBeInTheDocument();
+  });
+
   it('renders without duration when it is unavailable', () => {
     render(
       <VideoDetail
@@ -51,7 +91,7 @@ describe('VideoDetail', () => {
       />
     );
 
-    expect(document.querySelector('.video-detail span')).not.toBeInTheDocument();
+    expect(document.querySelector('.video-detail > span')).not.toBeInTheDocument();
     expect(screen.getByText('Video 2')).toBeInTheDocument();
   });
 

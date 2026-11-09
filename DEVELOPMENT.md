@@ -55,7 +55,11 @@ Never commit real secrets. Set them in your shell, your OS, or your (local, unco
 
 ### Google sign-in
 
-Configure a Google OAuth web application with the redirect URI
+When running the backend locally with the default `dev` profile, Google OAuth is
+configured with harmless placeholder credentials if the environment variables are
+empty. This allows local login and registration to start without Google credentials;
+Google sign-in remains unavailable until real credentials are provided. To enable
+Google sign-in, configure a Google OAuth web application with the redirect URI
 `http://localhost:8080/login/oauth2/code/google`, then set the client ID and secret
 environment variables above. The frontend's Google buttons start Spring Security's
 authorization-code flow at `/oauth2/authorization/google`; tokens remain server-side.

@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 public class SecurityConfig {
     @Value("${pro_tube.frontend.url:http://localhost:5173}")
     private String frontendUrl;
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http,
                                              AuthenticationSuccessHandler oauthSuccessHandler,
@@ -26,7 +27,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/oauth2/**", "/login/**", "/api/**", "/media/**", "/").permitAll()
                         .anyRequest().permitAll())
-                .oauth2Login(oauth -> oauth.successHandler(oauthSuccessHandler).failureHandler(oauthFailureHandler));
+                .oauth2Login(oauth -> oauth
+                        .successHandler(oauthSuccessHandler)
+                        .failureHandler(oauthFailureHandler));
         return http.build();
     }
 

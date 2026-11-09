@@ -50,6 +50,8 @@ class VideoMetadataServiceTest {
         assertThrows(VideoMetadataService.InvalidMetadataException.class,
                 () -> service.update("1", ownerId, "Title", "Description", List.of(), "x".repeat(81)));
         assertThrows(VideoMetadataService.InvalidMetadataException.class,
+                () -> service.update("1", ownerId, "x".repeat(256), "Description", List.of(), ""));
+        assertThrows(VideoMetadataService.InvalidMetadataException.class,
                 () -> service.update("", ownerId, "Title", "Description", List.of(), ""));
     }
 
@@ -59,5 +61,28 @@ class VideoMetadataServiceTest {
 
         assertThrows(VideoMetadataService.VideoNotFoundException.class,
                 () -> service.update("missing", ownerId, "Title", "Description", Arrays.asList((String) null), null));
+    }
+
+    @Test
+    void acceptsMissingOptionalTagsAndCategory() {
+        VideoSummary updated = new VideoSummary(
+                "1", "Title", "Description", null, "", "", ownerId, List.of(), ""
+        );
+        when(catalog.updateMetadata("1", ownerId, "Title", "Description", List.of(), ""))
+                .thenReturn(Optional.of(updated));
+
+        assertEquals(updated, service.update("1", ownerId, "Title", "Description", null, null));
+    }
+
+    @Test
+    void ignoresNullTags() {
+        VideoSummary updated = new VideoSummary(
+                "1", "Title", "Description", null, "", "", ownerId, List.of(), ""
+        );
+        when(catalog.updateMetadata("1", ownerId, "Title", "Description", List.of(), ""))
+                .thenReturn(Optional.of(updated));
+
+        assertEquals(updated, service.update("1", ownerId, "Title", "Description",
+                Arrays.asList((String) null), ""));
     }
 }

@@ -365,3 +365,20 @@ content in this file.
 - 2026-11-09: Improved the Google OAuth buttons with a clear branded icon,
   white contrast styling, hover feedback and consistent sizing in login and
   registration forms.
+- 2026-11-09: Fixed video rating persistence for PostgreSQL `SMALLINT` values by
+  converting numeric JDBC results safely, and redesigned the rating control as
+  an accessible star selector with clearer score and feedback states.
+- 2026-11-09: Made rating persistence compatible with numeric file-catalog video
+  identifiers as well as PostgreSQL UUID identifiers, and exposed actionable
+  session, not-found and server errors in the frontend.
+- 2026-11-09: Fixed the Flyway checksum mismatch caused by modifying the applied
+  `V2__video_persistence.sql`; the original migration is restored and the comments
+  schema normalization now runs through the new `V5__normalize_comments_schema.sql`
+  migration without requiring database reset or `flyway repair`.
+- 2026-11-09: Kept Google OAuth configured in the default `dev` profile while using
+  harmless placeholder credentials when environment variables are empty, allowing
+  local startup without disabling the OAuth integration.
+- 2026-11-09: Implemented video ratings with the approved
+  `prompts/35-implement-video-rating.md`; authenticated users can submit or update
+  one rating from 1 to 5 per video, while the detail view displays the persisted
+  average and count through the hexagonal video slice.

@@ -385,6 +385,31 @@ d'analítiques de l'owner reflecteixi també la participació real. En la interf
 les respostes tenen una vora i un marge lateral per identificar visualment que
 pertanyen al comentari original.
 
+### Rating de vídeos
+
+El rating es tracta com un cas d'ús propi dins del mòdul de vídeo. El port d'entrada
+`RateVideoUseCase` i `VideoRatingService` validen l'existència del vídeo, exigeixen
+una sessió per escriure i accepten només valors de l'1 al 5. El port de sortida
+`VideoRatingPort` amaga la persistència JDBC; `JdbcVideoRatingAdapter` desa una fila
+per combinació vídeo-usuari i actualitza la valoració existent amb `ON CONFLICT`.
+La migració `V6__video_ratings.sql` crea la taula i les restriccions sense modificar
+migracions Flyway ja aplicades.
+
+`VideoRatingController` exposa una lectura pública de la mitjana, el nombre total i
+la valoració de l'usuari actual, i una operació autenticada per crear o modificar la
+valoració. El detall del vídeo utilitza `useVideoRating`, mostra la mitjana i permet
+seleccionar una puntuació només si l'usuari està autenticat. Els tests cobreixen
+validació del servei, identitat derivada de la sessió, errors HTTP i la interacció
+del control de rating al frontend. El resultat `SMALLINT` de PostgreSQL es converteix
+com un `Number` abans de construir el model, perquè els drivers JDBC poden retornar
+`Short` en lloc d'`Integer`. La interfície presenta estrelles, destaca la puntuació
+seleccionada, mostra la mitjana i el nombre de valoracions, i manté els botons
+desactivats mentre es desa la valoració.
+La persistència utilitza el mateix identificador textual que el catàleg, perquè el
+catàleg de desenvolupament basat en fitxers pot utilitzar identificadors numèrics,
+mentre que el catàleg PostgreSQL utilitza UUID. El frontend diferencia errors de
+sessió, vídeo inexistent i errors del servidor per fer visible la causa.
+
 ### Compatibilitat amb l'esquema PostgreSQL existent
 
 La base de dades de Docker podia contenir una versió anterior de la taula `comments`
@@ -530,6 +555,8 @@ llindars definits al `pom.xml`; el perfil només fa vàlida la comanda del pipel
 | 09/11/2026 | Es corregeix la creació de sessió després del login amb Google. | El callback OAuth utilitza directament la petició HTTP que proporciona Spring Security per crear la sessió, perquè aquest flux passa pel filtre de seguretat abans del context de DispatcherServlet. |
 | 09/11/2026 | Es corregeix la inicial del perfil a la capçalera del catàleg. | El fallback de l'avatar ara s'avalua com una expressió React i mostra la primera lletra del nom, username o correu, en lloc d'imprimir el codi literal. |
 | 09/11/2026 | Es milloren els botons d'autenticació amb Google. | Els formularis de login i registre comparteixen un botó amb icona, contrast blanc, mida consistent i estats hover per diferenciar clarament l'accés OAuth de l'acció principal. |
+| 09/11/2026 | Es corregeix un conflicte de checksum de Flyway sense perdre dades. | Les migracions ja aplicades no s'han de modificar: `V2__video_persistence.sql` recupera el contingut original i la normalització de `comments` passa a `V5__normalize_comments_schema.sql`. Això permet que Flyway validi les bases existents i apliqui el canvi com una migració nova, sense `repair` ni esborrar `postgres-data`. |
+| 09/11/2026 | Es manté Google OAuth configurat en el perfil `dev` sense bloquejar l'arrencada. | Quan les variables d'entorn estan buides, Spring utilitza credencials fictícies no sensibles; el registre i el login locals funcionen, però Google OAuth només queda operatiu quan es proporcionen les claus reals de presentació. |
 
 ## 8. Temes pendents
 

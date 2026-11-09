@@ -3,6 +3,7 @@ import { getEnv, resolveMediaUrl } from '../utils/Env';
 import { useState } from 'react';
 import axios from 'axios';
 import CommentsSection from './CommentsSection';
+import { useVideoRating } from '../useVideoRating';
 
 type VideoDetailProps = {
   video: VideoSummary;
@@ -12,6 +13,13 @@ type VideoDetailProps = {
 };
 
 const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: VideoDetailProps) => {
+  const {
+    rating,
+    loading: ratingLoading,
+    saving: ratingSaving,
+    message: ratingMessage,
+    saveRating,
+  } = useVideoRating(video.id, Boolean(loggedUser));
   const [viewRegistered, setViewRegistered] = useState(false);
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(video.title);
@@ -115,6 +123,45 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
         </>
       )}
       {video.duration !== null && <span>{video.duration}s</span>}
+      <section className="video-rating" aria-label="Video rating">
+        <div className="video-rating-heading">
+          <div>
+            <p className="eyebrow">Community score</p>
+            <h3>Rate this video</h3>
+          </div>
+          <span className="rating-score">
+            {typeof rating?.averageRating === 'number' ? rating.averageRating.toFixed(2) : '0.00'}
+            <small>/ 5</small>
+          </span>
+        </div>
+        {ratingLoading ? (
+          <p>Loading rating...</p>
+        ) : (
+          <>
+            <p className="rating-count">
+              {rating?.ratingCount || 0} {rating?.ratingCount === 1 ? 'rating' : 'ratings'}
+            </p>
+            <div className="rating-actions" role="group" aria-label="Choose a rating from 1 to 5 stars">
+              {[1, 2, 3, 4, 5].map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-label={`Rate ${value} star${value === 1 ? '' : 's'}`}
+                  aria-pressed={rating?.userRating === value}
+                  disabled={!loggedUser || ratingSaving}
+                  onClick={() => saveRating(value)}
+                >
+                  <span aria-hidden="true">{rating?.userRating && value <= rating.userRating ? '★' : '☆'}</span>
+                  <small>{value}</small>
+                </button>
+              ))}
+            </div>
+            {loggedUser && rating?.userRating && <p className="your-rating">Your rating: {rating.userRating}/5</p>}
+            {!loggedUser && <p>Log in to rate this video.</p>}
+            {ratingMessage && <p role="alert">{ratingMessage}</p>}
+          </>
+        )}
+      </section>
       <CommentsSection videoId={video.id} loggedUser={loggedUser} />
     </article>
   );
