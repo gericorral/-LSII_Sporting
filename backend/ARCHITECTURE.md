@@ -54,3 +54,8 @@ video existence, and `VideoFavoritePort` hides `JdbcVideoFavoriteAdapter`. The a
 stores one favorite per user and video, while the service resolves the saved identifiers
 through `VideoCatalogPort`, keeping the feature compatible with both production UUIDs and
 development file-catalog identifiers.
+
+User display preferences also follow the boundary. `ManageUserPreferencesUseCase` is
+the input port used by `UserPreferencesController`; `UserPreferencesService` applies
+authentication and default-light behavior, while `UserPreferencesPersistencePort`
+keeps `UserPreferencesRepository` and JDBC details outside the application layer.

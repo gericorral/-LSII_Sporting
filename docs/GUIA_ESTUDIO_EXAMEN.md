@@ -6,6 +6,19 @@
 
 **Última actualització:** 9 de novembre de 2026
 
+### Mode fosc persistent
+
+El mode fosc és una preferència pròpia de l'usuari, no només un estat visual local.
+El backend reutilitza `user_preferences.dark_mode` mitjançant el port d'entrada
+`ManageUserPreferencesUseCase`, el servei `UserPreferencesService`, el port de sortida
+`UserPreferencesPersistencePort` i el repositori JDBC. Els endpoints autenticats
+`GET/PUT /api/preferences/me` permeten llegir i canviar el valor.
+
+El frontend carrega la preferència quan existeix una sessió, aplica les classes
+`light-mode` o `dark-mode` al contenidor principal i mostra un botó accessible per
+activar o desactivar el tema. El valor torna a l'estat anterior si la persistència
+falla; els usuaris anònims continuen amb el tema clar per defecte.
+
 ### Favorite Videos
 
 La funcionalitat de vídeos favorits permet que cada usuari autenticat desi o elimini

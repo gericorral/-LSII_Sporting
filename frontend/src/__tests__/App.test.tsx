@@ -241,6 +241,22 @@ describe('App routes', () => {
     );
   });
 
+  it('toggles dark mode from the catalog header', async () => {
+    mockedAxios.put.mockResolvedValue({ data: { darkMode: true } });
+    window.location.hash = '#login';
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
+    window.location.hash = '';
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Turn on dark mode' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Turn off dark mode' })).toBeInTheDocument());
+    expect(mockedAxios.put).toHaveBeenCalledWith(
+      expect.stringContaining('/preferences/me'),
+      { darkMode: true },
+      { withCredentials: true }
+    );
+  });
+
   it('uses the saved display name in the catalog greeting', async () => {
     mockedAxios.get.mockResolvedValue({
       data: {

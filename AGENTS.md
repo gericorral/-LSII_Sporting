@@ -146,6 +146,12 @@ content in this file.
 
 ## AI change log
 
+- 2026-11-09: Implemented persisted dark mode using
+  `prompts/37-implement-dark-mode.md`; authenticated users can toggle the
+  `user_preferences.dark_mode` setting through hexagonal backend ports and the
+  frontend theme control. The change is documented in the Catalan study guide and
+  Word export.
+
 - 2026-11-09: Implemented Favorite Videos using
   `prompts/36-implement-favorite-videos.md`; authenticated users can add, remove and
   list favorites through hexagonal backend ports and a responsive frontend detail

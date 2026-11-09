@@ -12,19 +12,38 @@ import ProfilePage from './components/ProfilePage';
 import UploadForm from './components/UploadForm';
 import AnalyticsPage from './components/AnalyticsPage';
 import FavoritesPage from './components/FavoritesPage';
+import { useDarkMode } from './useDarkMode';
 
 function App() {
+  const [authenticated, setAuthenticated] = useState(false);
+  const { darkMode, state: themeState, toggleDarkMode } = useDarkMode(authenticated);
+
   return (
-    <div className="App">
+    <div className={`App ${darkMode ? 'dark-mode' : 'light-mode'}`}>
       <header className="App-header">
         <img src="/protube-logo-removebg-preview.png" className="App-logo" alt="logo" />
-        <ContentApp />
+        <ContentApp
+          onAuthenticationChange={setAuthenticated}
+          darkMode={darkMode}
+          themeState={themeState}
+          onToggleDarkMode={toggleDarkMode}
+        />
       </header>
     </div>
   );
 }
 
-function ContentApp() {
+function ContentApp({
+  onAuthenticationChange,
+  darkMode,
+  themeState,
+  onToggleDarkMode,
+}: {
+  onAuthenticationChange: (authenticated: boolean) => void;
+  darkMode: boolean;
+  themeState: 'loading' | 'ready' | 'saving';
+  onToggleDarkMode: () => Promise<void>;
+}) {
   const [hash, setHash] = useState(() => window.location.hash);
   const [registeredUser, setRegisteredUser] = useState<{
     id?: string;
@@ -41,6 +60,9 @@ function ContentApp() {
     avatarPath?: string | null;
   } | null>(null);
   const authenticatedUser = loggedUser || registeredUser;
+  useEffect(() => {
+    onAuthenticationChange(Boolean(authenticatedUser));
+  }, [authenticatedUser, onAuthenticationChange]);
 
   useEffect(() => {
     const onHashChange = () => setHash(window.location.hash);
@@ -176,6 +198,9 @@ function ContentApp() {
     <VideoCatalog
       videoId={videoId}
       loggedUser={authenticatedUser}
+      darkMode={darkMode}
+      themeState={themeState}
+      onToggleDarkMode={onToggleDarkMode}
       onLogout={() => {
         axios.post(`${getEnv().API_BASE_URL}/auth/logout`, {}, { withCredentials: true }).finally(() => {
           setLoggedUser(null);
@@ -189,6 +214,9 @@ function ContentApp() {
 function VideoCatalog({
   videoId,
   loggedUser,
+  darkMode,
+  themeState,
+  onToggleDarkMode,
   onLogout,
 }: {
   videoId: string | null;
@@ -199,6 +227,9 @@ function VideoCatalog({
     displayName?: string | null;
     avatarPath?: string | null;
   } | null;
+  darkMode: boolean;
+  themeState: 'loading' | 'ready' | 'saving';
+  onToggleDarkMode: () => Promise<void>;
   onLogout: () => void;
 }) {
   const { loading, message, value, hasNext, loadMore, refresh, query, search } = useAllVideos();
@@ -251,6 +282,16 @@ function VideoCatalog({
               </form>
             </div>
             <nav className="catalog-actions">
+              <button
+                type="button"
+                className="theme-toggle"
+                onClick={onToggleDarkMode}
+                disabled={themeState !== 'ready'}
+                aria-label={darkMode ? 'Turn off dark mode' : 'Turn on dark mode'}
+                aria-pressed={darkMode}
+              >
+                {darkMode ? 'Light mode' : 'Dark mode'}
+              </button>
               {loggedUser ? (
                 <>
                   <a className="catalog-profile-link" href="#profile">
