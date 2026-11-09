@@ -41,6 +41,36 @@ class AuthControllerTest {
     }
 
     @Test
+    void returnsCurrentUserFromSession() {
+        UUID id = UUID.randomUUID();
+        User user = new User(id, "user@example.com", "player_1", "hash");
+        when(session.currentUserId()).thenReturn(id);
+        when(registration.findById(id)).thenReturn(java.util.Optional.of(user));
+
+        var response = controller.me();
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(id, ((AuthController.UserResponse) response.getBody()).id());
+    }
+
+    @Test
+    void rejectsMissingSessionFromMe() {
+        when(session.currentUserId()).thenReturn(null);
+
+        assertEquals(401, controller.me().getStatusCode().value());
+        verifyNoInteractions(registration);
+    }
+
+    @Test
+    void rejectsSessionForDeletedUserFromMe() {
+        UUID id = UUID.randomUUID();
+        when(session.currentUserId()).thenReturn(id);
+        when(registration.findById(id)).thenReturn(java.util.Optional.empty());
+
+        assertEquals(401, controller.me().getStatusCode().value());
+    }
+
+    @Test
     void rejectsInvalidCredentialsWithoutAuthenticating() {
         when(login.authenticate("user@example.com", "wrongpass"))
                 .thenThrow(new LoginUseCase.InvalidCredentialsException("Invalid email or password"));

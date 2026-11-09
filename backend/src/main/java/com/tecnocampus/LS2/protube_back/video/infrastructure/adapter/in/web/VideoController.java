@@ -70,6 +70,7 @@ public class VideoController {
             @RequestPart("title") String title,
             @RequestPart("description") String description,
             @RequestPart("video") MultipartFile video,
+            @RequestPart("thumbnail") MultipartFile thumbnail,
             HttpSession session
     ) {
         Object userId = session.getAttribute("authenticatedUserId");
@@ -80,8 +81,11 @@ public class VideoController {
             UploadVideoUseCase.VideoFile videoFile = new UploadVideoUseCase.VideoFile(
                     video.getInputStream(), video.getSize(), video.getContentType()
             );
+            UploadVideoUseCase.ThumbnailFile thumbnailFile = new UploadVideoUseCase.ThumbnailFile(
+                    thumbnail.getInputStream(), thumbnail.getSize(), thumbnail.getContentType()
+            );
             return ResponseEntity.status(201)
-                    .body(uploadVideoUseCase.upload(title, description, videoFile, ownerId));
+                    .body(uploadVideoUseCase.upload(title, description, videoFile, thumbnailFile, ownerId));
         } catch (java.io.IOException exception) {
             return ResponseEntity.internalServerError()
                     .body(Map.of("message", "The video could not be published."));

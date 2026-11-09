@@ -4,7 +4,7 @@
 > després de cada canvi de codi. No substitueix el codi: resumeix què fa
 > l'aplicació, quines peces es modifiquen i quines decisions s'han de saber justificar.
 
-**Última actualització:** 4 de novembre de 2026
+**Última actualització:** 9 de novembre de 2026
 
 ### Qualitat del codi del perfil i format del frontend
 
@@ -15,6 +15,21 @@ incloent els tipus d'estat de `App` i les proves de navegació i perfil. A més,
 Això evita avisos de linter i reexecucions inesperades de l'efecte, sense canviar
 el comportament funcional. Les proves i la compilació del frontend continuen
 verificant aquest flux.
+
+### Alineació del control de perfil públic
+
+El checkbox `Public profile` del formulari de perfil té una regla d'estil pròpia.
+Els estils de mida completa dels camps de text ja no s'apliquen als checkbox, que
+ara mantenen una mida compacta i s'alineen amb el seu text. Això evita que el
+checkbox ocupi tota la fila i desplaci visualment l'etiqueta.
+
+### Importació segura del `video-store`
+
+L'importador de producció només incorpora metadades del video-grabber. Les
+metadades generades per una pujada d'usuari contenen `ownerId` i s'ignoren durant
+l'arrencada de Docker, perquè aquests vídeos ja tenen el seu registre propi a
+PostgreSQL. Aquesta separació evita que cada reinici creï una segona còpia del
+mateix vídeo amb origen `VIDEO_GRABBER`.
 
 ### Cobertura dels adaptadors JDBC i de l'importador
 
@@ -131,17 +146,17 @@ compleix el criteri d'acceptació per a catàlegs més grans.
 
 La pujada es protegeix amb l'atribut de sessió `authenticatedUserId`; si no hi ha una
 sessió vàlida, el backend respon 401 i el frontend mostra el login en lloc del formulari.
-El formulari demana títol, descripció i un fitxer MP4 de fins a 100 MB. El port d'entrada
+El formulari demana títol, descripció, un fitxer MP4 de fins a 100 MB i una miniatura
+JPEG, PNG, WebP o GIF. El port d'entrada
 `UploadVideoUseCase` rep un model de fitxer independent de Spring i el servei valida els
 camps abans d'escriure; mai utilitza el nom original del fitxer com a ruta.
 
-El backend crea un identificador UUID i escriu el vídeo, una miniatura PNG generada i el
+El backend crea un identificador UUID i escriu el vídeo, la miniatura proporcionada i el
 JSON de metadades en fitxers temporals dins del directori configurat. Només mou els tres
 fitxers a les seves rutes públiques quan totes les operacions han acabat; si hi ha un
-error, elimina temporals i fitxers parcials. El catàleg existent accepta miniatures
-`.webp` del `videoGrabber` i `.png` de les pujades, de manera que el vídeo apareix
-immediatament a la llista. La persistència relacional de vídeos continua pendent de
-NFR-01 i serà una evolució separada.
+error, elimina temporals i fitxers parcials. L'adaptador PostgreSQL desa també la clau i
+el MIME real de la miniatura a `video_assets`, mentre que el catàleg continua acceptant
+les miniatures `.webp` del `videoGrabber` i les extensions de les pujades.
 
 ### Disseny responsive del catàleg i del reproductor
 
@@ -479,6 +494,8 @@ llindars definits al `pom.xml`; el perfil només fa vàlida la comanda del pipel
 | 19/10/2026 | Es configura CORS per permetre el guardat del perfil des del frontend local. | El navegador fa un preflight `OPTIONS` abans del `PUT`; declarar explícitament mètodes, cabeceres i credencials evita que Axios mostri un error de xarxa encara que el backend estigui encès. |
 | 19/10/2026 | Es redissenya la capçalera per mostrar el logo petit a la cantonada superior esquerra. | El logo es posiciona de manera absoluta dins de la capçalera i el contingut conserva l'alineació central sense que la marca ocupe l'espai principal. |
 | 19/10/2026 | Es col·loquen les accions de sessió a la mateixa línia superior que el logo. | El nom de l'usuari i el logout es posicionen dins de la capçalera visual del catàleg, mantenint el títol centrat i les targetes separades. |
+| 09/11/2026 | S'implementa l'autenticació Google OAuth2/OIDC. | Spring Security gestiona el flux de codi d'autorització al servidor, crea l'usuari i el perfil a partir del `sub` de Google sense enllaçar comptes locals només per email, i reutilitza la sessió HTTP existent. `/api/auth/me` permet restaurar la sessió al frontend i els botons React mai exposen tokens. |
+| 09/11/2026 | S'ajusta el retorn OAuth de Docker i es cobreixen els adaptadors amb tests focalitzats. | Compose redirigeix a `http://localhost` mentre el desenvolupament Vite pot sobreescriure `ENV_PROTUBE_FRONTEND_URL`; els tests verifiquen el provisionament, els conflictes d'email, els redirects i la restauració de sessió. |
 | 19/10/2026 | S'ajusta l'escala visual de les accions de sessió. | L'enllaç al perfil manté més protagonisme i el botó de logout utilitza una mida i un espaiat més compactes per equilibrar la capçalera. |
 | 19/10/2026 | S'ajusta la jerarquia tipogràfica del formulari de registre. | Les etiquetes dels camps tenen més presència i els placeholders i el text d'ajuda són més petits, de manera que la informació principal queda clarament diferenciada de l'exemple. |
 | 19/10/2026 | Es completa la cobertura mínima del 90% al frontend i backend. | Els tests cobreixen branques de navegació, errors de formularis, permisos de perfil, validacions, persistència H2 i credencials; Jest i JaCoCo fan fallar el build si alguna mètrica global baixa del 90%. |
@@ -505,6 +522,14 @@ llindars definits al `pom.xml`; el perfil només fa vàlida la comanda del pipel
 | 02/11/2026 | Es fa compatible la migració Flyway de vídeos amb bases PostgreSQL persistents antigues. | `V2__video_persistence.sql` crea la taula `comments` si encara no existeix abans de construir `video_analytics_summary`. Això permet que una instal·lació nova i una base conservada per Docker arrenquin sense esborrar `postgres-data`; les migracions idempotents mantenen les dades existents. |
 | 02/11/2026 | Es corregeix el catàleg buit de Docker en instal·lacions noves. | Compose utilitza el perfil `prod` i `VideoStoreDatabaseImporter` importa de manera idempotent la metadata i les referències dels assets des de `video-store` a PostgreSQL. `JdbcVideoCatalogAdapter` consulta la base de dades, mentre els fitxers `.mp4` i les miniatures continuen al magatzem muntat. |
 | 04/11/2026 | Es corregeix el test d'arrencada del backend a la CI sense substituir PostgreSQL. | GitHub Actions inicia un servei PostgreSQL saludable abans de Maven i li passa les credencials de la base de dades; el perfil `coverage` també queda definit al `pom.xml` perquè la verificació amb JaCoCo no produeixi un avís de perfil inexistent. |
+
+| 09/11/2026 | Es completa la cobertura de branques del flux OAuth per superar el 90% global. | Els tests cobreixen identitats Google nul·les o buides, noms i correus alternatius durant el provisioning, conflictes de compte i errors de redirecció. Això protegeix els camins excepcionals sense canviar el comportament de producció. |
+| 09/11/2026 | Es recupera la taula `auth_accounts` en bases PostgreSQL persistents creades amb un esquema anterior. | La migració Flyway `V4__restore_auth_accounts.sql` crea de manera idempotent la relació d'identitats externes, les restriccions i l'índex que necessita `JdbcGoogleAccountAdapter`; així el callback OAuth no falla amb un error SQL després de l'autorització de Google. |
+| 09/11/2026 | Es força el flush de l'usuari abans d'inserir el compte Google amb JDBC. | `JdbcGoogleAccountAdapter` usa `saveAndFlush()` perquè la fila `users` existeixi abans de validar la clau forana d'`auth_accounts`; el test focalitzat verifica l'ordre i evita que una excepció de PostgreSQL deixi la transacció actual avortada. |
+
+| 09/11/2026 | Es corregeix la creació de sessió després del login amb Google. | El callback OAuth utilitza directament la petició HTTP que proporciona Spring Security per crear la sessió, perquè aquest flux passa pel filtre de seguretat abans del context de DispatcherServlet. |
+| 09/11/2026 | Es corregeix la inicial del perfil a la capçalera del catàleg. | El fallback de l'avatar ara s'avalua com una expressió React i mostra la primera lletra del nom, username o correu, en lloc d'imprimir el codi literal. |
+| 09/11/2026 | Es milloren els botons d'autenticació amb Google. | Els formularis de login i registre comparteixen un botó amb icona, contrast blanc, mida consistent i estats hover per diferenciar clarament l'accés OAuth de l'acció principal. |
 
 ## 8. Temes pendents
 

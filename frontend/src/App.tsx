@@ -47,9 +47,20 @@ function ContentApp() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
+  useEffect(() => {
+    if (typeof axios.get !== 'function') return;
+    const request = axios.get(`${getEnv().API_BASE_URL}/auth/me`, { withCredentials: true });
+    if (request && typeof request.then === 'function') {
+      request.then((response) => setLoggedUser(response.data)).catch(() => undefined);
+    }
+  }, []);
+
   const videoId = getVideoId(hash);
   const registering = hash === '#register';
-  const loggingIn = hash === '#login';
+  const loggingIn = hash === '#login' || hash.startsWith('#login?');
+  const oauthError = hash.startsWith('#login?oauthError=')
+    ? decodeURIComponent(hash.substring('#login?oauthError='.length))
+    : undefined;
   const profileId = getProfileId(hash);
   const uploading = hash === '#upload';
   const analytics = hash === '#analytics';
@@ -64,6 +75,7 @@ function ContentApp() {
   if (loggingIn) {
     return (
       <LoginForm
+        oauthError={oauthError}
         onLoggedIn={(user) => {
           setLoggedUser(user);
           setHash('');
@@ -226,7 +238,9 @@ function VideoCatalog({
                       <img className="catalog-profile-avatar" src={loggedUser.avatarPath} alt="Profile avatar" />
                     ) : (
                       <span className="catalog-profile-avatar catalog-profile-avatar-placeholder" aria-hidden="true">
-                        {(loggedUser.displayName || loggedUser.username).charAt(0).toUpperCase()}
+                        {(loggedUser.displayName || loggedUser.username || loggedUser.email || '?')
+                          .charAt(0)
+                          .toUpperCase()}
                       </span>
                     )}
                     <span>Hi, {loggedUser.displayName || loggedUser.username}</span>

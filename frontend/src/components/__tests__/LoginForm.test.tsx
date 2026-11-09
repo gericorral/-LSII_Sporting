@@ -9,6 +9,14 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 describe('LoginForm', () => {
   beforeEach(() => jest.clearAllMocks());
 
+  it('offers Google sign-in through the backend authorization endpoint', () => {
+    render(<LoginForm onLoggedIn={jest.fn()} />);
+    expect(screen.getByRole('link', { name: 'Continue with Google' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('/oauth2/authorization/google')
+    );
+  });
+
   it('validates credentials before calling the API', () => {
     render(<LoginForm onLoggedIn={jest.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Log in' }));

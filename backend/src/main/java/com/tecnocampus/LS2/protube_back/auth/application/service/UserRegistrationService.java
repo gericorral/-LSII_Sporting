@@ -13,6 +13,7 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.Optional;
 
 @Service
 public class UserRegistrationService implements RegistrationUseCase {
@@ -20,6 +21,12 @@ public class UserRegistrationService implements RegistrationUseCase {
 
     public UserRegistrationService(UserPersistencePort userRepository) {
         this.userRepository = userRepository;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<User> findById(UUID id) {
+        return userRepository.findById(id);
     }
 
     @Transactional

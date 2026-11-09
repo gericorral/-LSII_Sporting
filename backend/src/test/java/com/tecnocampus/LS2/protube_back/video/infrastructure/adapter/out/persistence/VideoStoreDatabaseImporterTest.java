@@ -81,6 +81,19 @@ class VideoStoreDatabaseImporterTest {
     }
 
     @Test
+    void skipsUserUploadedMetadataToAvoidImportingItAsAGrabberVideo(@TempDir Path store) throws IOException {
+        writeCompleteVideo(store, "user-upload", "png", """
+                {"title":"Uploaded","ownerId":"fb169fc6-511e-4535-8ecd-15819588ad3d","meta":{"description":"Description"}}
+                """);
+        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+
+        new VideoStoreDatabaseImporter(store.toString(), new ObjectMapper(), jdbcTemplate)
+                .run(new DefaultApplicationArguments(new String[0]));
+
+        verifyNoInteractions(jdbcTemplate);
+    }
+
+    @Test
     void treatsARegularStorePathAsAnEmptyStore(@TempDir Path temp) throws IOException {
         Path store = temp.resolve("store");
         Files.createFile(store);

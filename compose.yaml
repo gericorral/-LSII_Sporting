@@ -34,6 +34,7 @@ services:
       ENV_PROTUBE_DB_PWD: ${ENV_PROTUBE_DB_PWD:-secret}
       ENV_PROTUBE_GOOGLE_CLIENT_ID: ${ENV_PROTUBE_GOOGLE_CLIENT_ID:-}
       ENV_PROTUBE_GOOGLE_CLIENT_SECRET: ${ENV_PROTUBE_GOOGLE_CLIENT_SECRET:-}
+      ENV_PROTUBE_FRONTEND_URL: ${ENV_PROTUBE_FRONTEND_URL:-http://localhost}
     depends_on:
       db:
         condition: service_healthy

@@ -30,6 +30,9 @@ public class UserLoginService implements LoginUseCase {
     }
 
     private boolean verifyPassword(String password, String encodedHash) {
+        if (encodedHash == null) {
+            return false;
+        }
         try {
             String[] parts = encodedHash.split("\\$", -1);
             if (parts.length != 4 || !"pbkdf2".equals(parts[0])) {

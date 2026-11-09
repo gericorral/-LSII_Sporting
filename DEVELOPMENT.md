@@ -45,12 +45,27 @@ python3 main.py --store=/absolute/path/to/videos --id=10 --videos=../../resource
 | `ENV_PROTUBE_STORE_DIR`            | optional locally, required for external/production stores | Store folder override. If omitted during local development, the backend uses `../video-store/` relative to `backend/`; Docker uses the repository `./video-store` mount. End an override with a path separator (`/` or `\`). |
 | `ENV_PROTUBE_GOOGLE_CLIENT_ID`     | Google OAuth login      | Google OAuth client id                                                                           |
 | `ENV_PROTUBE_GOOGLE_CLIENT_SECRET` | Google OAuth login      | Google OAuth client secret                                                                       |
+| `ENV_PROTUBE_FRONTEND_URL`        | Google OAuth login      | Frontend origin used after OAuth success or failure (defaults to `http://localhost:5173`)        |
 | `ENV_PROTUBE_DB_HOST`              | `dev`/`prod` profiles   | PostgreSQL host (defaults to `localhost` locally and `db` in Docker)                             |
 | `ENV_PROTUBE_DB_USER`              | `dev`/`prod` profiles   | PostgreSQL database user                                                                           |
 | `ENV_PROTUBE_DB_PWD`               | `dev`/`prod` profiles   | PostgreSQL database password                                                                       |
 | `ENV_PROTUBE_DB`                   | `dev`/`prod` profiles   | PostgreSQL database name (see [Using PostgreSQL](#using-postgresql))                              |
 
 Never commit real secrets. Set them in your shell, your OS, or your (local, uncommitted) IDE run configuration.
+
+### Google sign-in
+
+Configure a Google OAuth web application with the redirect URI
+`http://localhost:8080/login/oauth2/code/google`, then set the client ID and secret
+environment variables above. The frontend's Google buttons start Spring Security's
+authorization-code flow at `/oauth2/authorization/google`; tokens remain server-side.
+After Google authenticates, the backend provisions a user and profile when the Google
+subject is new, stores the subject in `auth_accounts`, and establishes the same HTTP
+session used by local login. An existing local account with the same email is never
+linked automatically; sign in locally instead.
+Docker Compose redirects back to `http://localhost` by default. For the Vite
+development server, set `ENV_PROTUBE_FRONTEND_URL=http://localhost:5173` before
+starting the backend.
 
 ```bash
 # Linux / macOS

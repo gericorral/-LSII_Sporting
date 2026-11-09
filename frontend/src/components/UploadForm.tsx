@@ -10,14 +10,15 @@ export default function UploadForm({ onUploaded }: UploadFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [video, setVideo] = useState<File | null>(null);
+  const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
-    if (!title.trim() || !description.trim() || !video) {
-      setError('Title, description and an MP4 video are required.');
+    if (!title.trim() || !description.trim() || !video || !thumbnail) {
+      setError('Title, description, an MP4 video and an image thumbnail are required.');
       return;
     }
     if (video.type !== 'video/mp4') {
@@ -28,11 +29,16 @@ export default function UploadForm({ onUploaded }: UploadFormProps) {
       setError('Video files must not exceed 100 MB.');
       return;
     }
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(thumbnail.type)) {
+      setError('Only JPEG, PNG, WebP or GIF thumbnail files are supported.');
+      return;
+    }
 
     const data = new FormData();
     data.append('title', title.trim());
     data.append('description', description.trim());
     data.append('video', video);
+    data.append('thumbnail', thumbnail);
     try {
       setSubmitting(true);
       await axios.post(`${getEnv().API_BASE_URL}/videos`, data, { withCredentials: true });
@@ -63,6 +69,15 @@ export default function UploadForm({ onUploaded }: UploadFormProps) {
             value={title}
             maxLength={255}
             onChange={(event) => setTitle(event.target.value)}
+          />
+        </div>
+        <div className="registration-field">
+          <label htmlFor="upload-thumbnail">Image thumbnail</label>
+          <input
+            id="upload-thumbnail"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"
+            onChange={(event) => setThumbnail(event.target.files?.[0] || null)}
           />
         </div>
         <div className="registration-field">

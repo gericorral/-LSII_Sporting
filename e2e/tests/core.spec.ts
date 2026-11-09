@@ -20,6 +20,11 @@ test('authenticated user can register, upload, search, play and comment', async 
 
   await page.getByLabel('Title').fill(videoTitle);
   await page.getByLabel('Description').fill('Video created by the end-to-end test.');
+  await page.getByLabel('Image thumbnail').setInputFiles({
+    name: 'e2e-thumbnail.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('synthetic PNG content for the upload contract'),
+  });
   await page.getByLabel('MP4 video').setInputFiles({
     name: 'e2e-video.mp4',
     mimeType: 'video/mp4',

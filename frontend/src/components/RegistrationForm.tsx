@@ -128,6 +128,15 @@ export default function RegistrationForm({ onRegistered }: RegistrationFormProps
           {submitting ? 'Creating account...' : 'Create my account'}
         </button>
       </form>
+      <a
+        className="google-login-button"
+        href={`${getEnv().API_BASE_URL.replace(/\/api$/, '')}/oauth2/authorization/google`}
+      >
+        <span className="google-login-icon" aria-hidden="true">
+          G
+        </span>
+        Sign up with Google
+      </a>
       <p className="registration-footer">
         Already have an account? <a href="#">Back to videos</a>
       </p>

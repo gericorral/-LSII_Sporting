@@ -21,7 +21,7 @@ class VideoUploadServiceTest {
         VideoUploadService service = service(store);
 
         var result = service.upload(
-                " Uploaded title ", " Description ", file(new byte[] {1, 2, 3}), UUID.randomUUID()
+                " Uploaded title ", " Description ", file(new byte[] {1, 2, 3}), thumbnail(), UUID.randomUUID()
         );
 
         assertEquals("Uploaded title", result.title());
@@ -41,36 +41,42 @@ class VideoUploadServiceTest {
         VideoUploadService service = service(store);
 
         assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
-                "", "Description", file(new byte[] {1}), UUID.randomUUID()));
+                "", "Description", file(new byte[] {1}), thumbnail(), UUID.randomUUID()));
         assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
                 "Title", "Description",
                 new UploadVideoUseCase.VideoFile(new ByteArrayInputStream(new byte[] {1}), 1, "video/x-msvideo"),
-                UUID.randomUUID()));
+                thumbnail(), UUID.randomUUID()));
         assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
-                "Title", "", file(new byte[] {1}), UUID.randomUUID()));
+                "Title", "", file(new byte[] {1}), thumbnail(), UUID.randomUUID()));
         assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
-                "Title", "Description", null, UUID.randomUUID()));
+                "Title", "Description", null, thumbnail(), UUID.randomUUID()));
         assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
-                "Title", "Description", file(new byte[0]), UUID.randomUUID()));
+                "Title", "Description", file(new byte[0]), thumbnail(), UUID.randomUUID()));
         assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
-                "x".repeat(256), "Description", file(new byte[] {1}), UUID.randomUUID()));
+                "x".repeat(256), "Description", file(new byte[] {1}), thumbnail(), UUID.randomUUID()));
         assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
                 "Title", "Description",
                 new UploadVideoUseCase.VideoFile(new ByteArrayInputStream(new byte[] {1}),
                         100L * 1024 * 1024 + 1, "video/mp4"),
+                thumbnail(), UUID.randomUUID()));
+        assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
+                "Title", "Description", file(new byte[] {1}), null, UUID.randomUUID()));
+        assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
+                "Title", "Description", file(new byte[] {1}),
+                new UploadVideoUseCase.ThumbnailFile(new ByteArrayInputStream(new byte[] {1}), 1, "text/plain"),
                 UUID.randomUUID()));
     }
 
     @Test
     void wrapsPublicationFailure(@TempDir Path store) {
         VideoUploadService service = new VideoUploadService(
-                (id, title, description, ownerId, video) -> {
+                (id, title, description, ownerId, video, thumbnail) -> {
                     throw new IllegalStateException("disk full");
                 }
         );
 
         assertThrows(UploadVideoUseCase.UploadFailedException.class, () -> service.upload(
-                "Title", "Description", file(new byte[] {1}), UUID.randomUUID()));
+                "Title", "Description", file(new byte[] {1}), thumbnail(), UUID.randomUUID()));
     }
 
     private VideoUploadService service(Path store) {
@@ -79,5 +85,9 @@ class VideoUploadServiceTest {
 
     private UploadVideoUseCase.VideoFile file(byte[] content) {
         return new UploadVideoUseCase.VideoFile(new ByteArrayInputStream(content), content.length, "video/mp4");
+    }
+
+    private UploadVideoUseCase.ThumbnailFile thumbnail() {
+        return new UploadVideoUseCase.ThumbnailFile(new ByteArrayInputStream(new byte[] {9}), 1, "image/png");
     }
 }

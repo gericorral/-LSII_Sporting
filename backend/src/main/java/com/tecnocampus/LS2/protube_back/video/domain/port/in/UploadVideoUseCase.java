@@ -7,9 +7,12 @@ import java.util.UUID;
 
 public interface UploadVideoUseCase {
 
-    VideoSummary upload(String title, String description, VideoFile video, UUID ownerId);
+    VideoSummary upload(String title, String description, VideoFile video, ThumbnailFile thumbnail, UUID ownerId);
 
     record VideoFile(InputStream content, long size, String contentType) {
+    }
+
+    record ThumbnailFile(InputStream content, long size, String contentType) {
     }
 
     class InvalidUploadException extends RuntimeException {

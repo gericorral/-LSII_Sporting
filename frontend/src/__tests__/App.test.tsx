@@ -206,6 +206,9 @@ describe('App routes', () => {
     fireEvent.change(screen.getByLabelText('MP4 video'), {
       target: { files: [new File(['video'], 'video.mp4', { type: 'video/mp4' })] },
     });
+    fireEvent.change(screen.getByLabelText('Image thumbnail'), {
+      target: { files: [new File(['image'], 'thumbnail.png', { type: 'image/png' })] },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Upload video' }));
 
     expect(await screen.findByRole('heading', { name: 'Available videos' })).toBeInTheDocument();

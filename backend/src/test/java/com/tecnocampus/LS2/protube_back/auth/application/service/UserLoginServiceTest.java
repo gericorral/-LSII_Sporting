@@ -52,6 +52,15 @@ class UserLoginServiceTest {
     }
 
     @Test
+    void rejectsOAuthOnlyUserFromLocalLogin() {
+        User user = new User(UUID.randomUUID(), "google@example.com", "google_user", null);
+        when(repository.findByEmailIgnoreCase("google@example.com")).thenReturn(java.util.Optional.of(user));
+
+        assertThrows(LoginUseCase.InvalidCredentialsException.class,
+                () -> service.authenticate("google@example.com", "secret123"));
+    }
+
+    @Test
     void rejectsStoredHashWithInvalidBase64() {
         User user = new User(UUID.randomUUID(), "user@example.com", "player_1", "pbkdf2$120000$%%%$%%%");
         when(repository.findByEmailIgnoreCase("user@example.com")).thenReturn(java.util.Optional.of(user));

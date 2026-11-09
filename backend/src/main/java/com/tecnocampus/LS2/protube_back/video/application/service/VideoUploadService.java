@@ -11,6 +11,8 @@ import java.util.UUID;
 public class VideoUploadService implements UploadVideoUseCase {
     private static final long MAX_FILE_SIZE = 100L * 1024 * 1024;
     private static final String MP4_CONTENT_TYPE = "video/mp4";
+    private static final java.util.Set<String> THUMBNAIL_CONTENT_TYPES =
+            java.util.Set.of("image/jpeg", "image/png", "image/webp", "image/gif");
 
     private final VideoPublicationPort publicationPort;
 
@@ -19,11 +21,12 @@ public class VideoUploadService implements UploadVideoUseCase {
     }
 
     @Override
-    public VideoSummary upload(String title, String description, VideoFile video, UUID ownerId) {
-        validate(title, description, video);
+    public VideoSummary upload(String title, String description, VideoFile video,
+                               ThumbnailFile thumbnail, UUID ownerId) {
+        validate(title, description, video, thumbnail);
         try {
             return publicationPort.publish(
-                    UUID.randomUUID().toString(), title.trim(), description.trim(), ownerId, video
+                    UUID.randomUUID().toString(), title.trim(), description.trim(), ownerId, video, thumbnail
             );
         } catch (RuntimeException exception) {
             if (exception instanceof InvalidUploadException) {
@@ -33,7 +36,7 @@ public class VideoUploadService implements UploadVideoUseCase {
         }
     }
 
-    private void validate(String title, String description, VideoFile video) {
+    private void validate(String title, String description, VideoFile video, ThumbnailFile thumbnail) {
         if (title == null || title.isBlank() || title.trim().length() > 255) {
             throw new InvalidUploadException("Title is required and must contain at most 255 characters.");
         }
@@ -48,6 +51,13 @@ public class VideoUploadService implements UploadVideoUseCase {
         }
         if (!MP4_CONTENT_TYPE.equalsIgnoreCase(video.contentType())) {
             throw new InvalidUploadException("Only MP4 video files are supported.");
+        }
+        if (thumbnail == null || thumbnail.content() == null || thumbnail.size() <= 0) {
+            throw new InvalidUploadException("An image thumbnail is required.");
+        }
+        if (!THUMBNAIL_CONTENT_TYPES.contains(
+                thumbnail.contentType() == null ? "" : thumbnail.contentType().toLowerCase(java.util.Locale.ROOT))) {
+            throw new InvalidUploadException("Only JPEG, PNG, WebP or GIF thumbnails are supported.");
         }
     }
 }

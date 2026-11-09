@@ -316,3 +316,52 @@ content in this file.
   `prompts/10-enforce-global-coverage.md`; JDBC video adapters and the PostgreSQL
   video-store importer now have focused tests, with the AI-assisted change
   documented in this file and the Catalan study guide.
+- 2026-11-09: Corrected the profile visibility checkbox layout using the existing
+  frontend styling prompt; checkbox sizing is now independent from full-width text
+  fields, with the AI-assisted change documented in the Catalan study guide.
+- 2026-11-09: Prevented the production video-store importer from re-importing
+  user-uploaded metadata as `VIDEO_GRABBER` records; the change is documented in
+  the Catalan study guide.
+- 2026-11-09: Required user video uploads to include a JPEG, PNG, WebP or GIF thumbnail
+  using `prompts/32-require-upload-thumbnails.md`; the frontend validates and submits
+  the image, while the hexagonal backend stores it atomically and persists its actual
+  MIME type in PostgreSQL. The change was generated with AI and documented in the
+  Catalan study guide and Word export.
+- 2026-11-09: Restored the missing `auth_accounts` table for existing PostgreSQL
+  installations with `V4__restore_auth_accounts.sql`; Google OAuth provisioning
+  now has the schema required by `JdbcGoogleAccountAdapter`, documented in the
+  Catalan study guide. This AI-generated fix uses the approved
+  `prompts/31-implement-google-oauth-login.md` and is logged here.
+- 2026-11-09: Google OAuth provisioning now calls `UserRepository.saveAndFlush()`
+  before inserting the external account through JDBC, preventing PostgreSQL
+  foreign-key failures caused by an unflushed JPA insert and avoiding aborted
+  transaction lookups. The focused adapter test verifies this ordering.
+- 2026-11-09: Implemented Google OAuth2/OIDC login and registration using
+  `prompts/31-implement-google-oauth-login.md`; Spring Security now handles the
+  authorization-code flow, provisions Google identities without unsafe email
+  auto-linking, restores sessions through `/api/auth/me`, and the frontend exposes
+  Google sign-in buttons. This change was generated with AI and documented in the
+  Catalan study guide and Word export.
+- 2026-11-09: Reviewed the Google OAuth implementation using the same approved
+  prompt; Docker now redirects to the port-80 frontend by default and focused
+  backend tests cover provisioning, conflicts, redirects and session restoration.
+- 2026-11-09: Raised backend JaCoCo branch coverage above the required 90% for
+  Google OAuth using the approved `prompts/10-enforce-global-coverage.md`; tests
+  now cover null and blank identity inputs, OAuth provisioning fallbacks and
+  authentication redirect failures.
+- 2026-11-09: Fixed OAuth session creation after Google authentication by resolving
+  the request-scoped session adapter lazily inside the callback; the security
+  handler no longer tries to access request scope while Spring creates singleton
+  beans.
+- 2026-11-09: Stabilized OAuth session access by making `HttpSessionAdapter` a
+  singleton backed by Spring's request-proxied `HttpServletRequest`; this avoids
+  request-scope resolution errors in the Spring Security callback.
+- 2026-11-09: Fixed OAuth callback session persistence by using the request
+  supplied directly by Spring Security; this avoids relying on DispatcherServlet
+  request attributes, which are not thread-bound during the security filter flow.
+- 2026-11-09: Fixed the authenticated catalog header rendering the profile
+  initial as literal text; the fallback initial is now evaluated as a React
+  expression.
+- 2026-11-09: Improved the Google OAuth buttons with a clear branded icon,
+  white contrast styling, hover feedback and consistent sizing in login and
+  registration forms.

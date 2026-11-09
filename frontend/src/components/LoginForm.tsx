@@ -3,10 +3,10 @@ import axios from 'axios';
 import { getEnv } from '../utils/Env';
 
 type LoginUser = { id?: string; username: string; email: string };
-type LoginFormProps = { onLoggedIn: (user: LoginUser) => void };
+type LoginFormProps = { onLoggedIn: (user: LoginUser) => void; oauthError?: string };
 const LOGIN_URL = `${getEnv().API_BASE_URL}/auth/login`;
 
-export default function LoginForm({ onLoggedIn }: LoginFormProps) {
+export default function LoginForm({ onLoggedIn, oauthError }: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -86,6 +86,16 @@ export default function LoginForm({ onLoggedIn }: LoginFormProps) {
           {submitting ? 'Logging in...' : 'Log in'}
         </button>
       </form>
+      <a
+        className="google-login-button"
+        href={`${getEnv().API_BASE_URL.replace(/\/api$/, '')}/oauth2/authorization/google`}
+      >
+        <span className="google-login-icon" aria-hidden="true">
+          G
+        </span>
+        Continue with Google
+      </a>
+      {oauthError && <p role="alert">{oauthError}</p>}
       <p className="registration-footer">
         New to ProTube? <a href="#register">Create an account</a>
       </p>
