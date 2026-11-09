@@ -428,18 +428,28 @@ JDBC posteriors.
 
 ### Compatibilitat dels identificadors de vídeo dels comentaris
 
-Després de migrar el catàleg a PostgreSQL, `comments.video_id` és una clau
-`UUID`, mentre que el port de comentaris continua rebent els identificadors com
-a `String` perquè també és compatible amb l'adaptador anterior. L'adaptador
-`JdbcCommentRepository` converteix els identificadors que tenen format UUID
-abans d'enllaçar-los en les consultes de lectura, inserció i validació de
-respostes; els identificadors no UUID continuen funcionant en els tests i
-escenaris heretats.
+El catàleg de desenvolupament basat en fitxers pot utilitzar identificadors
+numèrics, mentre que el catàleg PostgreSQL utilitza UUID. Per mantenir els dos
+escenaris, `comments.video_id` es desa com `VARCHAR(255)` i
+`JdbcCommentRepository` sempre envia l'identificador textual a JDBC.
 
-Aquesta conversió evita els errors PostgreSQL `uuid = character varying` i
-permet que els comentaris es desin realment. Com que
-`video_analytics_summary` compta les files de `comments`, el mateix comentari
-persistit incrementa el comptador que consulta la pantalla d'analítiques.
+Les bases persistents creades amb l'esquema antic podien conservar
+`comments.video_id` com `UUID`. La migració `V8__normalize_comment_video_ids.sql`
+converteix aquesta columna a text sense perdre les dades existents. Això evita
+l'error PostgreSQL `uuid = character varying` quan la pantalla consulta els
+comentaris d'un vídeo de `video-store`, i conserva també els identificadors UUID
+del catàleg PostgreSQL. Com que `video_analytics_summary` compta les files de
+`comments`, el comentari persistit continua incrementant el comptador d'analítica.
+
+### Selecció de l'adaptador de comptadors de comentaris
+
+El perfil `dev` utilitza el catàleg de fitxers i, per tant, els identificadors
+dels vídeos poden ser numèrics. L'adaptador `JdbcVideoCommentAdapter` només és
+vàlid per al catàleg PostgreSQL, on els identificadors són UUID; si s'injectava
+com a adaptador primari durant el desenvolupament, rebutjava un ID com `5` i
+retornava un `404` després de desar el comentari. Ara
+`FileVideoCommentAdapter` està actiu en `dev` i `JdbcVideoCommentAdapter` en
+`prod`, mantenint coherent el comptador d'analítica amb el catàleg seleccionat.
 
 ### Configuració compartida del magatzem de vídeos
 

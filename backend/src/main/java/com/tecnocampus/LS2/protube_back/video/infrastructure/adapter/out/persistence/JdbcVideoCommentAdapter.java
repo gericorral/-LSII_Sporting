@@ -2,6 +2,7 @@ package com.tecnocampus.LS2.protube_back.video.infrastructure.adapter.out.persis
 
 import com.tecnocampus.LS2.protube_back.video.domain.port.out.VideoCommentPort;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -9,6 +10,7 @@ import java.util.UUID;
 
 @Component
 @Primary
+@Profile("prod")
 public class JdbcVideoCommentAdapter implements VideoCommentPort {
     private final JdbcTemplate jdbcTemplate;
 

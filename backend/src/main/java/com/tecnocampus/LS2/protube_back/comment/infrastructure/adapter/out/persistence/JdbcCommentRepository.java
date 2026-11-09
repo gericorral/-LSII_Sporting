@@ -101,11 +101,7 @@ public class JdbcCommentRepository implements CommentPersistencePort {
     }
 
     private Object videoIdParameter(String videoId) {
-        try {
-            return UUID.fromString(videoId);
-        } catch (IllegalArgumentException exception) {
-            return videoId;
-        }
+        return videoId;
     }
 
     @Override

@@ -382,3 +382,11 @@ content in this file.
   `prompts/35-implement-video-rating.md`; authenticated users can submit or update
   one rating from 1 to 5 per video, while the detail view displays the persisted
   average and count through the hexagonal video slice.
+- 2026-11-09: Restored comment compatibility with numeric file-catalog video IDs;
+  `V8__normalize_comment_video_ids.sql` converts legacy UUID comment references to
+  text and the JDBC adapter binds all video IDs consistently, preventing PostgreSQL
+  `uuid = character varying` errors.
+- 2026-11-09: Fixed comment creation in the `dev` profile by selecting
+  `FileVideoCommentAdapter` for file-catalog IDs and reserving
+  `JdbcVideoCommentAdapter` for PostgreSQL UUID IDs; this prevents a false `404`
+  after a comment was saved.

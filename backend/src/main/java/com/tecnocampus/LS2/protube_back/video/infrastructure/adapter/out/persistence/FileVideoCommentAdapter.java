@@ -7,6 +7,7 @@ import com.tecnocampus.LS2.protube_back.video.domain.port.out.VideoCommentPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 @Component
+@Profile("dev")
 public class FileVideoCommentAdapter implements VideoCommentPort {
     private static final Logger LOG = LoggerFactory.getLogger(FileVideoCommentAdapter.class);
 
