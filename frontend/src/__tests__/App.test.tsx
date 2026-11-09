@@ -187,6 +187,16 @@ describe('App routes', () => {
     expect(await screen.findByText('You have not uploaded any videos yet.')).toBeInTheDocument();
   });
 
+  it('shows favorites after authenticating from the favorites route', async () => {
+    mockedAxios.get.mockResolvedValue({ data: [] });
+    window.location.hash = '#favorites';
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
+    expect(await screen.findByRole('heading', { name: 'Favorite videos' })).toBeInTheDocument();
+    expect(await screen.findByRole('status')).toHaveTextContent('no favorite videos');
+  });
+
   it('opens a public profile route', () => {
     mockedAxios.get.mockResolvedValue({ data: {} });
     window.location.hash = '#profile/42';

@@ -6,6 +6,21 @@
 
 **Última actualització:** 9 de novembre de 2026
 
+### Favorite Videos
+
+La funcionalitat de vídeos favorits permet que cada usuari autenticat desi o elimini
+un vídeo i consulti la seva llista personal. El backend segueix l'arquitectura
+hexagonal: `ManageVideoFavoriteUseCase` és el port d'entrada, `VideoFavoriteService`
+valida la sessió i l'existència del vídeo, i `VideoFavoritePort` amaga l'adaptador
+JDBC que desa una fila única per parella usuari-vídeo. La migració normalitza
+`favorites.video_id` a text per mantenir compatibilitat amb els identificadors UUID
+de producció i els identificadors numèrics del catàleg de fitxers.
+
+El frontend consulta l'estat del favorit a la vista de detall, mostra un control
+per afegir-lo o eliminar-lo i ofereix la ruta autenticada `#favorites`, que recupera
+els vídeos guardats. Les proves cobreixen les regles del servei, la persistència,
+els controladors i els estats de càrrega, error i canvi del control React.
+
 ### Qualitat del codi del perfil i format del frontend
 
 El frontend manté els fitxers TypeScript/TSX amb el format definit per Prettier,

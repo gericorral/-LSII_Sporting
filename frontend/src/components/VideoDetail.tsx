@@ -4,6 +4,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import CommentsSection from './CommentsSection';
 import { useVideoRating } from '../useVideoRating';
+import { useVideoFavorite } from '../useVideoFavorite';
 
 type VideoDetailProps = {
   video: VideoSummary;
@@ -20,6 +21,12 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
     message: ratingMessage,
     saveRating,
   } = useVideoRating(video.id, Boolean(loggedUser));
+  const {
+    favorited,
+    state: favoriteState,
+    message: favoriteMessage,
+    toggleFavorite,
+  } = useVideoFavorite(video.id, Boolean(loggedUser));
   const [viewRegistered, setViewRegistered] = useState(false);
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(video.title);
@@ -81,6 +88,18 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
       >
         Your browser does not support video playback.
       </video>
+      <section className="video-favorite" aria-label="Favorite video">
+        <button
+          type="button"
+          onClick={toggleFavorite}
+          disabled={!loggedUser || favoriteState === 'loading' || favoriteState === 'saving'}
+          aria-pressed={favorited}
+        >
+          {favorited ? 'Remove from favorites' : 'Add to favorites'}
+        </button>
+        {!loggedUser && <p>Log in to save this video as a favorite.</p>}
+        {favoriteMessage && <p role="alert">{favoriteMessage}</p>}
+      </section>
       {canEdit && !editing && (
         <button className="edit-video-button" type="button" onClick={() => setEditing(true)}>
           Edit metadata

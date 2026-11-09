@@ -11,6 +11,7 @@ import { getEnv } from './utils/Env';
 import ProfilePage from './components/ProfilePage';
 import UploadForm from './components/UploadForm';
 import AnalyticsPage from './components/AnalyticsPage';
+import FavoritesPage from './components/FavoritesPage';
 
 function App() {
   return (
@@ -64,6 +65,7 @@ function ContentApp() {
   const profileId = getProfileId(hash);
   const uploading = hash === '#upload';
   const analytics = hash === '#analytics';
+  const favorites = hash === '#favorites';
   const handleProfileUpdated = useCallback(
     (displayName: string | null | undefined, avatarPath: string | null | undefined) => {
       setLoggedUser((user) => (user ? { ...user, displayName, avatarPath } : user));
@@ -130,6 +132,24 @@ function ContentApp() {
         onLoggedIn={(user) => {
           setLoggedUser(user);
           window.location.hash = '#analytics';
+        }}
+      />
+    );
+  }
+
+  if (favorites) {
+    return authenticatedUser ? (
+      <FavoritesPage
+        onBack={() => {
+          setHash('');
+          window.location.hash = '';
+        }}
+      />
+    ) : (
+      <LoginForm
+        onLoggedIn={(user) => {
+          setLoggedUser(user);
+          window.location.hash = '#favorites';
         }}
       />
     );
@@ -247,6 +267,7 @@ function VideoCatalog({
                   </a>
                   <a href="#upload">Upload video</a>
                   <a href="#analytics">Analytics</a>
+                  <a href="#favorites">Favorites</a>
                   <button type="button" onClick={onLogout}>
                     Log out
                   </button>

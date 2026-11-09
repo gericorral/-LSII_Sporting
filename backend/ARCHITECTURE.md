@@ -47,3 +47,10 @@ Video playback uses the same boundaries: `RegisterVideoViewUseCase` is invoked b
 `JdbcVideoViewAdapter` records one row in `video_views`, while
 `JdbcVideoAnalyticsAdapter` reads the database view derived from videos, comments,
 views and likes. Counter persistence therefore remains outside the application layer.
+
+Favorite videos use the same separation. `ManageVideoFavoriteUseCase` is the input port
+used by `VideoFavoriteController`, `VideoFavoriteService` validates authentication and
+video existence, and `VideoFavoritePort` hides `JdbcVideoFavoriteAdapter`. The adapter
+stores one favorite per user and video, while the service resolves the saved identifiers
+through `VideoCatalogPort`, keeping the feature compatible with both production UUIDs and
+development file-catalog identifiers.

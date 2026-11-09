@@ -146,6 +146,12 @@ content in this file.
 
 ## AI change log
 
+- 2026-11-09: Implemented Favorite Videos using
+  `prompts/36-implement-favorite-videos.md`; authenticated users can add, remove and
+  list favorites through hexagonal backend ports and a responsive frontend detail
+  control and favorites page. The change is documented in the Catalan study guide
+  and Word export.
+
 - 2026-10-17: Implemented the US-04 video catalog using
   `prompts/06-implement-video-catalog.md`. The change was generated with AI and documented in
   `docs/GUIA_ESTUDIO_EXAMEN.md` and `docs/GUIA_ESTUDIO_EXAMEN.docx`.
