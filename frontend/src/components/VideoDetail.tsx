@@ -1,6 +1,6 @@
 import type { VideoSummary } from '../useAllVideos';
 import { getEnv, resolveMediaUrl } from '../utils/Env';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import CommentsSection from './CommentsSection';
 import { useVideoRating } from '../useVideoRating';
@@ -10,10 +10,19 @@ type VideoDetailProps = {
   video: VideoSummary;
   canEdit?: boolean;
   onUpdated?: () => Promise<void>;
-  loggedUser?: { username: string } | null;
+  loggedUser?: { id?: string; username: string } | null;
 };
 
 const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: VideoDetailProps) => {
+  const [author, setAuthor] = useState<{
+    userId: string;
+    username: string;
+    displayName: string | null;
+    avatarPath: string | null;
+  } | null>(null);
+  const [subscribed, setSubscribed] = useState(false);
+  const [subscriptionSaving, setSubscriptionSaving] = useState(false);
+  const [subscriptionMessage, setSubscriptionMessage] = useState('');
   const {
     rating,
     loading: ratingLoading,
@@ -35,6 +44,50 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
   const [category, setCategory] = useState(video.category || '');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!video.ownerId) return;
+    setAuthor({
+      userId: video.ownerId,
+      username: video.ownerUsername || 'Unknown author',
+      displayName: null,
+      avatarPath: null,
+    });
+    const ownerId = encodeURIComponent(video.ownerId);
+    axios
+      .get(`${getEnv().API_BASE_URL}/profiles/${ownerId}`, { withCredentials: true })
+      .then((response) => setAuthor(response.data))
+      .catch(() => undefined);
+    if (loggedUser && loggedUser.id !== video.ownerId) {
+      axios
+        .get<{ subscribed: boolean }>(`${getEnv().API_BASE_URL}/profiles/${ownerId}/subscription`, {
+          withCredentials: true,
+        })
+        .then((response) => setSubscribed(response.data.subscribed))
+        .catch(() => undefined);
+    }
+  }, [loggedUser, video.ownerId, video.ownerUsername]);
+
+  const changeSubscription = async () => {
+    if (!video.ownerId || !loggedUser || loggedUser.id === video.ownerId) return;
+    setSubscriptionSaving(true);
+    setSubscriptionMessage('');
+    try {
+      const ownerId = encodeURIComponent(video.ownerId);
+      const response = subscribed
+        ? await axios.delete(`${getEnv().API_BASE_URL}/profiles/${ownerId}/subscription`, { withCredentials: true })
+        : await axios.put(`${getEnv().API_BASE_URL}/profiles/${ownerId}/subscription`, {}, { withCredentials: true });
+      setSubscribed(response.data.subscribed);
+    } catch (error: unknown) {
+      if (axios.isAxiosError<{ message?: string }>(error) && error.response?.data?.message) {
+        setSubscriptionMessage(error.response.data.message);
+      } else {
+        setSubscriptionMessage('Unable to update your subscription.');
+      }
+    } finally {
+      setSubscriptionSaving(false);
+    }
+  };
 
   const save = async () => {
     setError('');
@@ -88,6 +141,25 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
       >
         Your browser does not support video playback.
       </video>
+      {author && (
+        <section className="video-author" aria-label="Video author">
+          <a href={`#profile/${encodeURIComponent(author.userId)}`} className="video-author-profile">
+            {author.avatarPath ? (
+              <img src={author.avatarPath} alt={`${author.username}'s avatar`} />
+            ) : (
+              <span aria-hidden="true">{author.username.charAt(0).toUpperCase()}</span>
+            )}
+            <strong>{author.displayName || author.username}</strong>
+          </a>
+          {loggedUser?.id !== author.userId && (
+            <button type="button" onClick={changeSubscription} disabled={!loggedUser || subscriptionSaving}>
+              {subscriptionSaving ? 'Updating...' : subscribed ? 'Unsubscribe' : 'Subscribe'}
+            </button>
+          )}
+          {!loggedUser && <p>Log in to subscribe.</p>}
+          {subscriptionMessage && <p role="alert">{subscriptionMessage}</p>}
+        </section>
+      )}
       <section className="video-favorite" aria-label="Favorite video">
         <button
           type="button"

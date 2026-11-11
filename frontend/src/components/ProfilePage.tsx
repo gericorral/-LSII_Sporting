@@ -36,6 +36,8 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
   });
   const [message, setMessage] = useState('Loading profile...');
   const [saving, setSaving] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+  const [subscriptionSaving, setSubscriptionSaving] = useState(false);
 
   useEffect(() => {
     const url = userId
@@ -52,7 +54,36 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
         setMessage('');
       })
       .catch(() => setMessage('Unable to load this profile.'));
+    if (userId) {
+      axios
+        .get<{ subscribed: boolean }>(`${getEnv().API_BASE_URL}/profiles/${encodeURIComponent(userId)}/subscription`, {
+          withCredentials: true,
+        })
+        .then((response) => setSubscribed(response.data.subscribed))
+        .catch(() => undefined);
+    }
   }, [editable, onProfileUpdated, userId]);
+
+  const changeSubscription = async () => {
+    if (!userId) return;
+    setSubscriptionSaving(true);
+    try {
+      const response = await axios({
+        method: subscribed ? 'delete' : 'put',
+        url: `${getEnv().API_BASE_URL}/profiles/${encodeURIComponent(userId)}/subscription`,
+        withCredentials: true,
+      });
+      setSubscribed(response.data.subscribed);
+    } catch (error: unknown) {
+      if (axios.isAxiosError<{ message?: string }>(error) && error.response?.data?.message) {
+        setMessage(error.response.data.message);
+      } else {
+        setMessage('Unable to update your subscription.');
+      }
+    } finally {
+      setSubscriptionSaving(false);
+    }
+  };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -170,6 +201,12 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
         </form>
       ) : (
         <div className="profile-details">
+          {userId && (
+            <button type="button" onClick={changeSubscription} disabled={subscriptionSaving}>
+              {subscriptionSaving ? 'Updating...' : subscribed ? 'Unsubscribe' : 'Subscribe'}
+            </button>
+          )}
+          {message && <p role="status">{message}</p>}
           <p>{profile.description || 'This user has not added a description yet.'}</p>
           {profile.location && (
             <p>

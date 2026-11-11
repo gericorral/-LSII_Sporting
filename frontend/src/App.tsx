@@ -12,6 +12,7 @@ import ProfilePage from './components/ProfilePage';
 import UploadForm from './components/UploadForm';
 import AnalyticsPage from './components/AnalyticsPage';
 import FavoritesPage from './components/FavoritesPage';
+import SubscriptionsPage from './components/SubscriptionsPage';
 import { useDarkMode } from './useDarkMode';
 
 function App() {
@@ -88,6 +89,7 @@ function ContentApp({
   const uploading = hash === '#upload';
   const analytics = hash === '#analytics';
   const favorites = hash === '#favorites';
+  const subscriptions = hash === '#subscriptions';
   const handleProfileUpdated = useCallback(
     (displayName: string | null | undefined, avatarPath: string | null | undefined) => {
       setLoggedUser((user) => (user ? { ...user, displayName, avatarPath } : user));
@@ -172,6 +174,24 @@ function ContentApp({
         onLoggedIn={(user) => {
           setLoggedUser(user);
           window.location.hash = '#favorites';
+        }}
+      />
+    );
+  }
+
+  if (subscriptions) {
+    return authenticatedUser ? (
+      <SubscriptionsPage
+        onBack={() => {
+          setHash('');
+          window.location.hash = '';
+        }}
+      />
+    ) : (
+      <LoginForm
+        onLoggedIn={(user) => {
+          setLoggedUser(user);
+          window.location.hash = '#subscriptions';
         }}
       />
     );
@@ -309,6 +329,7 @@ function VideoCatalog({
                   <a href="#upload">Upload video</a>
                   <a href="#analytics">Analytics</a>
                   <a href="#favorites">Favorites</a>
+                  <a href="#subscriptions">Subscriptions</a>
                   <button type="button" onClick={onLogout}>
                     Log out
                   </button>

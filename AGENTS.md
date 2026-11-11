@@ -406,3 +406,14 @@ content in this file.
   and added `V10__normalize_favorites_video_ids_safely.sql` for legacy databases
   where the `favorites` table is absent; previously applied migrations remain
   immutable and the Docker backend completes migrations without deleting data.
+- 2026-11-11: Implemented user subscriptions using
+  `prompts/38-implement-user-subscriptions.md`; authenticated users can subscribe
+  to public profiles, unsubscribe, and view their subscribed users through the
+  hexagonal backend slice and frontend subscriptions page. The change is documented
+  in the Catalan study guide and Word export.
+- 2026-11-11: Added the video-detail author subscription control; the author avatar
+  and name now appear below the player with a profile link and Subscribe/Unsubscribe
+  action using the existing subscription endpoints.
+- 2026-11-11: Exposed the PostgreSQL video owner's public username in `VideoSummary`
+  and used it as the video-detail fallback, so the author is shown by name rather
+  than the generic `Author` label when profile loading is unavailable.

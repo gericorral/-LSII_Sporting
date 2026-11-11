@@ -185,6 +185,7 @@ describe('App routes', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
     expect(await screen.findByRole('heading', { name: 'Video analytics' })).toBeInTheDocument();
     expect(await screen.findByText('You have not uploaded any videos yet.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Back to videos/ }));
   });
 
   it('shows favorites after authenticating from the favorites route', async () => {
@@ -195,6 +196,19 @@ describe('App routes', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
     expect(await screen.findByRole('heading', { name: 'Favorite videos' })).toBeInTheDocument();
     expect(await screen.findByRole('status')).toHaveTextContent('no favorite videos');
+    fireEvent.click(screen.getByRole('button', { name: /Back to videos/ }));
+  });
+
+  it('shows subscriptions after authenticating from the subscriptions route', async () => {
+    mockedAxios.get.mockResolvedValue({ data: [] });
+    window.location.hash = '#subscriptions';
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
+    expect(await screen.findByRole('heading', { name: 'Subscriptions' })).toBeInTheDocument();
+    expect(await screen.findByRole('status')).toHaveTextContent('not subscribed');
+    fireEvent.click(screen.getByRole('button', { name: /Back to videos/ }));
+    expect(await screen.findByRole('heading', { name: 'Available videos' })).toBeInTheDocument();
   });
 
   it('opens a public profile route', () => {

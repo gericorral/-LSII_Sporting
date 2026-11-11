@@ -75,6 +75,29 @@ describe('ProfilePage', () => {
     expect(screen.queryByRole('button', { name: 'Save profile' })).not.toBeInTheDocument();
   });
 
+  it('loads and changes the subscription state for a public profile', async () => {
+    mockedAxios.get.mockResolvedValueOnce({ data: profile }).mockResolvedValueOnce({ data: { subscribed: true } });
+    mockedAxios.mockResolvedValue({ data: { subscribed: false } });
+    render(<ProfilePage userId="1" editable={false} onBack={jest.fn()} />);
+
+    expect(await screen.findByRole('button', { name: 'Unsubscribe' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Unsubscribe' }));
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Subscribe' })).toBeInTheDocument());
+    expect(mockedAxios).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'delete', url: expect.stringContaining('/subscription') })
+    );
+  });
+
+  it('shows subscription update errors', async () => {
+    mockedAxios.get.mockResolvedValueOnce({ data: profile }).mockResolvedValueOnce({ data: { subscribed: false } });
+    mockedAxios.mockRejectedValue(new Error('offline'));
+    render(<ProfilePage userId="1" editable={false} onBack={jest.fn()} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Subscribe' }));
+    expect(await screen.findByText('Unable to update your subscription.')).toBeInTheDocument();
+  });
+
   it('renders an avatar and optional public details', async () => {
     mockedAxios.get.mockResolvedValue({
       data: {

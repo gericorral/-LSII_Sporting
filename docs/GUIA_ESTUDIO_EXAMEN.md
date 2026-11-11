@@ -6,6 +6,30 @@
 
 **Última actualització:** 9 de novembre de 2026
 
+### Subscripcions d'usuaris
+
+Les subscripcions permeten que un usuari autenticat segueixi altres perfils. El
+backend utilitza el port d'entrada `ManageSubscriptionUseCase`, el servei
+`SubscriptionService`, el port de sortida `SubscriptionPort` i l'adaptador JDBC
+`JdbcSubscriptionAdapter`; la taula `subscriptions` manté una fila única per
+parella i impedeix subscriure's a un mateix.
+
+Els endpoints autenticats permeten consultar l'estat, subscriure's, cancel·lar la
+subscripció i llistar els perfils seguits. El frontend mostra el botó
+`Subscribe`/`Unsubscribe` als perfils públics i afegeix la ruta `#subscriptions`
+per consultar la llista, amb enllaços de tornada als perfils.
+
+A la vista de detall d'un vídeo també es carrega el perfil de l'autor a partir de
+`ownerId`. Sota el reproductor es mostra el seu avatar i nom com a enllaç al
+perfil, juntament amb el control de subscripció; l'estat i els canvis reutilitzen
+els mateixos endpoints autenticats.
+
+El catàleg PostgreSQL incorpora també el `username` públic de l'autor en el resum
+del vídeo. Això permet mostrar el nom real sota el reproductor encara que la resta
+del perfil públic no estigui disponible.
+La consulta agrupada inclou aquest camp en `GROUP BY`, perquè PostgreSQL exigeix
+agrupar totes les columnes seleccionades que no són agregades.
+
 ### Mode fosc persistent
 
 El mode fosc és una preferència pròpia de l'usuari, no només un estat visual local.

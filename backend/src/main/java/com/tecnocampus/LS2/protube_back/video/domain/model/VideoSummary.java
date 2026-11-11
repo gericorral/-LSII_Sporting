@@ -12,7 +12,8 @@ public record VideoSummary(
         String videoUrl,
         UUID ownerId,
         List<String> tags,
-        String category
+        String category,
+        String ownerUsername
 ) {
     public VideoSummary(
             String id,
@@ -22,6 +23,20 @@ public record VideoSummary(
             String thumbnailUrl,
             String videoUrl
     ) {
-        this(id, title, description, duration, thumbnailUrl, videoUrl, null, List.of(), "");
+        this(id, title, description, duration, thumbnailUrl, videoUrl, null, List.of(), "", null);
+    }
+
+    public VideoSummary(
+            String id,
+            String title,
+            String description,
+            Integer duration,
+            String thumbnailUrl,
+            String videoUrl,
+            UUID ownerId,
+            List<String> tags,
+            String category
+    ) {
+        this(id, title, description, duration, thumbnailUrl, videoUrl, ownerId, tags, category, null);
     }
 }
