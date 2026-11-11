@@ -402,3 +402,7 @@ content in this file.
   `FileVideoCommentAdapter` for file-catalog IDs and reserving
   `JdbcVideoCommentAdapter` for PostgreSQL UUID IDs; this prevents a false `404`
   after a comment was saved.
+- 2026-11-11: Repaired the persistent Flyway checksum for `V2__video_persistence.sql`
+  and added `V10__normalize_favorites_video_ids_safely.sql` for legacy databases
+  where the `favorites` table is absent; previously applied migrations remain
+  immutable and the Docker backend completes migrations without deleting data.

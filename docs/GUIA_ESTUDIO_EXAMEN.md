@@ -438,6 +438,15 @@ catàleg de desenvolupament basat en fitxers pot utilitzar identificadors numèr
 mentre que el catàleg PostgreSQL utilitza UUID. El frontend diferencia errors de
 sessió, vídeo inexistent i errors del servidor per fer visible la causa.
 
+### Reparació de migracions Flyway
+
+Les migracions Flyway aplicades són immutables: modificar `V2` provoca un conflicte
+de checksum en bases PostgreSQL persistents. La migració `V2` es manté amb el seu
+contingut original i les funcionalitats posteriors s'apliquen mitjançant versions
+noves. `V10__normalize_favorites_video_ids_safely.sql` comprova que la taula
+`favorites` existeix abans de modificar-la, de manera que una base antiga sense
+aquesta taula també pot completar totes les migracions i arrencar correctament.
+
 ### Compatibilitat amb l'esquema PostgreSQL existent
 
 La base de dades de Docker podia contenir una versió anterior de la taula `comments`
