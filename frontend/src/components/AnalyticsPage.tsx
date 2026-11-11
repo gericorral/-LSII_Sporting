@@ -1,25 +1,27 @@
 import { useAnalytics } from '../useAnalytics';
+import { useTranslation } from 'react-i18next';
 
 type AnalyticsPageProps = {
   onBack: () => void;
 };
 
 export default function AnalyticsPage({ onBack }: AnalyticsPageProps) {
+  const { t } = useTranslation();
   const { value, loading, message } = useAnalytics(true);
 
   return (
     <section className="analytics-panel" aria-labelledby="analytics-title">
       <button type="button" onClick={onBack}>
-        Back to videos
+        {t('backToVideos')}
       </button>
       <div className="analytics-heading">
-        <p className="registration-eyebrow">MY CONTENT</p>
-        <h2 id="analytics-title">Video analytics</h2>
-        <p>Understand how your videos are performing.</p>
+        <p className="registration-eyebrow">{t('pages.analyticsEyebrow')}</p>
+        <h2 id="analytics-title">{t('pages.analyticsTitle')}</h2>
+        <p>{t('pages.analyticsDescription')}</p>
       </div>
-      {loading === 'loading' && <p role="status">Loading analytics...</p>}
+      {loading === 'loading' && <p role="status">{t('pages.loadingAnalytics')}</p>}
       {loading === 'error' && <p role="alert">{message}</p>}
-      {loading === 'success' && value.length === 0 && <p role="status">You have not uploaded any videos yet.</p>}
+      {loading === 'success' && value.length === 0 && <p role="status">{t('pages.noUploads')}</p>}
       {loading === 'success' && value.length > 0 && (
         <div className="analytics-list">
           {value.map((video) => (
@@ -27,15 +29,15 @@ export default function AnalyticsPage({ onBack }: AnalyticsPageProps) {
               <h3>{video.title}</h3>
               <dl>
                 <div>
-                  <dt>Views</dt>
+                  <dt>{t('pages.views')}</dt>
                   <dd>{video.views}</dd>
                 </div>
                 <div>
-                  <dt>Comments</dt>
+                  <dt>{t('pages.comments')}</dt>
                   <dd>{video.comments}</dd>
                 </div>
                 <div>
-                  <dt>Likes</dt>
+                  <dt>{t('pages.likes')}</dt>
                   <dd>{video.likes}</dd>
                 </div>
               </dl>

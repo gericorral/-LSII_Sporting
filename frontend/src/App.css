@@ -48,6 +48,27 @@
   width: 100%;
 }
 
+.language-selector {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.language-selector span {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.language-selector select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  color: var(--text);
+  padding: 0.35rem 0.5rem;
+}
+
 .video-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

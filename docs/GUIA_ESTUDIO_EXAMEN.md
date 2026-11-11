@@ -462,6 +462,24 @@ catàleg de desenvolupament basat en fitxers pot utilitzar identificadors numèr
 mentre que el catàleg PostgreSQL utilitza UUID. El frontend diferencia errors de
 sessió, vídeo inexistent i errors del servidor per fer visible la causa.
 
+### Internacionalització del frontend
+
+La interfície React utilitza `i18next` i `react-i18next` amb anglès com a idioma
+principal i castellà com a alternativa. Les traduccions es concentren a
+`frontend/src/i18n.ts`, i els components consumeixen les claus mitjançant
+`useTranslation` en lloc de mantenir textos visibles duplicats. El selector
+d'idioma és accessible, actualitza el context de traducció i desa la preferència
+a `localStorage`, de manera que es conserva entre sessions.
+
+La configuració s'importa abans de muntar React i també s'inicialitza en els tests
+de Jest. Això permet provar el text anglès per defecte i evitar que els components
+renderitzats directament depenguin de `main.tsx`. Les proves existents mantenen el
+comportament funcional i el build comprova els tipus i la compilació de les dues
+llengües. Els textos del perfil, autenticació, catàleg, vídeos, comentaris,
+preferits, subscripcions, analítica i càrrega de vídeos utilitzen les traduccions;
+els missatges d'error desconeguts del backend es conserven perquè continuïn sent
+accionables.
+
 ### Reparació de migracions Flyway
 
 Les migracions Flyway aplicades són immutables: modificar `V2` provoca un conflicte

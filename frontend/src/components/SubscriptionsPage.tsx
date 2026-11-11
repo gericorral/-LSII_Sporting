@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { getEnv } from '../utils/Env';
+import { useTranslation } from 'react-i18next';
 
 type SubscribedProfile = {
   userId: string;
@@ -14,6 +15,7 @@ type SubscriptionsPageProps = {
 };
 
 const SubscriptionsPage = ({ onBack }: SubscriptionsPageProps) => {
+  const { t } = useTranslation();
   const [profiles, setProfiles] = useState<SubscribedProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -22,19 +24,19 @@ const SubscriptionsPage = ({ onBack }: SubscriptionsPageProps) => {
     axios
       .get<SubscribedProfile[]>(`${getEnv().API_BASE_URL}/subscriptions`, { withCredentials: true })
       .then((response) => setProfiles(response.data))
-      .catch(() => setMessage('Unable to load your subscriptions.'))
+      .catch(() => setMessage(t('pages.subscriptionsError')))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   return (
     <section className="subscriptions-page">
       <button className="back-button" type="button" onClick={onBack}>
-        &larr; Back to videos
+        &larr; {t('backToVideos')}
       </button>
-      <h2>Subscriptions</h2>
-      {loading && <p>Loading subscriptions...</p>}
+      <h2>{t('pages.subscriptionTitle')}</h2>
+      {loading && <p>{t('pages.loadingSubscriptions')}</p>}
       {message && <p role="alert">{message}</p>}
-      {!loading && !message && profiles.length === 0 && <p role="status">You are not subscribed to any users yet.</p>}
+      {!loading && !message && profiles.length === 0 && <p role="status">{t('pages.noSubscriptions')}</p>}
       {!loading && !message && profiles.length > 0 && (
         <ul className="subscriptions-list">
           {profiles.map((profile) => (

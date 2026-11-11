@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import axios from 'axios';
 import { getEnv } from '../utils/Env';
+import { useTranslation } from 'react-i18next';
 
 type RegistrationUser = {
   id: string;
@@ -15,6 +16,7 @@ type RegistrationFormProps = {
 const REGISTER_URL = `${getEnv().API_BASE_URL}/auth/register`;
 
 export default function RegistrationForm({ onRegistered }: RegistrationFormProps) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -25,13 +27,13 @@ export default function RegistrationForm({ onRegistered }: RegistrationFormProps
   const validate = () => {
     const nextErrors: Record<string, string> = {};
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      nextErrors.email = 'Enter a valid email address.';
+      nextErrors.email = t('auth.validEmail');
     }
     if (!/^[a-zA-Z0-9_]{3,50}$/.test(username.trim())) {
-      nextErrors.username = 'Use 3-50 letters, numbers or underscores.';
+      nextErrors.username = t('auth.usernameRules');
     }
     if (password.length < 8) {
-      nextErrors.password = 'Password must contain at least 8 characters.';
+      nextErrors.password = t('auth.passwordRules');
     }
     return nextErrors;
   };
@@ -57,10 +59,10 @@ export default function RegistrationForm({ onRegistered }: RegistrationFormProps
         if (error.response?.status === 409 && data?.field && data.message) {
           setErrors({ [data.field]: data.message });
         } else {
-          setServerError(data?.message || 'Registration failed. Please try again.');
+          setServerError(data?.message || t('auth.registrationFailed'));
         }
       } else {
-        setServerError('Registration failed. Please try again.');
+        setServerError(t('auth.registrationFailed'));
       }
     } finally {
       setSubmitting(false);
@@ -76,18 +78,18 @@ export default function RegistrationForm({ onRegistered }: RegistrationFormProps
         <span>PROTUBE</span>
       </div>
       <div className="registration-heading">
-        <p className="registration-eyebrow">JOIN THE COMMUNITY</p>
-        <h2 id="registration-title">Create your account</h2>
-        <p>Join ProTube and start watching your favourite videos.</p>
+        <p className="registration-eyebrow">{t('auth.join')}</p>
+        <h2 id="registration-title">{t('auth.create')}</h2>
+        <p>{t('auth.createDescription')}</p>
       </div>
       <form onSubmit={submit} noValidate>
         <div className="registration-field">
-          <label htmlFor="email">Email address</label>
+          <label htmlFor="email">{t('auth.email')}</label>
           <input
             id="email"
             type="email"
             autoComplete="email"
-            placeholder="you@example.com"
+            placeholder={t('auth.emailPlaceholder')}
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             aria-invalid={Boolean(errors.email)}
@@ -96,11 +98,11 @@ export default function RegistrationForm({ onRegistered }: RegistrationFormProps
         {errors.email && <small role="alert">{errors.email}</small>}
 
         <div className="registration-field">
-          <label htmlFor="username">Username</label>
+          <label htmlFor="username">{t('auth.username')}</label>
           <input
             id="username"
             autoComplete="username"
-            placeholder="Choose a username"
+            placeholder={t('auth.usernamePlaceholder')}
             value={username}
             onChange={(event) => setUsername(event.target.value)}
             aria-invalid={Boolean(errors.username)}
@@ -109,23 +111,23 @@ export default function RegistrationForm({ onRegistered }: RegistrationFormProps
         {errors.username && <small role="alert">{errors.username}</small>}
 
         <div className="registration-field">
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">{t('auth.password')}</label>
           <input
             id="password"
             type="password"
             autoComplete="new-password"
-            placeholder="At least 8 characters"
+            placeholder={t('auth.passwordPlaceholder')}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             aria-invalid={Boolean(errors.password)}
           />
         </div>
         {errors.password && <small role="alert">{errors.password}</small>}
-        <p className="registration-hint">Use at least 8 characters to keep your account secure.</p>
+        <p className="registration-hint">{t('auth.passwordHint')}</p>
 
         {serverError && <p role="alert">{serverError}</p>}
         <button type="submit" disabled={submitting}>
-          {submitting ? 'Creating account...' : 'Create my account'}
+          {submitting ? t('auth.creating') : t('auth.createMy')}
         </button>
       </form>
       <a
@@ -135,10 +137,10 @@ export default function RegistrationForm({ onRegistered }: RegistrationFormProps
         <span className="google-login-icon" aria-hidden="true">
           G
         </span>
-        Sign up with Google
+        {t('auth.signUpGoogle')}
       </a>
       <p className="registration-footer">
-        Already have an account? <a href="#">Back to videos</a>
+        {t('auth.alreadyAccount')} <a href="#">{t('backToVideos')}</a>
       </p>
     </section>
   );

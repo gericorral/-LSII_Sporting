@@ -5,6 +5,7 @@ import axios from 'axios';
 import CommentsSection from './CommentsSection';
 import { useVideoRating } from '../useVideoRating';
 import { useVideoFavorite } from '../useVideoFavorite';
+import { useTranslation } from 'react-i18next';
 
 type VideoDetailProps = {
   video: VideoSummary;
@@ -14,6 +15,7 @@ type VideoDetailProps = {
 };
 
 const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: VideoDetailProps) => {
+  const { t } = useTranslation();
   const [author, setAuthor] = useState<{
     userId: string;
     username: string;
@@ -49,7 +51,7 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
     if (!video.ownerId) return;
     setAuthor({
       userId: video.ownerId,
-      username: video.ownerUsername || 'Unknown author',
+      username: video.ownerUsername || t('video.unknownAuthor'),
       displayName: null,
       avatarPath: null,
     });
@@ -66,7 +68,7 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
         .then((response) => setSubscribed(response.data.subscribed))
         .catch(() => undefined);
     }
-  }, [loggedUser, video.ownerId, video.ownerUsername]);
+  }, [loggedUser, t, video.ownerId, video.ownerUsername]);
 
   const changeSubscription = async () => {
     if (!video.ownerId || !loggedUser || loggedUser.id === video.ownerId) return;
@@ -82,7 +84,7 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
       if (axios.isAxiosError<{ message?: string }>(error) && error.response?.data?.message) {
         setSubscriptionMessage(error.response.data.message);
       } else {
-        setSubscriptionMessage('Unable to update your subscription.');
+        setSubscriptionMessage(t('video.loginSubscribe'));
       }
     } finally {
       setSubscriptionSaving(false);
@@ -110,9 +112,9 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
       setEditing(false);
     } catch (saveError: unknown) {
       if (axios.isAxiosError<{ message?: string }>(saveError)) {
-        setError(saveError.response?.data?.message || 'The video could not be updated.');
+        setError(saveError.response?.data?.message || t('video.updateFailed'));
       } else {
-        setError('The video could not be updated.');
+        setError(t('video.updateFailed'));
       }
     } finally {
       setSaving(false);
@@ -131,7 +133,7 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
 
   return (
     <article className="video-detail">
-      <a href="#">&larr; Back to videos</a>
+      <a href="#">&larr; {t('backToVideos')}</a>
       <h2>{video.title}</h2>
       <video
         controls
@@ -139,10 +141,10 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
         src={resolveMediaUrl(video.videoUrl)}
         onPlay={registerView}
       >
-        Your browser does not support video playback.
+        {t('video.playbackUnsupported')}
       </video>
       {author && (
-        <section className="video-author" aria-label="Video author">
+        <section className="video-author" aria-label={t('video.author')}>
           <a href={`#profile/${encodeURIComponent(author.userId)}`} className="video-author-profile">
             {author.avatarPath ? (
               <img src={author.avatarPath} alt={`${author.username}'s avatar`} />
@@ -153,35 +155,35 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
           </a>
           {loggedUser?.id !== author.userId && (
             <button type="button" onClick={changeSubscription} disabled={!loggedUser || subscriptionSaving}>
-              {subscriptionSaving ? 'Updating...' : subscribed ? 'Unsubscribe' : 'Subscribe'}
+              {subscriptionSaving ? t('video.updating') : subscribed ? t('video.unsubscribe') : t('video.subscribe')}
             </button>
           )}
-          {!loggedUser && <p>Log in to subscribe.</p>}
+          {!loggedUser && <p>{t('video.loginSubscribe')}</p>}
           {subscriptionMessage && <p role="alert">{subscriptionMessage}</p>}
         </section>
       )}
-      <section className="video-favorite" aria-label="Favorite video">
+      <section className="video-favorite" aria-label={t('video.favorite')}>
         <button
           type="button"
           onClick={toggleFavorite}
           disabled={!loggedUser || favoriteState === 'loading' || favoriteState === 'saving'}
           aria-pressed={favorited}
         >
-          {favorited ? 'Remove from favorites' : 'Add to favorites'}
+          {favorited ? t('video.removeFavorite') : t('video.addFavorite')}
         </button>
-        {!loggedUser && <p>Log in to save this video as a favorite.</p>}
+        {!loggedUser && <p>{t('video.loginFavorite')}</p>}
         {favoriteMessage && <p role="alert">{favoriteMessage}</p>}
       </section>
       {canEdit && !editing && (
         <button className="edit-video-button" type="button" onClick={() => setEditing(true)}>
-          Edit metadata
+          {t('video.edit')}
         </button>
       )}
       {editing ? (
         <div className="video-edit-form">
-          <label htmlFor="edit-video-title">Title</label>
+          <label htmlFor="edit-video-title">{t('upload.titleLabel')}</label>
           <input id="edit-video-title" value={title} onChange={(event) => setTitle(event.target.value)} />
-          <label htmlFor="edit-video-description">Description</label>
+          <label htmlFor="edit-video-description">{t('video.description')}</label>
           <textarea
             id="edit-video-description"
             value={description}
@@ -192,33 +194,33 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
             id="edit-video-tags"
             value={tags}
             onChange={(event) => setTags(event.target.value)}
-            placeholder="music, live, tutorial"
+            placeholder={t('video.tagsPlaceholder')}
           />
-          <label htmlFor="edit-video-category">Category</label>
+          <label htmlFor="edit-video-category">{t('video.category')}</label>
           <input id="edit-video-category" value={category} onChange={(event) => setCategory(event.target.value)} />
           {error && <p role="alert">{error}</p>}
           <div className="video-edit-actions">
             <button type="button" onClick={save} disabled={saving}>
-              {saving ? 'Saving...' : 'Save changes'}
+              {saving ? t('video.saving') : t('video.save')}
             </button>
             <button type="button" onClick={() => setEditing(false)}>
-              Cancel
+              {t('video.cancel')}
             </button>
           </div>
         </div>
       ) : (
         <>
-          <p>{video.description || 'No description available.'}</p>
+          <p>{video.description || t('video.noDescription')}</p>
           {video.category && <span className="video-category">{video.category}</span>}
           {video.tags?.length ? <p className="video-tags">{video.tags.map((tag) => `#${tag}`).join(' ')}</p> : null}
         </>
       )}
       {video.duration !== null && <span>{video.duration}s</span>}
-      <section className="video-rating" aria-label="Video rating">
+      <section className="video-rating" aria-label={t('video.rate')}>
         <div className="video-rating-heading">
           <div>
-            <p className="eyebrow">Community score</p>
-            <h3>Rate this video</h3>
+            <p className="eyebrow">{t('video.communityScore')}</p>
+            <h3>{t('video.rate')}</h3>
           </div>
           <span className="rating-score">
             {typeof rating?.averageRating === 'number' ? rating.averageRating.toFixed(2) : '0.00'}
@@ -226,18 +228,18 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
           </span>
         </div>
         {ratingLoading ? (
-          <p>Loading rating...</p>
+          <p>{t('video.loadingRating')}</p>
         ) : (
           <>
             <p className="rating-count">
-              {rating?.ratingCount || 0} {rating?.ratingCount === 1 ? 'rating' : 'ratings'}
+              {rating?.ratingCount || 0} {rating?.ratingCount === 1 ? t('video.rating') : t('video.ratings')}
             </p>
-            <div className="rating-actions" role="group" aria-label="Choose a rating from 1 to 5 stars">
+            <div className="rating-actions" role="group" aria-label={t('video.chooseRating')}>
               {[1, 2, 3, 4, 5].map((value) => (
                 <button
                   key={value}
                   type="button"
-                  aria-label={`Rate ${value} star${value === 1 ? '' : 's'}`}
+                  aria-label={value === 1 ? t('video.rateStar', { value }) : t('video.rateStars', { value })}
                   aria-pressed={rating?.userRating === value}
                   disabled={!loggedUser || ratingSaving}
                   onClick={() => saveRating(value)}
@@ -247,8 +249,10 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
                 </button>
               ))}
             </div>
-            {loggedUser && rating?.userRating && <p className="your-rating">Your rating: {rating.userRating}/5</p>}
-            {!loggedUser && <p>Log in to rate this video.</p>}
+            {loggedUser && rating?.userRating && (
+              <p className="your-rating">{t('video.yourRating', { value: rating.userRating })}</p>
+            )}
+            {!loggedUser && <p>{t('video.loginRating')}</p>}
             {ratingMessage && <p role="alert">{ratingMessage}</p>}
           </>
         )}

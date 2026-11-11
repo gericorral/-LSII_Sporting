@@ -2,6 +2,8 @@ import { FormEvent, useState } from 'react';
 import axios, { AxiosError } from 'axios';
 import { getEnv } from '../utils/Env';
 import { Comment, useComments } from '../useComments';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 
 type CommentsSectionProps = {
   videoId: string;
@@ -37,12 +39,13 @@ function parseCommentDate(value: Comment['createdAt']): Date | null {
 function formatCommentDate(value: Comment['createdAt']): { dateTime?: string; label: string } {
   const date = parseCommentDate(value);
   if (!date) {
-    return { label: 'Date unavailable' };
+    return { label: i18n.t('comments.dateUnavailable') };
   }
   return { dateTime: date.toISOString(), label: date.toLocaleString() };
 }
 
 export default function CommentsSection({ videoId, loggedUser }: CommentsSectionProps) {
+  const { t } = useTranslation();
   const { comments, loading, message, hasNext, loadMore, addComment, updateLike } = useComments(videoId);
   const [content, setContent] = useState('');
   const [replyTo, setReplyTo] = useState<string | null>(null);
@@ -54,11 +57,11 @@ export default function CommentsSection({ videoId, loggedUser }: CommentsSection
     event.preventDefault();
     const normalizedContent = content.trim();
     if (!normalizedContent) {
-      setSubmitMessage('Comment cannot be empty.');
+      setSubmitMessage(t('comments.empty'));
       return;
     }
     if (normalizedContent.length > MAX_COMMENT_LENGTH) {
-      setSubmitMessage('Comment must be at most 2000 characters.');
+      setSubmitMessage(t('comments.tooLong'));
       return;
     }
     setSubmitMessage('');
@@ -72,7 +75,7 @@ export default function CommentsSection({ videoId, loggedUser }: CommentsSection
       addComment(response.data);
       setContent('');
     } catch (error: unknown) {
-      setSubmitMessage('Error posting comment: ' + (error as AxiosError).message);
+      setSubmitMessage(t('comments.errorPosting', { error: (error as AxiosError).message }));
     } finally {
       setSubmitting(false);
     }
@@ -81,11 +84,11 @@ export default function CommentsSection({ videoId, loggedUser }: CommentsSection
   const submitReply = async (parentCommentId: string) => {
     const normalizedContent = replyContent.trim();
     if (!normalizedContent) {
-      setSubmitMessage('Reply cannot be empty.');
+      setSubmitMessage(t('comments.replyEmpty'));
       return;
     }
     if (normalizedContent.length > MAX_COMMENT_LENGTH) {
-      setSubmitMessage('Reply must be at most 2000 characters.');
+      setSubmitMessage(t('comments.replyTooLong'));
       return;
     }
     setSubmitMessage('');
@@ -100,7 +103,7 @@ export default function CommentsSection({ videoId, loggedUser }: CommentsSection
       setReplyContent('');
       setReplyTo(null);
     } catch (error: unknown) {
-      setSubmitMessage('Error posting reply: ' + (error as AxiosError).message);
+      setSubmitMessage(t('comments.errorReplying', { error: (error as AxiosError).message }));
     } finally {
       setSubmitting(false);
     }
@@ -120,7 +123,7 @@ export default function CommentsSection({ videoId, loggedUser }: CommentsSection
           {loggedUser && (
             <>
               <button type="button" onClick={() => updateLike(comment.id)}>
-                {comment.likedByCurrentUser ? 'Unlike' : 'Like'} ({comment.likeCount || 0})
+                {comment.likedByCurrentUser ? t('comments.unlike') : t('comments.like')} ({comment.likeCount || 0})
               </button>
               <button
                 type="button"
@@ -129,7 +132,7 @@ export default function CommentsSection({ videoId, loggedUser }: CommentsSection
                   setSubmitMessage('');
                 }}
               >
-                Reply
+                {t('comments.reply')}
               </button>
             </>
           )}
@@ -141,7 +144,7 @@ export default function CommentsSection({ videoId, loggedUser }: CommentsSection
               submitReply(comment.id);
             }}
           >
-            <label htmlFor={`reply-${comment.id}`}>Reply</label>
+            <label htmlFor={`reply-${comment.id}`}>{t('comments.reply')}</label>
             <textarea
               id={`reply-${comment.id}`}
               value={replyContent}
@@ -149,7 +152,7 @@ export default function CommentsSection({ videoId, loggedUser }: CommentsSection
               onChange={(event) => setReplyContent(event.target.value)}
             />
             <button type="submit" disabled={submitting}>
-              {submitting ? 'Posting...' : 'Post reply'}
+              {submitting ? t('comments.posting') : t('comments.postReply')}
             </button>
           </form>
         )}
@@ -162,34 +165,34 @@ export default function CommentsSection({ videoId, loggedUser }: CommentsSection
 
   return (
     <section className="comments-section" aria-labelledby="comments-heading">
-      <h3 id="comments-heading">Comments</h3>
+      <h3 id="comments-heading">{t('comments.title')}</h3>
       {loggedUser ? (
         <form onSubmit={submit} className="comment-form">
-          <label htmlFor="comment-content">Add a comment</label>
+          <label htmlFor="comment-content">{t('comments.add')}</label>
           <textarea
             id="comment-content"
             value={content}
             maxLength={MAX_COMMENT_LENGTH}
             onChange={(event) => setContent(event.target.value)}
-            placeholder="Share your thoughts"
+            placeholder={t('comments.placeholder')}
           />
           {submitMessage && <p role="alert">{submitMessage}</p>}
           <button type="submit" disabled={submitting}>
-            {submitting ? 'Posting...' : 'Post comment'}
+            {submitting ? t('comments.posting') : t('comments.post')}
           </button>
         </form>
       ) : (
         <p>
-          <a href="#login">Log in</a> to comment.
+          <a href="#login">{t('login')}</a> {t('comments.loginToComment')}
         </p>
       )}
-      {loading === 'loading' && <p role="status">Loading comments...</p>}
+      {loading === 'loading' && <p role="status">{t('comments.loading')}</p>}
       {loading === 'error' && <p role="alert">{message}</p>}
-      {loading === 'success' && comments.length === 0 && <p>No comments yet.</p>}
+      {loading === 'success' && comments.length === 0 && <p>{t('comments.noComments')}</p>}
       <ul className="comments-list">{rootComments.map(renderComment)}</ul>
       {hasNext && (
         <button type="button" className="load-more-button" onClick={loadMore} disabled={loading === 'loading'}>
-          Load more comments
+          {t('comments.loadMore')}
         </button>
       )}
     </section>

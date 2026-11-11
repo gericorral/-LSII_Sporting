@@ -146,6 +146,14 @@ content in this file.
 
 ## AI change log
 
+- 2026-11-11: Implemented frontend internationalization using
+  `i18next` and `react-i18next`; English is the default language, Spanish is
+  selectable through an accessible persisted language control, and user-facing
+  catalog, authentication, profile, video, comments, favorites, subscriptions,
+  analytics and upload text now uses translation resources. Jest initializes the
+  same i18n configuration and the change is documented in the Catalan study guide
+  and Word export.
+
 - 2026-11-09: Implemented persisted dark mode using
   `prompts/37-implement-dark-mode.md`; authenticated users can toggle the
   `user_preferences.dark_mode` setting through hexagonal backend ports and the

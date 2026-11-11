@@ -1,12 +1,14 @@
 import { FormEvent, useState } from 'react';
 import axios from 'axios';
 import { getEnv } from '../utils/Env';
+import { useTranslation } from 'react-i18next';
 
 type LoginUser = { id?: string; username: string; email: string };
 type LoginFormProps = { onLoggedIn: (user: LoginUser) => void; oauthError?: string };
 const LOGIN_URL = `${getEnv().API_BASE_URL}/auth/login`;
 
 export default function LoginForm({ onLoggedIn, oauthError }: LoginFormProps) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -17,9 +19,9 @@ export default function LoginForm({ onLoggedIn, oauthError }: LoginFormProps) {
     event.preventDefault();
     const nextErrors: Record<string, string> = {};
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      nextErrors.email = 'Enter a valid email address.';
+      nextErrors.email = t('auth.validEmail');
     }
-    if (!password) nextErrors.password = 'Enter your password.';
+    if (!password) nextErrors.password = t('auth.requiredPassword');
     setErrors(nextErrors);
     setServerError('');
     if (Object.keys(nextErrors).length > 0) return;
@@ -34,9 +36,9 @@ export default function LoginForm({ onLoggedIn, oauthError }: LoginFormProps) {
       onLoggedIn(response.data);
     } catch (error: unknown) {
       if (axios.isAxiosError<{ message?: string }>(error)) {
-        setServerError(error.response?.data?.message || 'Unable to log in.');
+        setServerError(error.response?.data?.message || t('auth.unableLogin'));
       } else {
-        setServerError('Unable to log in.');
+        setServerError(t('auth.unableLogin'));
       }
     } finally {
       setSubmitting(false);
@@ -52,13 +54,13 @@ export default function LoginForm({ onLoggedIn, oauthError }: LoginFormProps) {
         <span>PROTUBE</span>
       </div>
       <div className="registration-heading">
-        <p className="registration-eyebrow">WELCOME BACK</p>
-        <h2 id="login-title">Log in</h2>
-        <p>Use your ProTube account to continue.</p>
+        <p className="registration-eyebrow">{t('auth.welcomeBack')}</p>
+        <h2 id="login-title">{t('auth.login')}</h2>
+        <p>{t('auth.loginDescription')}</p>
       </div>
       <form onSubmit={submit} noValidate>
         <div className="registration-field">
-          <label htmlFor="login-email">Email address</label>
+          <label htmlFor="login-email">{t('auth.email')}</label>
           <input
             id="login-email"
             type="email"
@@ -70,7 +72,7 @@ export default function LoginForm({ onLoggedIn, oauthError }: LoginFormProps) {
         </div>
         {errors.email && <small role="alert">{errors.email}</small>}
         <div className="registration-field">
-          <label htmlFor="login-password">Password</label>
+          <label htmlFor="login-password">{t('auth.password')}</label>
           <input
             id="login-password"
             type="password"
@@ -83,7 +85,7 @@ export default function LoginForm({ onLoggedIn, oauthError }: LoginFormProps) {
         {errors.password && <small role="alert">{errors.password}</small>}
         {serverError && <p role="alert">{serverError}</p>}
         <button type="submit" disabled={submitting}>
-          {submitting ? 'Logging in...' : 'Log in'}
+          {submitting ? t('auth.loggingIn') : t('auth.login')}
         </button>
       </form>
       <a
@@ -93,11 +95,11 @@ export default function LoginForm({ onLoggedIn, oauthError }: LoginFormProps) {
         <span className="google-login-icon" aria-hidden="true">
           G
         </span>
-        Continue with Google
+        {t('auth.continueGoogle')}
       </a>
       {oauthError && <p role="alert">{oauthError}</p>}
       <p className="registration-footer">
-        New to ProTube? <a href="#register">Create an account</a>
+        {t('auth.newTo')} <a href="#register">{t('createAccount')}</a>
       </p>
     </section>
   );

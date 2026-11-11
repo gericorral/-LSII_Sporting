@@ -14,6 +14,8 @@ import AnalyticsPage from './components/AnalyticsPage';
 import FavoritesPage from './components/FavoritesPage';
 import SubscriptionsPage from './components/SubscriptionsPage';
 import { useDarkMode } from './useDarkMode';
+import { useTranslation } from 'react-i18next';
+import LanguageSelector from './components/LanguageSelector';
 
 function App() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -23,6 +25,7 @@ function App() {
     <div className={`App ${darkMode ? 'dark-mode' : 'light-mode'}`}>
       <header className="App-header">
         <img src="/protube-logo-removebg-preview.png" className="App-logo" alt="logo" />
+        <LanguageSelector />
         <ContentApp
           onAuthenticationChange={setAuthenticated}
           darkMode={darkMode}
@@ -45,6 +48,7 @@ function ContentApp({
   themeState: 'loading' | 'ready' | 'saving';
   onToggleDarkMode: () => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [hash, setHash] = useState(() => window.location.hash);
   const [registeredUser, setRegisteredUser] = useState<{
     id?: string;
@@ -200,9 +204,9 @@ function ContentApp({
   if (registering) {
     return registeredUser ? (
       <section className="registration-panel" aria-live="polite">
-        <h2>Welcome, {registeredUser.username}!</h2>
-        <p>Your account ({registeredUser.email}) is ready and you are now signed in.</p>
-        <a href="#">Continue to videos</a>
+        <h2>{t('welcomeUser', { username: registeredUser.username })}</h2>
+        <p>{t('accountReady', { email: registeredUser.email })}</p>
+        <a href="#">{t('continueVideos')}</a>
       </section>
     ) : (
       <RegistrationForm
@@ -252,6 +256,7 @@ function VideoCatalog({
   onToggleDarkMode: () => Promise<void>;
   onLogout: () => void;
 }) {
+  const { t } = useTranslation();
   const { loading, message, value, hasNext, loadMore, refresh, query, search } = useAllVideos();
   const [searchText, setSearchText] = useState('');
   if (videoId) {
@@ -260,11 +265,11 @@ function VideoCatalog({
 
   switch (loading) {
     case 'loading':
-      return <div>Loading...</div>;
+      return <div>{t('loading')}</div>;
     case 'error':
       return (
         <div>
-          <h3>Error</h3> <p>{message}</p>
+          <h3>{t('error')}</h3> <p>{message}</p>
         </div>
       );
     case 'success':
@@ -272,7 +277,7 @@ function VideoCatalog({
         <>
           <div className="catalog-toolbar">
             <div>
-              <h2>{query ? `Search results for "${query}"` : 'Available videos'}</h2>
+              <h2>{query ? t('searchResultsFor', { query }) : t('availableVideos')}</h2>
               <form
                 className="video-search"
                 onSubmit={(event) => {
@@ -280,14 +285,14 @@ function VideoCatalog({
                   search(searchText);
                 }}
               >
-                <label htmlFor="video-search-input">Search videos</label>
+                <label htmlFor="video-search-input">{t('searchVideos')}</label>
                 <input
                   id="video-search-input"
                   value={searchText}
                   onChange={(event) => setSearchText(event.target.value)}
-                  placeholder="Search videos"
+                  placeholder={t('searchVideos')}
                 />
-                <button type="submit">Search</button>
+                <button type="submit">{t('search')}</button>
                 {query && (
                   <button
                     type="button"
@@ -296,7 +301,7 @@ function VideoCatalog({
                       search('');
                     }}
                   >
-                    Clear
+                    {t('clear')}
                   </button>
                 )}
               </form>
@@ -307,10 +312,10 @@ function VideoCatalog({
                 className="theme-toggle"
                 onClick={onToggleDarkMode}
                 disabled={themeState !== 'ready'}
-                aria-label={darkMode ? 'Turn off dark mode' : 'Turn on dark mode'}
+                aria-label={darkMode ? t('lightMode') : t('darkMode')}
                 aria-pressed={darkMode}
               >
-                {darkMode ? 'Light mode' : 'Dark mode'}
+                {darkMode ? t('lightMode') : t('darkMode')}
               </button>
               {loggedUser ? (
                 <>
@@ -326,32 +331,32 @@ function VideoCatalog({
                     )}
                     <span>Hi, {loggedUser.displayName || loggedUser.username}</span>
                   </a>
-                  <a href="#upload">Upload video</a>
-                  <a href="#analytics">Analytics</a>
-                  <a href="#favorites">Favorites</a>
-                  <a href="#subscriptions">Subscriptions</a>
+                  <a href="#upload">{t('uploadVideo')}</a>
+                  <a href="#analytics">{t('analytics')}</a>
+                  <a href="#favorites">{t('favorites')}</a>
+                  <a href="#subscriptions">{t('subscriptions')}</a>
                   <button type="button" onClick={onLogout}>
-                    Log out
+                    {t('logout')}
                   </button>
                 </>
               ) : (
                 <>
-                  <a href="#login">Log in</a>
-                  <a href="#register">Create an account</a>
+                  <a href="#login">{t('login')}</a>
+                  <a href="#register">{t('createAccount')}</a>
                 </>
               )}
             </nav>
           </div>
-          {value.length > 0 ? <VideoGrid videos={value} /> : <p role="status">No videos found.</p>}
+          {value.length > 0 ? <VideoGrid videos={value} /> : <p role="status">{t('noVideosFound')}</p>}
           {hasNext && (
             <button className="load-more-button" type="button" onClick={loadMore}>
-              Load more videos
+              {t('loadMoreVideos')}
             </button>
           )}
         </>
       );
   }
-  return <div>Idle...</div>;
+  return <div>{t('idle')}</div>;
 }
 
 function VideoDetailPage({
@@ -369,13 +374,14 @@ function VideoDetailPage({
   } | null;
   onUpdated: () => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const { loading, message, value } = useVideo(id);
-  if (loading === 'loading') return <div>Loading video...</div>;
+  if (loading === 'loading') return <div>{t('loadingVideo')}</div>;
   if (loading === 'error' || value === null) {
     return (
       <div>
-        <a href="#">&larr; Back to videos</a>
-        <h3>Unable to load video</h3>
+        <a href="#">&larr; {t('backToVideos')}</a>
+        <h3>{t('video.unableLoad')}</h3>
         <p>{message}</p>
       </div>
     );

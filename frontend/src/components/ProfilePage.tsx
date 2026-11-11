@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import axios from 'axios';
 import { getEnv } from '../utils/Env';
+import { useTranslation } from 'react-i18next';
 
 const MAX_DISPLAY_NAME_LENGTH = 50;
 
@@ -23,6 +24,7 @@ type ProfilePageProps = {
 };
 
 export default function ProfilePage({ userId, editable, onProfileUpdated, onBack }: ProfilePageProps) {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [form, setForm] = useState<Profile>({
     userId: '',
@@ -34,7 +36,7 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
     location: '',
     publicProfile: true,
   });
-  const [message, setMessage] = useState('Loading profile...');
+  const [message, setMessage] = useState(t('profile.loading'));
   const [saving, setSaving] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [subscriptionSaving, setSubscriptionSaving] = useState(false);
@@ -53,7 +55,7 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
         }
         setMessage('');
       })
-      .catch(() => setMessage('Unable to load this profile.'));
+      .catch(() => setMessage(t('profile.loadError')));
     if (userId) {
       axios
         .get<{ subscribed: boolean }>(`${getEnv().API_BASE_URL}/profiles/${encodeURIComponent(userId)}/subscription`, {
@@ -62,7 +64,7 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
         .then((response) => setSubscribed(response.data.subscribed))
         .catch(() => undefined);
     }
-  }, [editable, onProfileUpdated, userId]);
+  }, [editable, onProfileUpdated, t, userId]);
 
   const changeSubscription = async () => {
     if (!userId) return;
@@ -78,7 +80,7 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
       if (axios.isAxiosError<{ message?: string }>(error) && error.response?.data?.message) {
         setMessage(error.response.data.message);
       } else {
-        setMessage('Unable to update your subscription.');
+        setMessage(t('profile.updateSubscriptionError'));
       }
     } finally {
       setSubscriptionSaving(false);
@@ -105,14 +107,15 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
       setProfile(response.data);
       setForm(response.data);
       onProfileUpdated?.(response.data.displayName, response.data.avatarPath);
-      setMessage('Profile saved.');
+      setMessage(t('profile.saved'));
     } catch (error: unknown) {
       if (axios.isAxiosError<{ message?: string }>(error)) {
         setMessage(
-          error.response?.data?.message || `Unable to save your profile (${error.response?.status || 'network error'}).`
+          error.response?.data?.message ||
+            t('profile.saveErrorStatus', { status: error.response?.status || 'network error' })
         );
       } else {
-        setMessage('Unable to save your profile.');
+        setMessage(t('profile.saveError'));
       }
     } finally {
       setSaving(false);
@@ -123,7 +126,7 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
     return (
       <section className="profile-panel">
         <button type="button" onClick={onBack}>
-          Back to videos
+          {t('backToVideos')}
         </button>
         <p role="status">{message}</p>
       </section>
@@ -133,7 +136,7 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
   return (
     <section className="profile-panel" aria-labelledby="profile-title">
       <button type="button" onClick={onBack}>
-        Back to videos
+        {t('backToVideos')}
       </button>
       <div className="profile-header">
         {profile.avatarPath ? (
@@ -144,42 +147,42 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
           </div>
         )}
         <div>
-          <p className="registration-eyebrow">{editable ? 'MY PROFILE' : 'PROFILE'}</p>
+          <p className="registration-eyebrow">{editable ? t('profile.myTitle') : t('profile.title')}</p>
           <h2 id="profile-title">{profile.displayName || profile.username}</h2>
           <p>@{profile.username}</p>
         </div>
       </div>
       {editable ? (
         <form onSubmit={submit} className="profile-form">
-          <label htmlFor="display-name">Display name</label>
+          <label htmlFor="display-name">{t('profile.displayName')}</label>
           <input
             id="display-name"
             value={form.displayName || ''}
             maxLength={MAX_DISPLAY_NAME_LENGTH}
             onChange={(event) => setForm({ ...form, displayName: event.target.value })}
           />
-          <label htmlFor="description">Description</label>
+          <label htmlFor="description">{t('profile.description')}</label>
           <textarea
             id="description"
             value={form.description || ''}
             maxLength={2000}
             onChange={(event) => setForm({ ...form, description: event.target.value })}
           />
-          <label htmlFor="avatar-path">Avatar URL</label>
+          <label htmlFor="avatar-path">{t('profile.avatarUrl')}</label>
           <input
             id="avatar-path"
             type="url"
             value={form.avatarPath || ''}
             onChange={(event) => setForm({ ...form, avatarPath: event.target.value })}
           />
-          <label htmlFor="website">Website</label>
+          <label htmlFor="website">{t('profile.website')}</label>
           <input
             id="website"
             type="url"
             value={form.website || ''}
             onChange={(event) => setForm({ ...form, website: event.target.value })}
           />
-          <label htmlFor="location">Location</label>
+          <label htmlFor="location">{t('profile.location')}</label>
           <input
             id="location"
             value={form.location || ''}
@@ -192,25 +195,29 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
               checked={form.publicProfile}
               onChange={(event) => setForm({ ...form, publicProfile: event.target.checked })}
             />
-            Public profile
+            {t('profile.publicProfile')}
           </label>
           {message && <p role="status">{message}</p>}
           <button type="submit" disabled={saving}>
-            {saving ? 'Saving...' : 'Save profile'}
+            {saving ? t('profile.saving') : t('profile.save')}
           </button>
         </form>
       ) : (
         <div className="profile-details">
           {userId && (
             <button type="button" onClick={changeSubscription} disabled={subscriptionSaving}>
-              {subscriptionSaving ? 'Updating...' : subscribed ? 'Unsubscribe' : 'Subscribe'}
+              {subscriptionSaving
+                ? t('profile.updating')
+                : subscribed
+                  ? t('profile.unsubscribe')
+                  : t('profile.subscribe')}
             </button>
           )}
           {message && <p role="status">{message}</p>}
-          <p>{profile.description || 'This user has not added a description yet.'}</p>
+          <p>{profile.description || t('profile.noDescription')}</p>
           {profile.location && (
             <p>
-              <strong>Location:</strong> {profile.location}
+              <strong>{t('profile.location')}:</strong> {profile.location}
             </p>
           )}
           {profile.website && (

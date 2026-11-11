@@ -3,12 +3,14 @@ import axios from 'axios';
 import { getEnv } from '../utils/Env';
 import type { VideoSummary } from '../useAllVideos';
 import VideoGrid from './VideoGrid';
+import { useTranslation } from 'react-i18next';
 
 type FavoritesPageProps = {
   onBack: () => void;
 };
 
 const FavoritesPage = ({ onBack }: FavoritesPageProps) => {
+  const { t } = useTranslation();
   const [videos, setVideos] = useState<VideoSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -17,19 +19,19 @@ const FavoritesPage = ({ onBack }: FavoritesPageProps) => {
     axios
       .get<VideoSummary[]>(`${getEnv().API_BASE_URL}/favorites`, { withCredentials: true })
       .then((response) => setVideos(response.data))
-      .catch(() => setMessage('Unable to load favorite videos.'))
+      .catch(() => setMessage(t('pages.favoritesError')))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   return (
     <section className="favorites-page">
       <button className="back-button" type="button" onClick={onBack}>
-        &larr; Back to videos
+        &larr; {t('backToVideos')}
       </button>
-      <h2>Favorite videos</h2>
-      {loading && <p>Loading favorite videos...</p>}
+      <h2>{t('pages.favoriteTitle')}</h2>
+      {loading && <p>{t('pages.loadingFavorites')}</p>}
       {message && <p role="alert">{message}</p>}
-      {!loading && !message && videos.length === 0 && <p role="status">You have no favorite videos yet.</p>}
+      {!loading && !message && videos.length === 0 && <p role="status">{t('pages.noFavorites')}</p>}
       {!loading && !message && videos.length > 0 && <VideoGrid videos={videos} />}
     </section>
   );

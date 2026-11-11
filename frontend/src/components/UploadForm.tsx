@@ -1,12 +1,14 @@
 import { FormEvent, useState } from 'react';
 import axios from 'axios';
 import { getEnv } from '../utils/Env';
+import { useTranslation } from 'react-i18next';
 
 type UploadFormProps = {
   onUploaded: () => void;
 };
 
 export default function UploadForm({ onUploaded }: UploadFormProps) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [video, setVideo] = useState<File | null>(null);
@@ -18,19 +20,19 @@ export default function UploadForm({ onUploaded }: UploadFormProps) {
     event.preventDefault();
     setError('');
     if (!title.trim() || !description.trim() || !video || !thumbnail) {
-      setError('Title, description, an MP4 video and an image thumbnail are required.');
+      setError(t('upload.required'));
       return;
     }
     if (video.type !== 'video/mp4') {
-      setError('Only MP4 video files are supported.');
+      setError(t('upload.mp4Only'));
       return;
     }
     if (video.size > 100 * 1024 * 1024) {
-      setError('Video files must not exceed 100 MB.');
+      setError(t('upload.maxSize'));
       return;
     }
     if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(thumbnail.type)) {
-      setError('Only JPEG, PNG, WebP or GIF thumbnail files are supported.');
+      setError(t('upload.imageOnly'));
       return;
     }
 
@@ -45,9 +47,9 @@ export default function UploadForm({ onUploaded }: UploadFormProps) {
       onUploaded();
     } catch (uploadError: unknown) {
       if (axios.isAxiosError<{ message?: string }>(uploadError)) {
-        setError(uploadError.response?.data?.message || 'The video could not be uploaded.');
+        setError(uploadError.response?.data?.message || t('upload.failed'));
       } else {
-        setError('The video could not be uploaded.');
+        setError(t('upload.failed'));
       }
     } finally {
       setSubmitting(false);
@@ -57,13 +59,13 @@ export default function UploadForm({ onUploaded }: UploadFormProps) {
   return (
     <section className="registration-panel" aria-labelledby="upload-title">
       <div className="registration-heading">
-        <p className="registration-eyebrow">SHARE YOUR CONTENT</p>
-        <h2 id="upload-title">Upload a video</h2>
-        <p>Publish an MP4 video for the ProTube community.</p>
+        <p className="registration-eyebrow">{t('upload.eyebrow')}</p>
+        <h2 id="upload-title">{t('upload.title')}</h2>
+        <p>{t('upload.description')}</p>
       </div>
       <form onSubmit={submit} noValidate>
         <div className="registration-field">
-          <label htmlFor="upload-title-field">Title</label>
+          <label htmlFor="upload-title-field">{t('upload.titleLabel')}</label>
           <input
             id="upload-title-field"
             value={title}
@@ -72,7 +74,7 @@ export default function UploadForm({ onUploaded }: UploadFormProps) {
           />
         </div>
         <div className="registration-field">
-          <label htmlFor="upload-thumbnail">Image thumbnail</label>
+          <label htmlFor="upload-thumbnail">{t('upload.thumbnail')}</label>
           <input
             id="upload-thumbnail"
             type="file"
@@ -81,7 +83,7 @@ export default function UploadForm({ onUploaded }: UploadFormProps) {
           />
         </div>
         <div className="registration-field">
-          <label htmlFor="upload-description">Description</label>
+          <label htmlFor="upload-description">{t('video.description')}</label>
           <textarea
             id="upload-description"
             value={description}
@@ -89,7 +91,7 @@ export default function UploadForm({ onUploaded }: UploadFormProps) {
           />
         </div>
         <div className="registration-field">
-          <label htmlFor="upload-video">MP4 video</label>
+          <label htmlFor="upload-video">{t('upload.video')}</label>
           <input
             id="upload-video"
             type="file"
@@ -99,11 +101,11 @@ export default function UploadForm({ onUploaded }: UploadFormProps) {
         </div>
         {error && <p role="alert">{error}</p>}
         <button type="submit" disabled={submitting}>
-          {submitting ? 'Uploading...' : 'Upload video'}
+          {submitting ? t('upload.uploading') : t('uploadVideo')}
         </button>
       </form>
       <p className="registration-footer">
-        <a href="#">Back to videos</a>
+        <a href="#">{t('backToVideos')}</a>
       </p>
     </section>
   );
