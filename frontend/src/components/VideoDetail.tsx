@@ -132,11 +132,12 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
   };
 
   return (
-    <article className="video-detail">
+    <article className="video-detail" aria-labelledby="video-detail-title">
       <a href="#">&larr; {t('backToVideos')}</a>
-      <h2>{video.title}</h2>
+      <h2 id="video-detail-title">{video.title}</h2>
       <video
         controls
+        aria-label={video.title}
         poster={resolveMediaUrl(video.thumbnailUrl)}
         src={resolveMediaUrl(video.videoUrl)}
         onPlay={registerView}
@@ -147,7 +148,7 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
         <section className="video-author" aria-label={t('video.author')}>
           <a href={`#profile/${encodeURIComponent(author.userId)}`} className="video-author-profile">
             {author.avatarPath ? (
-              <img src={author.avatarPath} alt={`${author.username}'s avatar`} />
+              <img src={author.avatarPath} alt={t('avatarFor', { username: author.username })} />
             ) : (
               <span aria-hidden="true">{author.username.charAt(0).toUpperCase()}</span>
             )}

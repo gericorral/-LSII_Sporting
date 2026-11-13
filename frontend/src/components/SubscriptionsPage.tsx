@@ -29,12 +29,12 @@ const SubscriptionsPage = ({ onBack }: SubscriptionsPageProps) => {
   }, [t]);
 
   return (
-    <section className="subscriptions-page">
+    <section className="subscriptions-page" aria-labelledby="subscriptions-title">
       <button className="back-button" type="button" onClick={onBack}>
         &larr; {t('backToVideos')}
       </button>
-      <h2>{t('pages.subscriptionTitle')}</h2>
-      {loading && <p>{t('pages.loadingSubscriptions')}</p>}
+      <h2 id="subscriptions-title">{t('pages.subscriptionTitle')}</h2>
+      {loading && <p aria-live="polite">{t('pages.loadingSubscriptions')}</p>}
       {message && <p role="alert">{message}</p>}
       {!loading && !message && profiles.length === 0 && <p role="status">{t('pages.noSubscriptions')}</p>}
       {!loading && !message && profiles.length > 0 && (
@@ -43,7 +43,11 @@ const SubscriptionsPage = ({ onBack }: SubscriptionsPageProps) => {
             <li key={profile.userId}>
               <a href={`#profile/${encodeURIComponent(profile.userId)}`}>
                 {profile.avatarPath ? (
-                  <img className="profile-avatar" src={profile.avatarPath} alt={`${profile.username}'s avatar`} />
+                  <img
+                    className="profile-avatar"
+                    src={profile.avatarPath}
+                    alt={t('avatarFor', { username: profile.username })}
+                  />
                 ) : (
                   <span className="profile-avatar profile-avatar-placeholder" aria-hidden="true">
                     {profile.username.charAt(0).toUpperCase()}

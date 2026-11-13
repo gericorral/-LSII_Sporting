@@ -128,7 +128,9 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
         <button type="button" onClick={onBack}>
           {t('backToVideos')}
         </button>
-        <p role="status">{message}</p>
+        <p role="status" aria-live="polite">
+          {message}
+        </p>
       </section>
     );
   }
@@ -140,7 +142,11 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
       </button>
       <div className="profile-header">
         {profile.avatarPath ? (
-          <img className="profile-avatar" src={profile.avatarPath} alt={`${profile.username}'s avatar`} />
+          <img
+            className="profile-avatar"
+            src={profile.avatarPath}
+            alt={t('avatarFor', { username: profile.username })}
+          />
         ) : (
           <div className="profile-avatar profile-avatar-placeholder" aria-hidden="true">
             {profile.username.charAt(0).toUpperCase()}
@@ -197,7 +203,11 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
             />
             {t('profile.publicProfile')}
           </label>
-          {message && <p role="status">{message}</p>}
+          {message && (
+            <p role="status" aria-live="polite">
+              {message}
+            </p>
+          )}
           <button type="submit" disabled={saving}>
             {saving ? t('profile.saving') : t('profile.save')}
           </button>
@@ -213,7 +223,11 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
                   : t('profile.subscribe')}
             </button>
           )}
-          {message && <p role="status">{message}</p>}
+          {message && (
+            <p role="status" aria-live="polite">
+              {message}
+            </p>
+          )}
           <p>{profile.description || t('profile.noDescription')}</p>
           {profile.location && (
             <p>

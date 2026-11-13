@@ -587,6 +587,18 @@ llindars definits al `pom.xml`; el perfil només fa vàlida la comanda del pipel
 
 ## 7. Registre de canvis per estudiar
 
+### Accessibilitat del frontend
+
+El frontend incorpora un enllaç per saltar directament al contingut principal,
+landmarks semàntics i relacions entre encapçalaments i seccions. Els formularis
+associen els errors i les instruccions als camps amb `aria-describedby`, indiquen
+els camps obligatoris i anuncien els canvis de càrrega, èxit i error amb regions
+vives. Els controls d'agradar, valorar i canviar el tema exposen el seu estat
+mitjançant ARIA, i tots els elements interactius mantenen un focus visible per a
+teclat. També es respecta `prefers-reduced-motion` per evitar animacions que puguin
+dificultar la lectura o la interacció. Aquestes millores són de presentació i
+semàntica del frontend; no modifiquen els ports ni els contractes de l'API.
+
 | Data | Canvi funcional | Què cal entendre |
 |---|---|---|
 | 17/10/2026 | Es crea la guia i s'estableix que s'ha de mantenir després de cada canvi de codi. | L'examen avalua la comprensió del funcionament i de les decisions, no la memorització de línies. |
@@ -646,6 +658,7 @@ llindars definits al `pom.xml`; el perfil només fa vàlida la comanda del pipel
 | 09/11/2026 | Es milloren els botons d'autenticació amb Google. | Els formularis de login i registre comparteixen un botó amb icona, contrast blanc, mida consistent i estats hover per diferenciar clarament l'accés OAuth de l'acció principal. |
 | 09/11/2026 | Es corregeix un conflicte de checksum de Flyway sense perdre dades. | Les migracions ja aplicades no s'han de modificar: `V2__video_persistence.sql` recupera el contingut original i la normalització de `comments` passa a `V5__normalize_comments_schema.sql`. Això permet que Flyway validi les bases existents i apliqui el canvi com una migració nova, sense `repair` ni esborrar `postgres-data`. |
 | 09/11/2026 | Es manté Google OAuth configurat en el perfil `dev` sense bloquejar l'arrencada. | Quan les variables d'entorn estan buides, Spring utilitza credencials fictícies no sensibles; el registre i el login locals funcionen, però Google OAuth només queda operatiu quan es proporcionen les claus reals de presentació. |
+| 13/11/2026 | Es millora l'accessibilitat del frontend. | Els landmarks, l'enllaç de salt, els noms accessibles, el focus de teclat, les relacions d'errors de formulari i els estats anunciats permeten utilitzar les mateixes pantalles amb lector de pantalla o només amb teclat; `prefers-reduced-motion` evita moviments innecessaris. |
 
 ## 8. Temes pendents
 

@@ -122,7 +122,7 @@ export default function CommentsSection({ videoId, loggedUser }: CommentsSection
         <div className="comment-actions">
           {loggedUser && (
             <>
-              <button type="button" onClick={() => updateLike(comment.id)}>
+              <button type="button" onClick={() => updateLike(comment.id)} aria-pressed={comment.likedByCurrentUser}>
                 {comment.likedByCurrentUser ? t('comments.unlike') : t('comments.like')} ({comment.likeCount || 0})
               </button>
               <button
@@ -167,7 +167,7 @@ export default function CommentsSection({ videoId, loggedUser }: CommentsSection
     <section className="comments-section" aria-labelledby="comments-heading">
       <h3 id="comments-heading">{t('comments.title')}</h3>
       {loggedUser ? (
-        <form onSubmit={submit} className="comment-form">
+        <form onSubmit={submit} className="comment-form" noValidate>
           <label htmlFor="comment-content">{t('comments.add')}</label>
           <textarea
             id="comment-content"
@@ -175,7 +175,10 @@ export default function CommentsSection({ videoId, loggedUser }: CommentsSection
             maxLength={MAX_COMMENT_LENGTH}
             onChange={(event) => setContent(event.target.value)}
             placeholder={t('comments.placeholder')}
+            aria-describedby="comment-help"
+            required
           />
+          <small id="comment-help">{MAX_COMMENT_LENGTH} characters maximum.</small>
           {submitMessage && <p role="alert">{submitMessage}</p>}
           <button type="submit" disabled={submitting}>
             {submitting ? t('comments.posting') : t('comments.post')}

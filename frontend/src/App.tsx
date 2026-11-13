@@ -18,21 +18,27 @@ import { useTranslation } from 'react-i18next';
 import LanguageSelector from './components/LanguageSelector';
 
 function App() {
+  const { t } = useTranslation();
   const [authenticated, setAuthenticated] = useState(false);
   const { darkMode, state: themeState, toggleDarkMode } = useDarkMode(authenticated);
 
   return (
     <div className={`App ${darkMode ? 'dark-mode' : 'light-mode'}`}>
       <header className="App-header">
-        <img src="/protube-logo-removebg-preview.png" className="App-logo" alt="logo" />
+        <a className="skip-link" href="#main-content">
+          {t('skipToContent')}
+        </a>
+        <img src="/protube-logo-removebg-preview.png" className="App-logo" alt={t('appLogo')} />
         <LanguageSelector />
+      </header>
+      <main id="main-content" tabIndex={-1}>
         <ContentApp
           onAuthenticationChange={setAuthenticated}
           darkMode={darkMode}
           themeState={themeState}
           onToggleDarkMode={toggleDarkMode}
         />
-      </header>
+      </main>
     </div>
   );
 }
@@ -265,10 +271,14 @@ function VideoCatalog({
 
   switch (loading) {
     case 'loading':
-      return <div>{t('loading')}</div>;
+      return (
+        <div role="status" aria-live="polite">
+          {t('loading')}
+        </div>
+      );
     case 'error':
       return (
-        <div>
+        <div role="alert">
           <h3>{t('error')}</h3> <p>{message}</p>
         </div>
       );
@@ -277,7 +287,7 @@ function VideoCatalog({
         <>
           <div className="catalog-toolbar">
             <div>
-              <h2>{query ? t('searchResultsFor', { query }) : t('availableVideos')}</h2>
+              <h2 id="catalog-title">{query ? t('searchResultsFor', { query }) : t('availableVideos')}</h2>
               <form
                 className="video-search"
                 onSubmit={(event) => {
@@ -287,6 +297,7 @@ function VideoCatalog({
               >
                 <label htmlFor="video-search-input">{t('searchVideos')}</label>
                 <input
+                  type="search"
                   id="video-search-input"
                   value={searchText}
                   onChange={(event) => setSearchText(event.target.value)}
@@ -306,7 +317,7 @@ function VideoCatalog({
                 )}
               </form>
             </div>
-            <nav className="catalog-actions">
+            <nav className="catalog-actions" aria-label={t('catalogNavigation')}>
               <button
                 type="button"
                 className="theme-toggle"
@@ -321,7 +332,7 @@ function VideoCatalog({
                 <>
                   <a className="catalog-profile-link" href="#profile">
                     {loggedUser.avatarPath ? (
-                      <img className="catalog-profile-avatar" src={loggedUser.avatarPath} alt="Profile avatar" />
+                      <img className="catalog-profile-avatar" src={loggedUser.avatarPath} alt={t('profileAvatar')} />
                     ) : (
                       <span className="catalog-profile-avatar catalog-profile-avatar-placeholder" aria-hidden="true">
                         {(loggedUser.displayName || loggedUser.username || loggedUser.email || '?')

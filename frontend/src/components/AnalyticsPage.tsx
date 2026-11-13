@@ -19,7 +19,7 @@ export default function AnalyticsPage({ onBack }: AnalyticsPageProps) {
         <h2 id="analytics-title">{t('pages.analyticsTitle')}</h2>
         <p>{t('pages.analyticsDescription')}</p>
       </div>
-      {loading === 'loading' && <p role="status">{t('pages.loadingAnalytics')}</p>}
+      {loading === 'loading' && <p aria-live="polite">{t('pages.loadingAnalytics')}</p>}
       {loading === 'error' && <p role="alert">{message}</p>}
       {loading === 'success' && value.length === 0 && <p role="status">{t('pages.noUploads')}</p>}
       {loading === 'success' && value.length > 0 && (

@@ -5,6 +5,12 @@ const resources = {
   en: {
     translation: {
       language: 'Language',
+      skipToContent: 'Skip to main content',
+      catalogNavigation: 'Catalog navigation',
+      appLogo: 'ProTube home',
+      profileAvatar: 'Profile avatar',
+      thumbnailFor: 'Thumbnail for {{title}}',
+      avatarFor: "{{username}}'s avatar",
       english: 'English',
       spanish: 'Spanish',
       loading: 'Loading...',
@@ -173,6 +179,12 @@ const resources = {
   es: {
     translation: {
       language: 'Idioma',
+      skipToContent: 'Saltar al contenido principal',
+      catalogNavigation: 'Navegación del catálogo',
+      appLogo: 'Inicio de ProTube',
+      profileAvatar: 'Avatar del perfil',
+      thumbnailFor: 'Miniatura de {{title}}',
+      avatarFor: 'Avatar de {{username}}',
       english: 'Inglés',
       spanish: 'Español',
       backToVideos: 'Volver a los vídeos',

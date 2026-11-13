@@ -93,9 +93,15 @@ export default function RegistrationForm({ onRegistered }: RegistrationFormProps
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             aria-invalid={Boolean(errors.email)}
+            aria-describedby={errors.email ? 'registration-email-error' : undefined}
+            required
           />
         </div>
-        {errors.email && <small role="alert">{errors.email}</small>}
+        {errors.email && (
+          <small id="registration-email-error" role="alert">
+            {errors.email}
+          </small>
+        )}
 
         <div className="registration-field">
           <label htmlFor="username">{t('auth.username')}</label>
@@ -106,9 +112,15 @@ export default function RegistrationForm({ onRegistered }: RegistrationFormProps
             value={username}
             onChange={(event) => setUsername(event.target.value)}
             aria-invalid={Boolean(errors.username)}
+            aria-describedby={errors.username ? 'registration-username-error' : undefined}
+            required
           />
         </div>
-        {errors.username && <small role="alert">{errors.username}</small>}
+        {errors.username && (
+          <small id="registration-username-error" role="alert">
+            {errors.username}
+          </small>
+        )}
 
         <div className="registration-field">
           <label htmlFor="password">{t('auth.password')}</label>
@@ -120,10 +132,18 @@ export default function RegistrationForm({ onRegistered }: RegistrationFormProps
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             aria-invalid={Boolean(errors.password)}
+            aria-describedby={errors.password ? 'registration-password-error' : 'registration-password-hint'}
+            required
           />
         </div>
-        {errors.password && <small role="alert">{errors.password}</small>}
-        <p className="registration-hint">{t('auth.passwordHint')}</p>
+        {errors.password && (
+          <small id="registration-password-error" role="alert">
+            {errors.password}
+          </small>
+        )}
+        <p id="registration-password-hint" className="registration-hint">
+          {t('auth.passwordHint')}
+        </p>
 
         {serverError && <p role="alert">{serverError}</p>}
         <button type="submit" disabled={submitting}>

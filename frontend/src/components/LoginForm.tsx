@@ -68,9 +68,15 @@ export default function LoginForm({ onLoggedIn, oauthError }: LoginFormProps) {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             aria-invalid={Boolean(errors.email)}
+            aria-describedby={errors.email ? 'login-email-error' : undefined}
+            required
           />
         </div>
-        {errors.email && <small role="alert">{errors.email}</small>}
+        {errors.email && (
+          <small id="login-email-error" role="alert">
+            {errors.email}
+          </small>
+        )}
         <div className="registration-field">
           <label htmlFor="login-password">{t('auth.password')}</label>
           <input
@@ -80,9 +86,15 @@ export default function LoginForm({ onLoggedIn, oauthError }: LoginFormProps) {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             aria-invalid={Boolean(errors.password)}
+            aria-describedby={errors.password ? 'login-password-error' : undefined}
+            required
           />
         </div>
-        {errors.password && <small role="alert">{errors.password}</small>}
+        {errors.password && (
+          <small id="login-password-error" role="alert">
+            {errors.password}
+          </small>
+        )}
         {serverError && <p role="alert">{serverError}</p>}
         <button type="submit" disabled={submitting}>
           {submitting ? t('auth.loggingIn') : t('auth.login')}

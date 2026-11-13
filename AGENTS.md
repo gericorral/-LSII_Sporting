@@ -146,6 +146,12 @@ content in this file.
 
 ## AI change log
 
+- 2026-11-13: Implemented frontend accessibility improvements using
+  `prompts/39-implement-frontend-accessibility.md`; the React interface now provides
+  semantic main content, a skip link, translated accessible names, form error
+  associations, announced async states, visible keyboard focus and reduced-motion
+  support. The change is documented in the Catalan study guide and Word export.
+
 - 2026-11-11: Implemented frontend internationalization using
   `i18next` and `react-i18next`; English is the default language, Spanish is
   selectable through an accessible persisted language control, and user-facing

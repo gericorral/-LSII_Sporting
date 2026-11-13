@@ -71,6 +71,7 @@ export default function UploadForm({ onUploaded }: UploadFormProps) {
             value={title}
             maxLength={255}
             onChange={(event) => setTitle(event.target.value)}
+            required
           />
         </div>
         <div className="registration-field">
@@ -80,6 +81,7 @@ export default function UploadForm({ onUploaded }: UploadFormProps) {
             type="file"
             accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"
             onChange={(event) => setThumbnail(event.target.files?.[0] || null)}
+            required
           />
         </div>
         <div className="registration-field">
@@ -88,6 +90,7 @@ export default function UploadForm({ onUploaded }: UploadFormProps) {
             id="upload-description"
             value={description}
             onChange={(event) => setDescription(event.target.value)}
+            required
           />
         </div>
         <div className="registration-field">
@@ -97,6 +100,7 @@ export default function UploadForm({ onUploaded }: UploadFormProps) {
             type="file"
             accept="video/mp4,.mp4"
             onChange={(event) => setVideo(event.target.files?.[0] || null)}
+            required
           />
         </div>
         {error && <p role="alert">{error}</p>}
