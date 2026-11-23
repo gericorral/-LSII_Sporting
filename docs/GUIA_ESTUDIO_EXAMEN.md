@@ -660,6 +660,7 @@ semàntica del frontend; no modifiquen els ports ni els contractes de l'API.
 | 09/11/2026 | Es manté Google OAuth configurat en el perfil `dev` sense bloquejar l'arrencada. | Quan les variables d'entorn estan buides, Spring utilitza credencials fictícies no sensibles; el registre i el login locals funcionen, però Google OAuth només queda operatiu quan es proporcionen les claus reals de presentació. |
 | 13/11/2026 | Es millora l'accessibilitat del frontend. | Els landmarks, l'enllaç de salt, els noms accessibles, el focus de teclat, les relacions d'errors de formulari i els estats anunciats permeten utilitzar les mateixes pantalles amb lector de pantalla o només amb teclat; `prefers-reduced-motion` evita moviments innecessaris. |
 | 23/11/2026 | S'afegeix documentació Swagger/OpenAPI al backend. | `OpenApiConfig` descriu el projecte, la versió, els servidors local i Docker i l'esquema de seguretat `JSESSIONID`; els controladors documenten autenticació, perfils, vídeos, comentaris i analítiques amb resums i etiquetes. Swagger UI i `/v3/api-docs` estan disponibles en desenvolupament i es desactiven en el perfil `prod`, també quan Docker Compose executa aquest perfil. |
+| 23/11/2026 | S'afegeix caching local Caffeine al catàleg de vídeos. | Els resultats paginats, les cerques i els detalls es reutilitzen durant cinc minuts i fins a un màxim de 500 entrades per caché. La pujada i l'edició de metadades invaliden les entrades perquè PostgreSQL segueixi sent la font de veritat i el frontend no rebi dades obsoletes. |
 
 ## 8. Temes pendents
 

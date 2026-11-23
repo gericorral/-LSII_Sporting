@@ -340,3 +340,10 @@ The backend exposes interactive OpenAPI documentation in the development profile
 When the application is started with Docker Compose, the backend uses the `prod` profile, so Swagger UI and `/v3/api-docs` are disabled.
 
 In the development profile, Swagger UI exposes authentication, profiles, videos, comments and analytics endpoints.
+
+## Video caching
+
+The backend uses process-local Caffeine caching for paginated catalog reads, video
+searches and video-detail lookups. Entries expire after five minutes or when the cache
+reaches 500 entries. Video uploads and metadata updates evict the catalog and detail
+caches. Caffeine is only a read optimization; PostgreSQL remains the source of truth.

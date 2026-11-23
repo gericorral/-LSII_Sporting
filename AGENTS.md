@@ -438,3 +438,7 @@ content in this file.
   analytics endpoints. Swagger UI is enabled in development and disabled in the
   production profile used by Docker Compose. The change is documented in the Catalan
   study guide and Word export.
+- 2026-11-23: Added process-local Caffeine caching using
+  `prompts/41-add-caffeine-video-cache.md`; catalog pages, searches and video details
+  are reused for up to five minutes, while successful uploads and metadata edits
+  invalidate catalog and detail entries. PostgreSQL remains the source of truth.
