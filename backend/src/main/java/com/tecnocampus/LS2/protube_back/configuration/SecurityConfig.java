@@ -25,7 +25,8 @@ public class SecurityConfig {
                                              AuthenticationFailureHandler oauthFailureHandler) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/oauth2/**", "/login/**", "/api/**", "/media/**", "/").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
+                                "/oauth2/**", "/login/**", "/api/**", "/media/**", "/").permitAll()
                         .anyRequest().permitAll())
                 .oauth2Login(oauth -> oauth
                         .successHandler(oauthSuccessHandler)

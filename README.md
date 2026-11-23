@@ -330,3 +330,13 @@ The command will generate 3 files for every video listed in `resources/video_lis
 * *.webp: The thumbnail
 * *.json: Metadata info about the video
 
+## API documentation
+
+The backend exposes interactive OpenAPI documentation in the development profile:
+
+* Swagger UI: `http://localhost:8080/swagger-ui.html`
+* OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+
+When the application is started with Docker Compose, Swagger UI is available at `http://localhost:8080/swagger-ui.html`.
+
+The Swagger UI exposes authentication, profiles, videos, comments and analytics endpoints. Swagger and `/v3/api-docs` are disabled in the `prod` profile.

@@ -21,6 +21,7 @@ class SubscriptionControllerTest {
         when(session.currentUserId()).thenReturn(null);
         assertEquals(401, controller.list().getStatusCode().value());
         assertEquals(401, controller.subscribe(target).getStatusCode().value());
+        assertEquals(401, controller.status(target).getStatusCode().value());
     }
 
     @Test

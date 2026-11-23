@@ -79,6 +79,32 @@ class VideoUploadServiceTest {
                 "Title", "Description", file(new byte[] {1}), thumbnail(), UUID.randomUUID()));
     }
 
+    @Test
+    void rejectsNullFileContentAndPropagatesInvalidUpload(@TempDir Path store) {
+        VideoUploadService service = service(store);
+
+        assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
+                "Title", "Description",
+                new UploadVideoUseCase.VideoFile(null, 1, "video/mp4"),
+                thumbnail(), UUID.randomUUID()));
+        assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
+                "Title", "Description", file(new byte[] {1}),
+                new UploadVideoUseCase.ThumbnailFile(null, 1, "image/png"),
+                UUID.randomUUID()));
+        assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> service.upload(
+                "Title", "Description", file(new byte[] {1}),
+                new UploadVideoUseCase.ThumbnailFile(new ByteArrayInputStream(new byte[] {1}), 0, "image/png"),
+                UUID.randomUUID()));
+
+        VideoUploadService propagating = new VideoUploadService(
+                (id, title, description, ownerId, video, thumbnail) -> {
+                    throw new UploadVideoUseCase.InvalidUploadException("Rejected by storage");
+                }
+        );
+        assertThrows(UploadVideoUseCase.InvalidUploadException.class, () -> propagating.upload(
+                "Title", "Description", file(new byte[] {1}), thumbnail(), UUID.randomUUID()));
+    }
+
     private VideoUploadService service(Path store) {
         return new VideoUploadService(new FileVideoPublicationAdapter(store.toString(), new ObjectMapper()));
     }

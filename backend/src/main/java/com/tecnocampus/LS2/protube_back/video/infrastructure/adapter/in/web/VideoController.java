@@ -22,9 +22,14 @@ import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.ListVideosUseCase.VideoPage;
 import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/videos")
+@Tag(name = "Videos", description = "Catalog, playback, uploads and metadata management")
 public class VideoController {
 
     private final ListVideosUseCase listVideosUseCase;

@@ -2,6 +2,8 @@ package com.tecnocampus.LS2.protube_back.auth.infrastructure.adapter.in.web;
 
 import com.tecnocampus.LS2.protube_back.auth.application.port.in.ProfileUseCase;
 import com.tecnocampus.LS2.protube_back.auth.application.port.out.SessionPort;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/profiles")
+@Tag(name = "Profiles", description = "Operaciones relacionadas con los perfiles de usuario")
 public class ProfileController {
     private static final int MAX_DISPLAY_NAME_LENGTH = 50;
     private final ProfileUseCase profileUseCase;
@@ -22,6 +25,7 @@ public class ProfileController {
     }
 
     @GetMapping("/me")
+    @Operation(summary = "Obtener perfil propio", description = "Devuelve el perfil del usuario autenticado")
     public ResponseEntity<?> getOwnProfile() {
         UUID userId = sessionPort.currentUserId();
         if (userId == null) return unauthorized();
@@ -29,6 +33,7 @@ public class ProfileController {
     }
 
     @PutMapping("/me")
+    @Operation(summary = "Actualizar perfil propio", description = "Actualiza el perfil del usuario autenticado")
     public ResponseEntity<?> updateOwnProfile(@RequestBody ProfileRequest request) {
         UUID userId = sessionPort.currentUserId();
         if (userId == null) return unauthorized();
@@ -38,6 +43,7 @@ public class ProfileController {
     }
 
     @GetMapping("/{userId}")
+    @Operation(summary = "Obtener perfil público", description = "Devuelve el perfil público de un usuario")
     public ResponseEntity<?> getPublicProfile(@PathVariable UUID userId) {
         ProfileUseCase.Profile profile = profileUseCase.get(userId);
         return profile.publicProfile()
