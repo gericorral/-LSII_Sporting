@@ -337,6 +337,6 @@ The backend exposes interactive OpenAPI documentation in the development profile
 * Swagger UI: `http://localhost:8080/swagger-ui.html`
 * OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
-When the application is started with Docker Compose, Swagger UI is available at `http://localhost:8080/swagger-ui.html`.
+When the application is started with Docker Compose, the backend uses the `prod` profile, so Swagger UI and `/v3/api-docs` are disabled.
 
-The Swagger UI exposes authentication, profiles, videos, comments and analytics endpoints. Swagger and `/v3/api-docs` are disabled in the `prod` profile.
+In the development profile, Swagger UI exposes authentication, profiles, videos, comments and analytics endpoints.

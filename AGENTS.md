@@ -431,3 +431,10 @@ content in this file.
 - 2026-11-11: Exposed the PostgreSQL video owner's public username in `VideoSummary`
   and used it as the video-detail fallback, so the author is shown by name rather
   than the generic `Author` label when profile loading is unavailable.
+- 2026-11-23: Added Swagger/OpenAPI documentation using
+  `prompts/40-document-swagger-openapi.md`; the backend now exposes a ProTube API
+  title, version, contact, server URLs and a JSESSIONID session-cookie security
+  scheme, with operation summaries on authentication, profile, video, comment and
+  analytics endpoints. Swagger UI is enabled in development and disabled in the
+  production profile used by Docker Compose. The change is documented in the Catalan
+  study guide and Word export.
