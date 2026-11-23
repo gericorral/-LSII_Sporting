@@ -5,6 +5,10 @@ import com.tecnocampus.LS2.protube_back.auth.application.port.in.LogoutUseCase;
 import com.tecnocampus.LS2.protube_back.auth.application.port.in.RegistrationUseCase;
 import com.tecnocampus.LS2.protube_back.auth.application.port.out.SessionPort;
 import com.tecnocampus.LS2.protube_back.auth.domain.model.User;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +19,7 @@ import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentication", description = "Endpoints for user authentication")
 public class AuthController {
     private final RegistrationUseCase registrationUseCase;
     private final LoginUseCase loginUseCase;
@@ -34,6 +39,12 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Operation(summary = "Login", description = "Authenticate a user and return user data")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful login"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "401", description = "Invalid email or password")
+    })
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         Map<String, String> validationError = request.validationError();
         if (validationError != null) {
@@ -45,12 +56,41 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
+    @Operation(summary = "Logout", description = "Logout the authenticated user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Successful logout"),
+            @ApiResponse(responseCode = "401", description = "Not authenticated")
+    })
     public ResponseEntity<Void> logout() {
         logoutUseCase.logout();
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/me")
+    @Operation(summary = "Get current user", description = "Retrieve the authenticated user's data")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful retrieval of user data"),
+            @ApiResponse(responseCode = "401", description = "Not authenticated")
+    })
+    public ResponseEntity<?> me() {
+        UUID userId = sessionPort.currentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Not authenticated"));
+        }
+        User user = registrationUseCase.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Not authenticated"));
+        }
+        return ResponseEntity.ok(UserResponse.from(user));
+    }
+
     @PostMapping("/register")
+    @Operation(summary = "Register", description = "Create a new user account")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Successful registration"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "409", description = "User already exists")
+    })
     public ResponseEntity<?> register(@RequestBody RegistrationRequest request) {
         Map<String, String> validationError = request.validationError();
         if (validationError != null) {

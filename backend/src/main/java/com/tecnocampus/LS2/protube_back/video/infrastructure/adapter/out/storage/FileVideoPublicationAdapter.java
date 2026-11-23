@@ -3,13 +3,11 @@ package com.tecnocampus.LS2.protube_back.video.infrastructure.adapter.out.storag
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.UploadVideoUseCase.VideoFile;
+import com.tecnocampus.LS2.protube_back.video.domain.port.in.UploadVideoUseCase.ThumbnailFile;
 import com.tecnocampus.LS2.protube_back.video.domain.port.out.VideoPublicationPort;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.imageio.ImageIO;
-import java.awt.Color;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
@@ -32,15 +30,18 @@ public class FileVideoPublicationAdapter implements VideoPublicationPort {
     }
 
     @Override
-    public VideoSummary publish(String id, String title, String description, UUID ownerId, VideoFile video) {
+    public VideoSummary publish(String id, String title, String description, UUID ownerId, VideoFile video,
+                                ThumbnailFile thumbnail) {
+        String thumbnailExtension = extensionFor(thumbnail.contentType());
+        String thumbnailFileName = id + "." + thumbnailExtension;
         List<Path> published = List.of(
                 storeDirectory.resolve(id + ".mp4"),
-                storeDirectory.resolve(id + ".png"),
+                storeDirectory.resolve(thumbnailFileName),
                 storeDirectory.resolve(id + ".json")
         );
         List<Path> temporary = List.of(
                 temporaryPath(id, ".mp4"),
-                temporaryPath(id, ".png"),
+                temporaryPath(id, "." + thumbnailExtension),
                 temporaryPath(id, ".json")
         );
         try {
@@ -48,14 +49,16 @@ public class FileVideoPublicationAdapter implements VideoPublicationPort {
             try (var content = video.content()) {
                 Files.copy(content, temporary.get(0), StandardCopyOption.REPLACE_EXISTING);
             }
-            writeThumbnail(temporary.get(1));
+            try (var content = thumbnail.content()) {
+                Files.copy(content, temporary.get(1), StandardCopyOption.REPLACE_EXISTING);
+            }
             objectMapper.writeValue(temporary.get(2).toFile(),
                     new UploadMetadata(title, new Metadata(description), ownerId, new Analytics(0, 0, 0)));
             for (int index = 0; index < temporary.size(); index++) {
                 moveAtomically(temporary.get(index), published.get(index));
             }
             return new VideoSummary(
-                    id, title, description, null, "/media/" + id + ".png", "/media/" + id + ".mp4"
+                    id, title, description, null, "/media/" + thumbnailFileName, "/media/" + id + ".mp4"
             );
         } catch (IOException | RuntimeException exception) {
             deleteFiles(temporary);
@@ -68,20 +71,13 @@ public class FileVideoPublicationAdapter implements VideoPublicationPort {
         return storeDirectory.resolve("." + id + extension + ".uploading");
     }
 
-    private void writeThumbnail(Path path) throws IOException {
-        BufferedImage image = new BufferedImage(640, 360, BufferedImage.TYPE_INT_RGB);
-        var graphics = image.createGraphics();
-        try {
-            graphics.setColor(new Color(40, 44, 52));
-            graphics.fillRect(0, 0, image.getWidth(), image.getHeight());
-            graphics.setColor(new Color(97, 218, 251));
-            graphics.fillOval(280, 130, 80, 80);
-        } finally {
-            graphics.dispose();
-        }
-        if (!ImageIO.write(image, "png", path.toFile())) {
-            throw new IOException("PNG thumbnail writer is unavailable");
-        }
+    private String extensionFor(String contentType) {
+        return switch (contentType.toLowerCase(java.util.Locale.ROOT)) {
+            case "image/jpeg" -> "jpg";
+            case "image/webp" -> "webp";
+            case "image/gif" -> "gif";
+            default -> "png";
+        };
     }
 
     private void moveAtomically(Path source, Path target) throws IOException {

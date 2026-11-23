@@ -1,9 +1,13 @@
 package com.tecnocampus.LS2.protube_back.auth.application.port.in;
 
 import com.tecnocampus.LS2.protube_back.auth.domain.model.User;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface RegistrationUseCase {
     User register(String email, String username, String password);
+
+    Optional<User> findById(UUID id);
 
     class DuplicateUserException extends RuntimeException {
         private final String field;

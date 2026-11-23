@@ -3,7 +3,8 @@ package com.tecnocampus.LS2.protube_back.comment.infrastructure.adapter.in.web;
 import com.tecnocampus.LS2.protube_back.auth.application.port.out.SessionPort;
 import com.tecnocampus.LS2.protube_back.comment.domain.model.Comment;
 import com.tecnocampus.LS2.protube_back.comment.domain.port.in.CommentUseCase;
-import com.tecnocampus.LS2.protube_back.comment.domain.port.in.CommentUseCase.CommentPage;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/videos/{videoId}/comments")
+@Tag(name = "Comments")
 public class CommentController {
     private final CommentUseCase commentUseCase;
     private final SessionPort sessionPort;
@@ -22,6 +24,7 @@ public class CommentController {
     }
 
     @GetMapping
+    @Operation(summary = "List comments")
     public ResponseEntity<?> list(
             @PathVariable String videoId,
             @RequestParam(defaultValue = "0") int page,
@@ -40,6 +43,7 @@ public class CommentController {
     }
 
     @PostMapping
+    @Operation(summary = "Create a comment")
     public ResponseEntity<?> create(
             @PathVariable String videoId,
             @RequestBody CreateCommentRequest request
@@ -60,6 +64,7 @@ public class CommentController {
     }
 
     @PostMapping("/{commentId}/like")
+    @Operation(summary = "Like or unlike a comment")
     public ResponseEntity<?> toggleLike(
             @PathVariable String videoId,
             @PathVariable UUID commentId

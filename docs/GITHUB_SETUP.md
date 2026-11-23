@@ -93,6 +93,22 @@
    - These can be accessed in workflows using `${{ secrets.SECRET_NAME }}`
    - [Managing Encrypted Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
 
+### OAuth secrets for ProTube
+
+When Google OAuth is implemented, add these repository secrets under **Settings >
+Secrets and variables > Actions > Secrets**:
+
+* `ENV_PROTUBE_GOOGLE_CLIENT_ID`
+* `ENV_PROTUBE_GOOGLE_CLIENT_SECRET`
+
+The E2E Docker job passes these secrets to Docker Compose without writing them to the
+repository or exposing them to the frontend. Secrets are not available to workflows
+running from untrusted pull requests in forks; those workflows must not require OAuth
+credentials.
+
+For local development, copy `.env.example` to `.env` and fill in the values. The
+`.env` file is ignored by Git.
+
 ### Example CI Pipeline Setup
    Create `.github/workflows/ci.yml`:
    ```yaml

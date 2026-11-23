@@ -17,6 +17,11 @@ test('video metadata survives a backend restart because it is stored in PostgreS
   await page.getByRole('link', { name: 'Upload video' }).click();
   await page.getByLabel('Title').fill(videoTitle);
   await page.getByLabel('Description').fill('Metadata must survive a backend restart.');
+  await page.getByLabel('Image thumbnail').setInputFiles({
+    name: 'restart-thumbnail.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('synthetic PNG content for persistence testing'),
+  });
   await page.getByLabel('MP4 video').setInputFiles({
     name: 'restart-video.mp4',
     mimeType: 'video/mp4',

@@ -1,6 +1,6 @@
 /** @type {import('jest').Config} */
 module.exports = {
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/setupTests.js'],
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
     '\\.(css)$': '<rootDir>/styleMock.js',

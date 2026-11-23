@@ -49,6 +49,14 @@ class VideoControllerTest {
     }
 
     @Test
+    void treatsNullSearchQueryAsTheFullCatalog() {
+        when(listVideosUseCase.listVideos(0, 12)).thenReturn(new VideoPage(
+                List.of(), 0, 12, 0, 0, false));
+
+        assertEquals(200, videoController.getVideos(0, 12, null).getStatusCode().value());
+    }
+
+    @Test
     void returnsVideoFromTheInputPort() {
         VideoSummary video = new VideoSummary(
                 "1", "Video 1", "Description", 30, "/media/1.webp", "/media/1.mp4"
@@ -79,6 +87,7 @@ class VideoControllerTest {
         assertEquals(401, videoController.uploadVideo(
                 "Title", "Description",
                 new MockMultipartFile("video", "video.mp4", "video/mp4", new byte[] {1}),
+                new MockMultipartFile("thumbnail", "thumbnail.png", "image/png", new byte[] {2}),
                 session
         ).getStatusCode().value());
     }
@@ -95,12 +104,14 @@ class VideoControllerTest {
                 org.mockito.ArgumentMatchers.eq("Title"),
                 org.mockito.ArgumentMatchers.eq("Description"),
                 org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.eq(userId)
         )).thenReturn(uploaded);
 
         assertEquals(201, videoController.uploadVideo(
                 "Title", "Description",
                 new MockMultipartFile("video", "video.mp4", "video/mp4", new byte[] {1}),
+                new MockMultipartFile("thumbnail", "thumbnail.png", "image/png", new byte[] {2}),
                 session
         ).getStatusCode().value());
     }

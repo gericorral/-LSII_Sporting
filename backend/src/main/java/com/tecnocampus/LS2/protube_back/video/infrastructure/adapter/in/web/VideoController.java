@@ -22,9 +22,14 @@ import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.ListVideosUseCase.VideoPage;
 import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/videos")
+@Tag(name = "Videos", description = "Catalog, playback, uploads and metadata management")
 public class VideoController {
 
     private final ListVideosUseCase listVideosUseCase;
@@ -70,6 +75,7 @@ public class VideoController {
             @RequestPart("title") String title,
             @RequestPart("description") String description,
             @RequestPart("video") MultipartFile video,
+            @RequestPart("thumbnail") MultipartFile thumbnail,
             HttpSession session
     ) {
         Object userId = session.getAttribute("authenticatedUserId");
@@ -80,8 +86,11 @@ public class VideoController {
             UploadVideoUseCase.VideoFile videoFile = new UploadVideoUseCase.VideoFile(
                     video.getInputStream(), video.getSize(), video.getContentType()
             );
+            UploadVideoUseCase.ThumbnailFile thumbnailFile = new UploadVideoUseCase.ThumbnailFile(
+                    thumbnail.getInputStream(), thumbnail.getSize(), thumbnail.getContentType()
+            );
             return ResponseEntity.status(201)
-                    .body(uploadVideoUseCase.upload(title, description, videoFile, ownerId));
+                    .body(uploadVideoUseCase.upload(title, description, videoFile, thumbnailFile, ownerId));
         } catch (java.io.IOException exception) {
             return ResponseEntity.internalServerError()
                     .body(Map.of("message", "The video could not be published."));

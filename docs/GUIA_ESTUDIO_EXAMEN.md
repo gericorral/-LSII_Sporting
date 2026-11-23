@@ -4,7 +4,59 @@
 > després de cada canvi de codi. No substitueix el codi: resumeix què fa
 > l'aplicació, quines peces es modifiquen i quines decisions s'han de saber justificar.
 
-**Última actualització:** 4 de novembre de 2026
+**Última actualització:** 9 de novembre de 2026
+
+### Subscripcions d'usuaris
+
+Les subscripcions permeten que un usuari autenticat segueixi altres perfils. El
+backend utilitza el port d'entrada `ManageSubscriptionUseCase`, el servei
+`SubscriptionService`, el port de sortida `SubscriptionPort` i l'adaptador JDBC
+`JdbcSubscriptionAdapter`; la taula `subscriptions` manté una fila única per
+parella i impedeix subscriure's a un mateix.
+
+Els endpoints autenticats permeten consultar l'estat, subscriure's, cancel·lar la
+subscripció i llistar els perfils seguits. El frontend mostra el botó
+`Subscribe`/`Unsubscribe` als perfils públics i afegeix la ruta `#subscriptions`
+per consultar la llista, amb enllaços de tornada als perfils.
+
+A la vista de detall d'un vídeo també es carrega el perfil de l'autor a partir de
+`ownerId`. Sota el reproductor es mostra el seu avatar i nom com a enllaç al
+perfil, juntament amb el control de subscripció; l'estat i els canvis reutilitzen
+els mateixos endpoints autenticats.
+
+El catàleg PostgreSQL incorpora també el `username` públic de l'autor en el resum
+del vídeo. Això permet mostrar el nom real sota el reproductor encara que la resta
+del perfil públic no estigui disponible.
+La consulta agrupada inclou aquest camp en `GROUP BY`, perquè PostgreSQL exigeix
+agrupar totes les columnes seleccionades que no són agregades.
+
+### Mode fosc persistent
+
+El mode fosc és una preferència pròpia de l'usuari, no només un estat visual local.
+El backend reutilitza `user_preferences.dark_mode` mitjançant el port d'entrada
+`ManageUserPreferencesUseCase`, el servei `UserPreferencesService`, el port de sortida
+`UserPreferencesPersistencePort` i el repositori JDBC. Els endpoints autenticats
+`GET/PUT /api/preferences/me` permeten llegir i canviar el valor.
+
+El frontend carrega la preferència quan existeix una sessió, aplica les classes
+`light-mode` o `dark-mode` al contenidor principal i mostra un botó accessible per
+activar o desactivar el tema. El valor torna a l'estat anterior si la persistència
+falla; els usuaris anònims continuen amb el tema clar per defecte.
+
+### Favorite Videos
+
+La funcionalitat de vídeos favorits permet que cada usuari autenticat desi o elimini
+un vídeo i consulti la seva llista personal. El backend segueix l'arquitectura
+hexagonal: `ManageVideoFavoriteUseCase` és el port d'entrada, `VideoFavoriteService`
+valida la sessió i l'existència del vídeo, i `VideoFavoritePort` amaga l'adaptador
+JDBC que desa una fila única per parella usuari-vídeo. La migració normalitza
+`favorites.video_id` a text per mantenir compatibilitat amb els identificadors UUID
+de producció i els identificadors numèrics del catàleg de fitxers.
+
+El frontend consulta l'estat del favorit a la vista de detall, mostra un control
+per afegir-lo o eliminar-lo i ofereix la ruta autenticada `#favorites`, que recupera
+els vídeos guardats. Les proves cobreixen les regles del servei, la persistència,
+els controladors i els estats de càrrega, error i canvi del control React.
 
 ### Qualitat del codi del perfil i format del frontend
 
@@ -15,6 +67,21 @@ incloent els tipus d'estat de `App` i les proves de navegació i perfil. A més,
 Això evita avisos de linter i reexecucions inesperades de l'efecte, sense canviar
 el comportament funcional. Les proves i la compilació del frontend continuen
 verificant aquest flux.
+
+### Alineació del control de perfil públic
+
+El checkbox `Public profile` del formulari de perfil té una regla d'estil pròpia.
+Els estils de mida completa dels camps de text ja no s'apliquen als checkbox, que
+ara mantenen una mida compacta i s'alineen amb el seu text. Això evita que el
+checkbox ocupi tota la fila i desplaci visualment l'etiqueta.
+
+### Importació segura del `video-store`
+
+L'importador de producció només incorpora metadades del video-grabber. Les
+metadades generades per una pujada d'usuari contenen `ownerId` i s'ignoren durant
+l'arrencada de Docker, perquè aquests vídeos ja tenen el seu registre propi a
+PostgreSQL. Aquesta separació evita que cada reinici creï una segona còpia del
+mateix vídeo amb origen `VIDEO_GRABBER`.
 
 ### Cobertura dels adaptadors JDBC i de l'importador
 
@@ -131,17 +198,17 @@ compleix el criteri d'acceptació per a catàlegs més grans.
 
 La pujada es protegeix amb l'atribut de sessió `authenticatedUserId`; si no hi ha una
 sessió vàlida, el backend respon 401 i el frontend mostra el login en lloc del formulari.
-El formulari demana títol, descripció i un fitxer MP4 de fins a 100 MB. El port d'entrada
+El formulari demana títol, descripció, un fitxer MP4 de fins a 100 MB i una miniatura
+JPEG, PNG, WebP o GIF. El port d'entrada
 `UploadVideoUseCase` rep un model de fitxer independent de Spring i el servei valida els
 camps abans d'escriure; mai utilitza el nom original del fitxer com a ruta.
 
-El backend crea un identificador UUID i escriu el vídeo, una miniatura PNG generada i el
+El backend crea un identificador UUID i escriu el vídeo, la miniatura proporcionada i el
 JSON de metadades en fitxers temporals dins del directori configurat. Només mou els tres
 fitxers a les seves rutes públiques quan totes les operacions han acabat; si hi ha un
-error, elimina temporals i fitxers parcials. El catàleg existent accepta miniatures
-`.webp` del `videoGrabber` i `.png` de les pujades, de manera que el vídeo apareix
-immediatament a la llista. La persistència relacional de vídeos continua pendent de
-NFR-01 i serà una evolució separada.
+error, elimina temporals i fitxers parcials. L'adaptador PostgreSQL desa també la clau i
+el MIME real de la miniatura a `video_assets`, mentre que el catàleg continua acceptant
+les miniatures `.webp` del `videoGrabber` i les extensions de les pujades.
 
 ### Disseny responsive del catàleg i del reproductor
 
@@ -370,6 +437,58 @@ d'analítiques de l'owner reflecteixi també la participació real. En la interf
 les respostes tenen una vora i un marge lateral per identificar visualment que
 pertanyen al comentari original.
 
+### Rating de vídeos
+
+El rating es tracta com un cas d'ús propi dins del mòdul de vídeo. El port d'entrada
+`RateVideoUseCase` i `VideoRatingService` validen l'existència del vídeo, exigeixen
+una sessió per escriure i accepten només valors de l'1 al 5. El port de sortida
+`VideoRatingPort` amaga la persistència JDBC; `JdbcVideoRatingAdapter` desa una fila
+per combinació vídeo-usuari i actualitza la valoració existent amb `ON CONFLICT`.
+La migració `V6__video_ratings.sql` crea la taula i les restriccions sense modificar
+migracions Flyway ja aplicades.
+
+`VideoRatingController` exposa una lectura pública de la mitjana, el nombre total i
+la valoració de l'usuari actual, i una operació autenticada per crear o modificar la
+valoració. El detall del vídeo utilitza `useVideoRating`, mostra la mitjana i permet
+seleccionar una puntuació només si l'usuari està autenticat. Els tests cobreixen
+validació del servei, identitat derivada de la sessió, errors HTTP i la interacció
+del control de rating al frontend. El resultat `SMALLINT` de PostgreSQL es converteix
+com un `Number` abans de construir el model, perquè els drivers JDBC poden retornar
+`Short` en lloc d'`Integer`. La interfície presenta estrelles, destaca la puntuació
+seleccionada, mostra la mitjana i el nombre de valoracions, i manté els botons
+desactivats mentre es desa la valoració.
+La persistència utilitza el mateix identificador textual que el catàleg, perquè el
+catàleg de desenvolupament basat en fitxers pot utilitzar identificadors numèrics,
+mentre que el catàleg PostgreSQL utilitza UUID. El frontend diferencia errors de
+sessió, vídeo inexistent i errors del servidor per fer visible la causa.
+
+### Internacionalització del frontend
+
+La interfície React utilitza `i18next` i `react-i18next` amb anglès com a idioma
+principal i castellà com a alternativa. Les traduccions es concentren a
+`frontend/src/i18n.ts`, i els components consumeixen les claus mitjançant
+`useTranslation` en lloc de mantenir textos visibles duplicats. El selector
+d'idioma és accessible, actualitza el context de traducció i desa la preferència
+a `localStorage`, de manera que es conserva entre sessions.
+
+La configuració s'importa abans de muntar React i també s'inicialitza en els tests
+de Jest. Això permet provar el text anglès per defecte i evitar que els components
+renderitzats directament depenguin de `main.tsx`. Les proves existents mantenen el
+comportament funcional i el build comprova els tipus i la compilació de les dues
+llengües. Els textos del perfil, autenticació, catàleg, vídeos, comentaris,
+preferits, subscripcions, analítica i càrrega de vídeos utilitzen les traduccions;
+els missatges d'error desconeguts del backend es conserven perquè continuïn sent
+accionables.
+
+### Reparació de migracions Flyway
+
+Les migracions Flyway aplicades són immutables: modificar `V2` provoca un conflicte
+de checksum en bases PostgreSQL persistents. La migració `V2` es manté amb el seu
+contingut original i les funcionalitats posteriors s'apliquen mitjançant versions
+noves. `V10__normalize_favorites_video_ids_safely.sql` comprova que la taula
+`favorites` existeix abans de modificar-la, de manera que una base antiga sense
+aquesta taula també pot completar totes les migracions i arrencar correctament.
+
 ### Compatibilitat amb l'esquema PostgreSQL existent
 
 La base de dades de Docker podia contenir una versió anterior de la taula `comments`
@@ -388,18 +507,28 @@ JDBC posteriors.
 
 ### Compatibilitat dels identificadors de vídeo dels comentaris
 
-Després de migrar el catàleg a PostgreSQL, `comments.video_id` és una clau
-`UUID`, mentre que el port de comentaris continua rebent els identificadors com
-a `String` perquè també és compatible amb l'adaptador anterior. L'adaptador
-`JdbcCommentRepository` converteix els identificadors que tenen format UUID
-abans d'enllaçar-los en les consultes de lectura, inserció i validació de
-respostes; els identificadors no UUID continuen funcionant en els tests i
-escenaris heretats.
+El catàleg de desenvolupament basat en fitxers pot utilitzar identificadors
+numèrics, mentre que el catàleg PostgreSQL utilitza UUID. Per mantenir els dos
+escenaris, `comments.video_id` es desa com `VARCHAR(255)` i
+`JdbcCommentRepository` sempre envia l'identificador textual a JDBC.
 
-Aquesta conversió evita els errors PostgreSQL `uuid = character varying` i
-permet que els comentaris es desin realment. Com que
-`video_analytics_summary` compta les files de `comments`, el mateix comentari
-persistit incrementa el comptador que consulta la pantalla d'analítiques.
+Les bases persistents creades amb l'esquema antic podien conservar
+`comments.video_id` com `UUID`. La migració `V8__normalize_comment_video_ids.sql`
+converteix aquesta columna a text sense perdre les dades existents. Això evita
+l'error PostgreSQL `uuid = character varying` quan la pantalla consulta els
+comentaris d'un vídeo de `video-store`, i conserva també els identificadors UUID
+del catàleg PostgreSQL. Com que `video_analytics_summary` compta les files de
+`comments`, el comentari persistit continua incrementant el comptador d'analítica.
+
+### Selecció de l'adaptador de comptadors de comentaris
+
+El perfil `dev` utilitza el catàleg de fitxers i, per tant, els identificadors
+dels vídeos poden ser numèrics. L'adaptador `JdbcVideoCommentAdapter` només és
+vàlid per al catàleg PostgreSQL, on els identificadors són UUID; si s'injectava
+com a adaptador primari durant el desenvolupament, rebutjava un ID com `5` i
+retornava un `404` després de desar el comentari. Ara
+`FileVideoCommentAdapter` està actiu en `dev` i `JdbcVideoCommentAdapter` en
+`prod`, mantenint coherent el comptador d'analítica amb el catàleg seleccionat.
 
 ### Configuració compartida del magatzem de vídeos
 
@@ -458,6 +587,18 @@ llindars definits al `pom.xml`; el perfil només fa vàlida la comanda del pipel
 
 ## 7. Registre de canvis per estudiar
 
+### Accessibilitat del frontend
+
+El frontend incorpora un enllaç per saltar directament al contingut principal,
+landmarks semàntics i relacions entre encapçalaments i seccions. Els formularis
+associen els errors i les instruccions als camps amb `aria-describedby`, indiquen
+els camps obligatoris i anuncien els canvis de càrrega, èxit i error amb regions
+vives. Els controls d'agradar, valorar i canviar el tema exposen el seu estat
+mitjançant ARIA, i tots els elements interactius mantenen un focus visible per a
+teclat. També es respecta `prefers-reduced-motion` per evitar animacions que puguin
+dificultar la lectura o la interacció. Aquestes millores són de presentació i
+semàntica del frontend; no modifiquen els ports ni els contractes de l'API.
+
 | Data | Canvi funcional | Què cal entendre |
 |---|---|---|
 | 17/10/2026 | Es crea la guia i s'estableix que s'ha de mantenir després de cada canvi de codi. | L'examen avalua la comprensió del funcionament i de les decisions, no la memorització de línies. |
@@ -479,6 +620,8 @@ llindars definits al `pom.xml`; el perfil només fa vàlida la comanda del pipel
 | 19/10/2026 | Es configura CORS per permetre el guardat del perfil des del frontend local. | El navegador fa un preflight `OPTIONS` abans del `PUT`; declarar explícitament mètodes, cabeceres i credencials evita que Axios mostri un error de xarxa encara que el backend estigui encès. |
 | 19/10/2026 | Es redissenya la capçalera per mostrar el logo petit a la cantonada superior esquerra. | El logo es posiciona de manera absoluta dins de la capçalera i el contingut conserva l'alineació central sense que la marca ocupe l'espai principal. |
 | 19/10/2026 | Es col·loquen les accions de sessió a la mateixa línia superior que el logo. | El nom de l'usuari i el logout es posicionen dins de la capçalera visual del catàleg, mantenint el títol centrat i les targetes separades. |
+| 09/11/2026 | S'implementa l'autenticació Google OAuth2/OIDC. | Spring Security gestiona el flux de codi d'autorització al servidor, crea l'usuari i el perfil a partir del `sub` de Google sense enllaçar comptes locals només per email, i reutilitza la sessió HTTP existent. `/api/auth/me` permet restaurar la sessió al frontend i els botons React mai exposen tokens. |
+| 09/11/2026 | S'ajusta el retorn OAuth de Docker i es cobreixen els adaptadors amb tests focalitzats. | Compose redirigeix a `http://localhost` mentre el desenvolupament Vite pot sobreescriure `ENV_PROTUBE_FRONTEND_URL`; els tests verifiquen el provisionament, els conflictes d'email, els redirects i la restauració de sessió. |
 | 19/10/2026 | S'ajusta l'escala visual de les accions de sessió. | L'enllaç al perfil manté més protagonisme i el botó de logout utilitza una mida i un espaiat més compactes per equilibrar la capçalera. |
 | 19/10/2026 | S'ajusta la jerarquia tipogràfica del formulari de registre. | Les etiquetes dels camps tenen més presència i els placeholders i el text d'ajuda són més petits, de manera que la informació principal queda clarament diferenciada de l'exemple. |
 | 19/10/2026 | Es completa la cobertura mínima del 90% al frontend i backend. | Els tests cobreixen branques de navegació, errors de formularis, permisos de perfil, validacions, persistència H2 i credencials; Jest i JaCoCo fan fallar el build si alguna mètrica global baixa del 90%. |
@@ -505,6 +648,17 @@ llindars definits al `pom.xml`; el perfil només fa vàlida la comanda del pipel
 | 02/11/2026 | Es fa compatible la migració Flyway de vídeos amb bases PostgreSQL persistents antigues. | `V2__video_persistence.sql` crea la taula `comments` si encara no existeix abans de construir `video_analytics_summary`. Això permet que una instal·lació nova i una base conservada per Docker arrenquin sense esborrar `postgres-data`; les migracions idempotents mantenen les dades existents. |
 | 02/11/2026 | Es corregeix el catàleg buit de Docker en instal·lacions noves. | Compose utilitza el perfil `prod` i `VideoStoreDatabaseImporter` importa de manera idempotent la metadata i les referències dels assets des de `video-store` a PostgreSQL. `JdbcVideoCatalogAdapter` consulta la base de dades, mentre els fitxers `.mp4` i les miniatures continuen al magatzem muntat. |
 | 04/11/2026 | Es corregeix el test d'arrencada del backend a la CI sense substituir PostgreSQL. | GitHub Actions inicia un servei PostgreSQL saludable abans de Maven i li passa les credencials de la base de dades; el perfil `coverage` també queda definit al `pom.xml` perquè la verificació amb JaCoCo no produeixi un avís de perfil inexistent. |
+
+| 09/11/2026 | Es completa la cobertura de branques del flux OAuth per superar el 90% global. | Els tests cobreixen identitats Google nul·les o buides, noms i correus alternatius durant el provisioning, conflictes de compte i errors de redirecció. Això protegeix els camins excepcionals sense canviar el comportament de producció. |
+| 09/11/2026 | Es recupera la taula `auth_accounts` en bases PostgreSQL persistents creades amb un esquema anterior. | La migració Flyway `V4__restore_auth_accounts.sql` crea de manera idempotent la relació d'identitats externes, les restriccions i l'índex que necessita `JdbcGoogleAccountAdapter`; així el callback OAuth no falla amb un error SQL després de l'autorització de Google. |
+| 09/11/2026 | Es força el flush de l'usuari abans d'inserir el compte Google amb JDBC. | `JdbcGoogleAccountAdapter` usa `saveAndFlush()` perquè la fila `users` existeixi abans de validar la clau forana d'`auth_accounts`; el test focalitzat verifica l'ordre i evita que una excepció de PostgreSQL deixi la transacció actual avortada. |
+
+| 09/11/2026 | Es corregeix la creació de sessió després del login amb Google. | El callback OAuth utilitza directament la petició HTTP que proporciona Spring Security per crear la sessió, perquè aquest flux passa pel filtre de seguretat abans del context de DispatcherServlet. |
+| 09/11/2026 | Es corregeix la inicial del perfil a la capçalera del catàleg. | El fallback de l'avatar ara s'avalua com una expressió React i mostra la primera lletra del nom, username o correu, en lloc d'imprimir el codi literal. |
+| 09/11/2026 | Es milloren els botons d'autenticació amb Google. | Els formularis de login i registre comparteixen un botó amb icona, contrast blanc, mida consistent i estats hover per diferenciar clarament l'accés OAuth de l'acció principal. |
+| 09/11/2026 | Es corregeix un conflicte de checksum de Flyway sense perdre dades. | Les migracions ja aplicades no s'han de modificar: `V2__video_persistence.sql` recupera el contingut original i la normalització de `comments` passa a `V5__normalize_comments_schema.sql`. Això permet que Flyway validi les bases existents i apliqui el canvi com una migració nova, sense `repair` ni esborrar `postgres-data`. |
+| 09/11/2026 | Es manté Google OAuth configurat en el perfil `dev` sense bloquejar l'arrencada. | Quan les variables d'entorn estan buides, Spring utilitza credencials fictícies no sensibles; el registre i el login locals funcionen, però Google OAuth només queda operatiu quan es proporcionen les claus reals de presentació. |
+| 13/11/2026 | Es millora l'accessibilitat del frontend. | Els landmarks, l'enllaç de salt, els noms accessibles, el focus de teclat, les relacions d'errors de formulari i els estats anunciats permeten utilitzar les mateixes pantalles amb lector de pantalla o només amb teclat; `prefers-reduced-motion` evita moviments innecessaris. |
 
 ## 8. Temes pendents
 

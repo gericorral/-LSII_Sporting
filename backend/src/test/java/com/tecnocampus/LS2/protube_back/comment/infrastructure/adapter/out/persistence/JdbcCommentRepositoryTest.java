@@ -71,4 +71,13 @@ class JdbcCommentRepositoryTest {
                 .findFirst().orElseThrow().likeCount());
         assertEquals(false, repository.toggleLike(root.id(), authorId).likedByCurrentUser());
     }
+
+    @Test
+    void checksWhetherACommentBelongsToAVideo() {
+        var saved = repository.save("video-1", authorId, "Hello");
+
+        assertEquals(true, repository.existsInVideo(saved.id(), "video-1"));
+        assertEquals(false, repository.existsInVideo(saved.id(), "video-2"));
+        assertEquals(false, repository.existsInVideo(UUID.randomUUID(), "video-1"));
+    }
 }

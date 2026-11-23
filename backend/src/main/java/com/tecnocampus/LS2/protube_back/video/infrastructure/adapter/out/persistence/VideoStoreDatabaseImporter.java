@@ -78,6 +78,10 @@ public class VideoStoreDatabaseImporter implements ApplicationRunner {
             LOG.warn("Skipping video {} because its title is missing", fileId);
             return;
         }
+        if (metadata.hasNonNull("ownerId")) {
+            LOG.debug("Skipping user-uploaded video {} during legacy store import", fileId);
+            return;
+        }
 
         UUID videoId = UUID.nameUUIDFromBytes(("video-store:" + fileId).getBytes(StandardCharsets.UTF_8));
         String description = metadata.path("meta").path("description").asText("");

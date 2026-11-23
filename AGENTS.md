@@ -146,6 +146,32 @@ content in this file.
 
 ## AI change log
 
+- 2026-11-13: Implemented frontend accessibility improvements using
+  `prompts/39-implement-frontend-accessibility.md`; the React interface now provides
+  semantic main content, a skip link, translated accessible names, form error
+  associations, announced async states, visible keyboard focus and reduced-motion
+  support. The change is documented in the Catalan study guide and Word export.
+
+- 2026-11-11: Implemented frontend internationalization using
+  `i18next` and `react-i18next`; English is the default language, Spanish is
+  selectable through an accessible persisted language control, and user-facing
+  catalog, authentication, profile, video, comments, favorites, subscriptions,
+  analytics and upload text now uses translation resources. Jest initializes the
+  same i18n configuration and the change is documented in the Catalan study guide
+  and Word export.
+
+- 2026-11-09: Implemented persisted dark mode using
+  `prompts/37-implement-dark-mode.md`; authenticated users can toggle the
+  `user_preferences.dark_mode` setting through hexagonal backend ports and the
+  frontend theme control. The change is documented in the Catalan study guide and
+  Word export.
+
+- 2026-11-09: Implemented Favorite Videos using
+  `prompts/36-implement-favorite-videos.md`; authenticated users can add, remove and
+  list favorites through hexagonal backend ports and a responsive frontend detail
+  control and favorites page. The change is documented in the Catalan study guide
+  and Word export.
+
 - 2026-10-17: Implemented the US-04 video catalog using
   `prompts/06-implement-video-catalog.md`. The change was generated with AI and documented in
   `docs/GUIA_ESTUDIO_EXAMEN.md` and `docs/GUIA_ESTUDIO_EXAMEN.docx`.
@@ -316,3 +342,92 @@ content in this file.
   `prompts/10-enforce-global-coverage.md`; JDBC video adapters and the PostgreSQL
   video-store importer now have focused tests, with the AI-assisted change
   documented in this file and the Catalan study guide.
+- 2026-11-09: Corrected the profile visibility checkbox layout using the existing
+  frontend styling prompt; checkbox sizing is now independent from full-width text
+  fields, with the AI-assisted change documented in the Catalan study guide.
+- 2026-11-09: Prevented the production video-store importer from re-importing
+  user-uploaded metadata as `VIDEO_GRABBER` records; the change is documented in
+  the Catalan study guide.
+- 2026-11-09: Required user video uploads to include a JPEG, PNG, WebP or GIF thumbnail
+  using `prompts/32-require-upload-thumbnails.md`; the frontend validates and submits
+  the image, while the hexagonal backend stores it atomically and persists its actual
+  MIME type in PostgreSQL. The change was generated with AI and documented in the
+  Catalan study guide and Word export.
+- 2026-11-09: Restored the missing `auth_accounts` table for existing PostgreSQL
+  installations with `V4__restore_auth_accounts.sql`; Google OAuth provisioning
+  now has the schema required by `JdbcGoogleAccountAdapter`, documented in the
+  Catalan study guide. This AI-generated fix uses the approved
+  `prompts/31-implement-google-oauth-login.md` and is logged here.
+- 2026-11-09: Google OAuth provisioning now calls `UserRepository.saveAndFlush()`
+  before inserting the external account through JDBC, preventing PostgreSQL
+  foreign-key failures caused by an unflushed JPA insert and avoiding aborted
+  transaction lookups. The focused adapter test verifies this ordering.
+- 2026-11-09: Implemented Google OAuth2/OIDC login and registration using
+  `prompts/31-implement-google-oauth-login.md`; Spring Security now handles the
+  authorization-code flow, provisions Google identities without unsafe email
+  auto-linking, restores sessions through `/api/auth/me`, and the frontend exposes
+  Google sign-in buttons. This change was generated with AI and documented in the
+  Catalan study guide and Word export.
+- 2026-11-09: Reviewed the Google OAuth implementation using the same approved
+  prompt; Docker now redirects to the port-80 frontend by default and focused
+  backend tests cover provisioning, conflicts, redirects and session restoration.
+- 2026-11-09: Raised backend JaCoCo branch coverage above the required 90% for
+  Google OAuth using the approved `prompts/10-enforce-global-coverage.md`; tests
+  now cover null and blank identity inputs, OAuth provisioning fallbacks and
+  authentication redirect failures.
+- 2026-11-09: Fixed OAuth session creation after Google authentication by resolving
+  the request-scoped session adapter lazily inside the callback; the security
+  handler no longer tries to access request scope while Spring creates singleton
+  beans.
+- 2026-11-09: Stabilized OAuth session access by making `HttpSessionAdapter` a
+  singleton backed by Spring's request-proxied `HttpServletRequest`; this avoids
+  request-scope resolution errors in the Spring Security callback.
+- 2026-11-09: Fixed OAuth callback session persistence by using the request
+  supplied directly by Spring Security; this avoids relying on DispatcherServlet
+  request attributes, which are not thread-bound during the security filter flow.
+- 2026-11-09: Fixed the authenticated catalog header rendering the profile
+  initial as literal text; the fallback initial is now evaluated as a React
+  expression.
+- 2026-11-09: Improved the Google OAuth buttons with a clear branded icon,
+  white contrast styling, hover feedback and consistent sizing in login and
+  registration forms.
+- 2026-11-09: Fixed video rating persistence for PostgreSQL `SMALLINT` values by
+  converting numeric JDBC results safely, and redesigned the rating control as
+  an accessible star selector with clearer score and feedback states.
+- 2026-11-09: Made rating persistence compatible with numeric file-catalog video
+  identifiers as well as PostgreSQL UUID identifiers, and exposed actionable
+  session, not-found and server errors in the frontend.
+- 2026-11-09: Fixed the Flyway checksum mismatch caused by modifying the applied
+  `V2__video_persistence.sql`; the original migration is restored and the comments
+  schema normalization now runs through the new `V5__normalize_comments_schema.sql`
+  migration without requiring database reset or `flyway repair`.
+- 2026-11-09: Kept Google OAuth configured in the default `dev` profile while using
+  harmless placeholder credentials when environment variables are empty, allowing
+  local startup without disabling the OAuth integration.
+- 2026-11-09: Implemented video ratings with the approved
+  `prompts/35-implement-video-rating.md`; authenticated users can submit or update
+  one rating from 1 to 5 per video, while the detail view displays the persisted
+  average and count through the hexagonal video slice.
+- 2026-11-09: Restored comment compatibility with numeric file-catalog video IDs;
+  `V8__normalize_comment_video_ids.sql` converts legacy UUID comment references to
+  text and the JDBC adapter binds all video IDs consistently, preventing PostgreSQL
+  `uuid = character varying` errors.
+- 2026-11-09: Fixed comment creation in the `dev` profile by selecting
+  `FileVideoCommentAdapter` for file-catalog IDs and reserving
+  `JdbcVideoCommentAdapter` for PostgreSQL UUID IDs; this prevents a false `404`
+  after a comment was saved.
+- 2026-11-11: Repaired the persistent Flyway checksum for `V2__video_persistence.sql`
+  and added `V10__normalize_favorites_video_ids_safely.sql` for legacy databases
+  where the `favorites` table is absent; previously applied migrations remain
+  immutable and the Docker backend completes migrations without deleting data.
+- 2026-11-11: Implemented user subscriptions using
+  `prompts/38-implement-user-subscriptions.md`; authenticated users can subscribe
+  to public profiles, unsubscribe, and view their subscribed users through the
+  hexagonal backend slice and frontend subscriptions page. The change is documented
+  in the Catalan study guide and Word export.
+- 2026-11-11: Added the video-detail author subscription control; the author avatar
+  and name now appear below the player with a profile link and Subscribe/Unsubscribe
+  action using the existing subscription endpoints.
+- 2026-11-11: Exposed the PostgreSQL video owner's public username in `VideoSummary`
+  and used it as the video-detail fallback, so the author is shown by name rather
+  than the generic `Author` label when profile loading is unavailable.

@@ -66,21 +66,6 @@ CREATE TABLE IF NOT EXISTS video_likes (
     PRIMARY KEY (video_id, user_id)
 );
 
-CREATE TABLE IF NOT EXISTS comments (
-    id UUID PRIMARY KEY,
-    video_id VARCHAR(255) NOT NULL,
-    author_id UUID NOT NULL,
-    content VARCHAR(2000) NOT NULL,
-    parent_comment_id UUID,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_comments_author FOREIGN KEY (author_id)
-        REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT fk_comments_parent FOREIGN KEY (parent_comment_id)
-        REFERENCES comments (id) ON DELETE CASCADE,
-    CONSTRAINT ck_comments_content CHECK (length(trim(content)) > 0),
-    CONSTRAINT ck_comments_content_length CHECK (length(content) <= 2000)
-);
-
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.columns

@@ -12,6 +12,7 @@ export type VideoSummary = {
   thumbnailUrl: string;
   videoUrl: string;
   ownerId?: string | null;
+  ownerUsername?: string | null;
   tags?: string[];
   category?: string;
 };

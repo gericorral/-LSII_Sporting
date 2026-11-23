@@ -12,7 +12,9 @@ describe('UploadForm', () => {
   it('validates required fields and MP4 format', () => {
     render(<UploadForm onUploaded={jest.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Upload video' }));
-    expect(screen.getByRole('alert')).toHaveTextContent('Title, description and an MP4 video are required.');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Title, description, an MP4 video and an image thumbnail are required.'
+    );
   });
 
   it('rejects unsupported formats before sending a request', () => {
@@ -21,6 +23,9 @@ describe('UploadForm', () => {
     fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'A description' } });
     fireEvent.change(screen.getByLabelText('MP4 video'), {
       target: { files: [new File(['video'], 'video.avi', { type: 'video/x-msvideo' })] },
+    });
+    fireEvent.change(screen.getByLabelText('Image thumbnail'), {
+      target: { files: [new File(['image'], 'thumbnail.png', { type: 'image/png' })] },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Upload video' }));
 
@@ -35,13 +40,31 @@ describe('UploadForm', () => {
     fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'My video' } });
     fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'A description' } });
     const file = new File(['video'], 'video.mp4', { type: 'video/mp4' });
+    const thumbnail = new File(['image'], 'thumbnail.jpg', { type: 'image/jpeg' });
     fireEvent.change(screen.getByLabelText('MP4 video'), { target: { files: [file] } });
+    fireEvent.change(screen.getByLabelText('Image thumbnail'), { target: { files: [thumbnail] } });
     fireEvent.click(screen.getByRole('button', { name: 'Upload video' }));
 
     await waitFor(() => expect(onUploaded).toHaveBeenCalled());
     expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/videos'), expect.any(FormData), {
       withCredentials: true,
     });
+  });
+
+  it('rejects unsupported thumbnail formats before sending a request', () => {
+    render(<UploadForm onUploaded={jest.fn()} />);
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'My video' } });
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'A description' } });
+    fireEvent.change(screen.getByLabelText('MP4 video'), {
+      target: { files: [new File(['video'], 'video.mp4', { type: 'video/mp4' })] },
+    });
+    fireEvent.change(screen.getByLabelText('Image thumbnail'), {
+      target: { files: [new File(['image'], 'thumbnail.bmp', { type: 'image/bmp' })] },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Upload video' }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Only JPEG, PNG, WebP or GIF thumbnail files are supported.');
+    expect(mockedAxios.post).not.toHaveBeenCalled();
   });
 
   it('shows server upload errors', async () => {
@@ -55,6 +78,9 @@ describe('UploadForm', () => {
     fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'A description' } });
     fireEvent.change(screen.getByLabelText('MP4 video'), {
       target: { files: [new File(['video'], 'video.mp4', { type: 'video/mp4' })] },
+    });
+    fireEvent.change(screen.getByLabelText('Image thumbnail'), {
+      target: { files: [new File(['image'], 'thumbnail.png', { type: 'image/png' })] },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Upload video' }));
 

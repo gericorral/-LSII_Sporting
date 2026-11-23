@@ -185,6 +185,30 @@ describe('App routes', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
     expect(await screen.findByRole('heading', { name: 'Video analytics' })).toBeInTheDocument();
     expect(await screen.findByText('You have not uploaded any videos yet.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Back to videos/ }));
+  });
+
+  it('shows favorites after authenticating from the favorites route', async () => {
+    mockedAxios.get.mockResolvedValue({ data: [] });
+    window.location.hash = '#favorites';
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
+    expect(await screen.findByRole('heading', { name: 'Favorite videos' })).toBeInTheDocument();
+    expect(await screen.findByRole('status')).toHaveTextContent('no favorite videos');
+    fireEvent.click(screen.getByRole('button', { name: /Back to videos/ }));
+  });
+
+  it('shows subscriptions after authenticating from the subscriptions route', async () => {
+    mockedAxios.get.mockResolvedValue({ data: [] });
+    window.location.hash = '#subscriptions';
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
+    expect(await screen.findByRole('heading', { name: 'Subscriptions' })).toBeInTheDocument();
+    expect(await screen.findByRole('status')).toHaveTextContent('not subscribed');
+    fireEvent.click(screen.getByRole('button', { name: /Back to videos/ }));
+    expect(await screen.findByRole('heading', { name: 'Available videos' })).toBeInTheDocument();
   });
 
   it('opens a public profile route', () => {
@@ -206,6 +230,9 @@ describe('App routes', () => {
     fireEvent.change(screen.getByLabelText('MP4 video'), {
       target: { files: [new File(['video'], 'video.mp4', { type: 'video/mp4' })] },
     });
+    fireEvent.change(screen.getByLabelText('Image thumbnail'), {
+      target: { files: [new File(['image'], 'thumbnail.png', { type: 'image/png' })] },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Upload video' }));
 
     expect(await screen.findByRole('heading', { name: 'Available videos' })).toBeInTheDocument();
@@ -224,6 +251,22 @@ describe('App routes', () => {
     expect(mockedAxios.post).toHaveBeenCalledWith(
       expect.stringContaining('/auth/logout'),
       {},
+      { withCredentials: true }
+    );
+  });
+
+  it('toggles dark mode from the catalog header', async () => {
+    mockedAxios.put.mockResolvedValue({ data: { darkMode: true } });
+    window.location.hash = '#login';
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
+    window.location.hash = '';
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Turn on dark mode' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Turn off dark mode' })).toBeInTheDocument());
+    expect(mockedAxios.put).toHaveBeenCalledWith(
+      expect.stringContaining('/preferences/me'),
+      { darkMode: true },
       { withCredentials: true }
     );
   });

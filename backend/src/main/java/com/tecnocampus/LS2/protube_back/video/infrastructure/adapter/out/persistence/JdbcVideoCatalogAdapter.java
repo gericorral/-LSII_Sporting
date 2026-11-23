@@ -77,19 +77,20 @@ public class JdbcVideoCatalogAdapter implements VideoCatalogPort {
         String condition = id == null ? " " : " AND v.id = ? ";
         Object[] args = id == null ? new Object[0] : new Object[]{id};
         return jdbcTemplate.query("""
-                SELECT v.id, v.owner_id, v.title, v.description, v.duration_seconds,
+                SELECT v.id, v.owner_id, u.username AS owner_username, v.title, v.description, v.duration_seconds,
                        MAX(CASE WHEN a.asset_type = 'THUMBNAIL' THEN a.storage_key END) AS thumbnail_key,
                        MAX(CASE WHEN a.asset_type = 'VIDEO' THEN a.storage_key END) AS video_key,
                        COALESCE(string_agg(DISTINCT t.name, ',' ORDER BY t.name), '') AS tag_names,
                        COALESCE(MAX(c.name), '') AS category_name
                 FROM videos v
+                LEFT JOIN users u ON u.id = v.owner_id
                 LEFT JOIN video_assets a ON a.video_id = v.id
                 LEFT JOIN video_tags vt ON vt.video_id = v.id
                 LEFT JOIN tags t ON t.id = vt.tag_id
                 LEFT JOIN video_categories vc ON vc.video_id = v.id
                 LEFT JOIN categories c ON c.id = vc.category_id
                 WHERE v.status = 'PUBLISHED' AND v.visibility = 'PUBLIC'""" + condition + """
-                GROUP BY v.id, v.owner_id, v.title, v.description, v.duration_seconds
+                GROUP BY v.id, v.owner_id, u.username, v.title, v.description, v.duration_seconds
                 ORDER BY v.published_at DESC, v.id DESC
                 """, (rs, rowNum) -> {
             UUID videoId = rs.getObject("id", UUID.class);
@@ -102,7 +103,8 @@ public class JdbcVideoCatalogAdapter implements VideoCatalogPort {
                     mediaUrl(rs.getString("video_key")),
                     rs.getObject("owner_id", UUID.class),
                     splitTags(rs.getString("tag_names")),
-                    rs.getString("category_name")
+                    rs.getString("category_name"),
+                    rs.getString("owner_username")
             );
         }, args);
     }

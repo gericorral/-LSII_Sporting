@@ -3,12 +3,10 @@ package com.tecnocampus.LS2.protube_back.auth.infrastructure.adapter.in.web;
 import com.tecnocampus.LS2.protube_back.auth.application.port.out.SessionPort;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.UUID;
 
 @Component
-@RequestScope
 public class HttpSessionAdapter implements SessionPort {
     private final HttpServletRequest request;
 
