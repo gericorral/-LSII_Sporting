@@ -442,3 +442,8 @@ content in this file.
   `prompts/41-add-caffeine-video-cache.md`; catalog pages, searches and video details
   are reused for up to five minutes, while successful uploads and metadata edits
   invalidate catalog and detail entries. PostgreSQL remains the source of truth.
+- 2026-11-23: Configured SonarCloud static analysis using
+  `prompts/42-configure-sonarcloud-quality.md`; CI declares source, test, Java binary
+  and coverage paths, and the frontend now generates LCOV alongside JSON and HTML
+  coverage reports. The scan runs only when the `SONAR_TOKEN` secret is available,
+  preserving builds for contributors who have not configured SonarCloud.

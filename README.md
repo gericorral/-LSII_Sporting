@@ -347,3 +347,11 @@ The backend uses process-local Caffeine caching for paginated catalog reads, vid
 searches and video-detail lookups. Entries expire after five minutes or when the cache
 reaches 500 entries. Video uploads and metadata updates evict the catalog and detail
 caches. Caffeine is only a read optimization; PostgreSQL remains the source of truth.
+
+## Code quality with SonarCloud
+
+The repository includes `sonar-project.properties` for SonarCloud static analysis.
+GitHub Actions runs the SonarCloud scanner after the build, tests and frontend lint
+when the `SONAR_TOKEN` Actions secret is configured. Backend JaCoCo XML and frontend
+LCOV coverage reports are provided through the project configuration. SonarCloud
+credentials must never be committed to the repository.

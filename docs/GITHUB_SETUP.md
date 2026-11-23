@@ -175,6 +175,23 @@ For local development, copy `.env.example` to `.env` and fill in the values. The
    [Official GitHub Actions Documentation](https://docs.github.com/en/actions)
 
 2. **SonarCloud Integration**
+   The SonarCloud project must be created and the token must be added by a repository
+   owner or administrator.
+
+   1. Sign in to `https://sonarcloud.io` with GitHub.
+   2. Choose **Analyze new project** and enable the `gericorral/-LSII_Sporting`
+      repository.
+   3. Create the project using organization `gericorral` and project key
+      `gericorral_-LSII_Sporting`.
+   4. In SonarCloud, open **My Account > Security**, generate a token named
+      `github-actions`, and copy it.
+   5. In GitHub, open **Settings > Secrets and variables > Actions**.
+   6. Create repository secret `SONAR_TOKEN` with the SonarCloud token.
+   7. Open a new pull request or push to `main`; the workflow will run SonarCloud
+      automatically when the secret is available.
+
+   Do not commit the SonarCloud token to the repository or to workflow files.
+
    ```yaml
    name: SonarCloud Analysis
    
