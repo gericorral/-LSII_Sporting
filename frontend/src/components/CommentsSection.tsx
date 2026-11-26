@@ -4,6 +4,7 @@ import { getEnv } from '../utils/Env';
 import { Comment, useComments } from '../useComments';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
+import { toSafeId } from '../utils/safeId';
 
 type CommentsSectionProps = {
   videoId: string;
@@ -64,11 +65,16 @@ export default function CommentsSection({ videoId, loggedUser }: CommentsSection
       setSubmitMessage(t('comments.tooLong'));
       return;
     }
+    const safeVideoId = toSafeId(videoId);
+    if (!safeVideoId) {
+      setSubmitMessage(t('comments.errorPosting', { error: 'Invalid video ID.' }));
+      return;
+    }
     setSubmitMessage('');
     setSubmitting(true);
     try {
       const response = await axios.post<Comment>(
-        `${getEnv().API_BASE_URL}/videos/${encodeURIComponent(videoId)}/comments`,
+        `${getEnv().API_BASE_URL}/videos/${safeVideoId}/comments`,
         { content: normalizedContent },
         { withCredentials: true }
       );
@@ -91,12 +97,18 @@ export default function CommentsSection({ videoId, loggedUser }: CommentsSection
       setSubmitMessage(t('comments.replyTooLong'));
       return;
     }
+    const safeVideoId = toSafeId(videoId);
+    const safeParentCommentId = toSafeId(parentCommentId);
+    if (!safeVideoId || !safeParentCommentId) {
+      setSubmitMessage(t('comments.errorReplying', { error: 'Invalid comment or video ID.' }));
+      return;
+    }
     setSubmitMessage('');
     setSubmitting(true);
     try {
       const response = await axios.post<Comment>(
-        `${getEnv().API_BASE_URL}/videos/${encodeURIComponent(videoId)}/comments`,
-        { content: normalizedContent, parentCommentId },
+        `${getEnv().API_BASE_URL}/videos/${safeVideoId}/comments`,
+        { content: normalizedContent, parentCommentId: safeParentCommentId },
         { withCredentials: true }
       );
       addComment(response.data);
@@ -141,7 +153,7 @@ export default function CommentsSection({ videoId, loggedUser }: CommentsSection
           <form
             onSubmit={(event) => {
               event.preventDefault();
-              submitReply(comment.id);
+              void submitReply(comment.id);
             }}
           >
             <label htmlFor={`reply-${comment.id}`}>{t('comments.reply')}</label>

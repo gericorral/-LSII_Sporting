@@ -18,6 +18,19 @@ describe('useVideoFavorite', () => {
     expect(mockedAxios.get).not.toHaveBeenCalled();
   });
 
+  it('rejects unsafe video identifiers without making requests', async () => {
+    const { result } = renderHook(() => useVideoFavorite('../private', true));
+
+    await waitFor(() => expect(result.current.state).toBe('error'));
+    expect(result.current.message).toBe('Unable to load favorite status.');
+    expect(mockedAxios.get).not.toHaveBeenCalled();
+
+    await act(() => result.current.toggleFavorite());
+    expect(result.current.message).toBe('The favorite could not be updated.');
+    expect(mockedAxios.put).not.toHaveBeenCalled();
+    expect(mockedAxios.delete).not.toHaveBeenCalled();
+  });
+
   it('loads and toggles a favorite', async () => {
     mockedAxios.get.mockResolvedValue({ data: { favorited: false } });
     mockedAxios.put.mockResolvedValue({ data: { favorited: true } });
@@ -44,5 +57,46 @@ describe('useVideoFavorite', () => {
     await waitFor(() => expect(second.result.current.state).toBe('ready'));
     await act(() => second.result.current.toggleFavorite());
     expect(second.result.current.message).toBe('The favorite could not be updated.');
+  });
+
+  it('ignores a stale favorite response after the video changes', async () => {
+    let rejectStaleRequest: ((error: Error) => void) | undefined;
+    mockedAxios.get
+      .mockReturnValueOnce(
+        new Promise((_, reject) => {
+          rejectStaleRequest = reject;
+        }) as never
+      )
+      .mockResolvedValueOnce({ data: { favorited: false } });
+    const { result, rerender } = renderHook(({ id }) => useVideoFavorite(id, true), {
+      initialProps: { id: 'first-video' },
+    });
+
+    rerender({ id: 'second-video' });
+    await waitFor(() => expect(result.current.state).toBe('ready'));
+    await act(async () => rejectStaleRequest?.(new Error('stale failure')));
+
+    expect(result.current.favorited).toBe(false);
+    expect(result.current.message).toBe('');
+  });
+
+  it('does not apply an older successful favorite response', async () => {
+    let resolveStaleRequest: ((value: { data: { favorited: boolean } }) => void) | undefined;
+    mockedAxios.get
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveStaleRequest = resolve;
+        }) as never
+      )
+      .mockResolvedValueOnce({ data: { favorited: false } });
+    const { result, rerender } = renderHook(({ id }) => useVideoFavorite(id, true), {
+      initialProps: { id: 'first-video' },
+    });
+
+    rerender({ id: 'second-video' });
+    await waitFor(() => expect(result.current.state).toBe('ready'));
+    await act(async () => resolveStaleRequest?.({ data: { favorited: true } }));
+
+    expect(result.current.favorited).toBe(false);
   });
 });

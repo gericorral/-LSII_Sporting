@@ -114,6 +114,8 @@ class AuthControllerTest {
                 Arguments.of(new AuthController.RegistrationRequest(null, "player_1", "secret123"), "email"),
                 Arguments.of(new AuthController.RegistrationRequest(" ", "player_1", "secret123"), "email"),
                 Arguments.of(new AuthController.RegistrationRequest("bad", "player_1", "secret123"), "email"),
+                Arguments.of(new AuthController.RegistrationRequest("a@.com", "player_1", "secret123"), "email"),
+                Arguments.of(new AuthController.RegistrationRequest("a@b..com", "player_1", "secret123"), "email"),
                 Arguments.of(new AuthController.RegistrationRequest("user@example.com", null, "secret123"), "username"),
                 Arguments.of(new AuthController.RegistrationRequest("user@example.com", " ", "secret123"), "username"),
                 Arguments.of(new AuthController.RegistrationRequest("user@example.com", "ab", "secret123"), "username"),
@@ -121,7 +123,8 @@ class AuthControllerTest {
                 Arguments.of(new AuthController.RegistrationRequest("user@example.com", "player_1", null), "password"),
                 Arguments.of(new AuthController.RegistrationRequest("user@example.com", "player_1", "short"), "password"),
                 Arguments.of(new AuthController.RegistrationRequest("user@example.com", "player_1", "x".repeat(73)), "password"),
-                Arguments.of(new AuthController.RegistrationRequest("x".repeat(321) + "@example.com", "player_1", "secret123"), "email")
+                Arguments.of(new AuthController.RegistrationRequest("x".repeat(321) + "@example.com", "player_1", "secret123"), "email"),
+                Arguments.of(new AuthController.RegistrationRequest("a".repeat(100_000) + "@b".repeat(100_000), "player_1", "secret123"), "email")
         );
     }
 

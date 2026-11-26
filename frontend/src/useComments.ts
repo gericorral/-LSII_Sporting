@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import axios, { AxiosError } from 'axios';
 import { getEnv } from './utils/Env';
+import { toSafeId } from './utils/safeId';
 
 export type Comment = {
   id: string;
@@ -30,12 +31,17 @@ export function useComments(videoId: string) {
 
   const load = useCallback(
     async (page: number, append: boolean) => {
+      const safeVideoId = toSafeId(videoId);
+      if (!safeVideoId) {
+        setLoading('error');
+        setMessage('Invalid video ID.');
+        return;
+      }
       try {
         setLoading('loading');
-        const response = await axios.get<CommentPage>(
-          `${getEnv().API_BASE_URL}/videos/${encodeURIComponent(videoId)}/comments`,
-          { params: { page, size: pageSize } }
-        );
+        const response = await axios.get<CommentPage>(`${getEnv().API_BASE_URL}/videos/${safeVideoId}/comments`, {
+          params: { page, size: pageSize },
+        });
         if (response.status !== 200) {
           setLoading('success');
           return;
@@ -53,7 +59,7 @@ export function useComments(videoId: string) {
   );
 
   useEffect(() => {
-    load(0, false).then();
+    void load(0, false);
   }, [load]);
 
   const loadMore = () => {
@@ -66,8 +72,14 @@ export function useComments(videoId: string) {
   };
 
   const updateLike = async (commentId: string) => {
+    const safeVideoId = toSafeId(videoId);
+    const safeCommentId = toSafeId(commentId);
+    if (!safeVideoId || !safeCommentId) {
+      setMessage('Unable to update comment reaction.');
+      return;
+    }
     const response = await axios.post<{ commentId: string; likeCount: number; likedByCurrentUser: boolean }>(
-      `${getEnv().API_BASE_URL}/videos/${encodeURIComponent(videoId)}/comments/${encodeURIComponent(commentId)}/like`,
+      `${getEnv().API_BASE_URL}/videos/${safeVideoId}/comments/${safeCommentId}/like`,
       {},
       { withCredentials: true }
     );

@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import axios from 'axios';
 import { getEnv } from '../utils/Env';
 import { useTranslation } from 'react-i18next';
+import { isValidEmail } from '../utils/validation';
 
 type RegistrationUser = {
   id: string;
@@ -26,7 +27,7 @@ export default function RegistrationForm({ onRegistered }: RegistrationFormProps
 
   const validate = () => {
     const nextErrors: Record<string, string> = {};
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    if (!isValidEmail(email.trim())) {
       nextErrors.email = t('auth.validEmail');
     }
     if (!/^[a-zA-Z0-9_]{3,50}$/.test(username.trim())) {
@@ -123,7 +124,7 @@ export default function RegistrationForm({ onRegistered }: RegistrationFormProps
         )}
 
         <div className="registration-field">
-          <label htmlFor="password">{t('auth.password')}</label>
+          <label htmlFor="password">{t('auth.passwordLabel')}</label>
           <input
             id="password"
             type="password"

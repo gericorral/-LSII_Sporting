@@ -14,7 +14,14 @@ FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-COPY --from=build /workspace/backend/target/protube-back-0.0.1-SNAPSHOT.jar app.jar
+RUN groupadd --system app \
+    && useradd --system --gid app --no-create-home app \
+    && mkdir -p /app/store \
+    && chown -R app:app /app
+
+COPY --chown=app:app --from=build /workspace/backend/target/protube-back-0.0.1-SNAPSHOT.jar app.jar
+
+USER app
 
 EXPOSE 8080
 

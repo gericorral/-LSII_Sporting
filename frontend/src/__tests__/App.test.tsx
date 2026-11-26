@@ -21,6 +21,8 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 describe('App routes', () => {
   beforeEach(() => {
     window.location.hash = '';
+    mockedAxios.get.mockReset().mockRejectedValue(new Error('not authenticated'));
+    mockedAxios.post.mockReset().mockResolvedValue({ data: {} });
     mockedUseAllVideos.mockReturnValue({
       loading: 'success',
       message: '',
@@ -262,7 +264,9 @@ describe('App routes', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fake login' }));
     window.location.hash = '';
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Turn on dark mode' }));
+    const darkModeButton = await screen.findByRole('button', { name: 'Turn on dark mode' });
+    await waitFor(() => expect(darkModeButton).toBeEnabled());
+    fireEvent.click(darkModeButton);
     await waitFor(() => expect(screen.getByRole('button', { name: 'Turn off dark mode' })).toBeInTheDocument());
     expect(mockedAxios.put).toHaveBeenCalledWith(
       expect.stringContaining('/preferences/me'),

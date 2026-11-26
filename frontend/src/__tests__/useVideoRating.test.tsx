@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import axios from 'axios';
 
@@ -68,5 +68,58 @@ describe('useVideoRating', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Save' })[1]);
     await waitFor(() => expect(screen.getAllByText('The video rating could not be saved.').length).toBeGreaterThan(0));
     rerender(<Harness />);
+  });
+
+  it('rejects unsafe video identifiers without making requests', async () => {
+    render(<Harness id="a/b" />);
+
+    expect(await screen.findByText('The video rating could not be loaded.')).toBeInTheDocument();
+    expect(mockedAxios.get).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(screen.getByText('The video rating could not be saved.')).toBeInTheDocument();
+    expect(mockedAxios.put).not.toHaveBeenCalled();
+  });
+
+  it('ignores stale rating responses after the video changes', async () => {
+    let resolveStaleRequest: ((value: { data: { videoId: string; averageRating: number } }) => void) | undefined;
+    mockedAxios.get
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveStaleRequest = resolve;
+        }) as never
+      )
+      .mockResolvedValueOnce({ data: { videoId: 'second', averageRating: 2, ratingCount: 1, userRating: null } });
+    const { result, rerender } = renderHook(({ id }) => useVideoRating(id, true), {
+      initialProps: { id: 'first' },
+    });
+
+    rerender({ id: 'second' });
+    await waitFor(() => expect(result.current.rating?.averageRating).toBe(2));
+    await act(async () => resolveStaleRequest?.({ data: { videoId: 'first', averageRating: 5 } }));
+
+    expect(result.current.rating?.averageRating).toBe(2);
+    expect(result.current.loading).toBe(false);
+  });
+
+  it('does not update rating state when a stale request fails', async () => {
+    let rejectStaleRequest: ((error: Error) => void) | undefined;
+    mockedAxios.get
+      .mockReturnValueOnce(
+        new Promise((_, reject) => {
+          rejectStaleRequest = reject;
+        }) as never
+      )
+      .mockResolvedValueOnce({ data: { videoId: 'second', averageRating: 2, ratingCount: 1, userRating: null } });
+    const { result, rerender } = renderHook(({ id }) => useVideoRating(id, true), {
+      initialProps: { id: 'first' },
+    });
+
+    rerender({ id: 'second' });
+    await waitFor(() => expect(result.current.rating?.averageRating).toBe(2));
+    await act(async () => rejectStaleRequest?.(new Error('stale failure')));
+
+    expect(result.current.message).toBe('');
+    expect(result.current.rating?.averageRating).toBe(2);
   });
 });

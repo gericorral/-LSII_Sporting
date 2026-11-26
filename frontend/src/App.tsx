@@ -82,11 +82,10 @@ function ContentApp({
   }, []);
 
   useEffect(() => {
-    if (typeof axios.get !== 'function') return;
-    const request = axios.get(`${getEnv().API_BASE_URL}/auth/me`, { withCredentials: true });
-    if (request && typeof request.then === 'function') {
-      request.then((response) => setLoggedUser(response.data)).catch(() => undefined);
-    }
+    void axios
+      .get(`${getEnv().API_BASE_URL}/auth/me`, { withCredentials: true })
+      .then((response) => setLoggedUser(response.data))
+      .catch(() => undefined);
   }, []);
 
   const videoId = getVideoId(hash);
@@ -232,10 +231,13 @@ function ContentApp({
       themeState={themeState}
       onToggleDarkMode={onToggleDarkMode}
       onLogout={() => {
-        axios.post(`${getEnv().API_BASE_URL}/auth/logout`, {}, { withCredentials: true }).finally(() => {
-          setLoggedUser(null);
-          setRegisteredUser(null);
-        });
+        void axios
+          .post(`${getEnv().API_BASE_URL}/auth/logout`, {}, { withCredentials: true })
+          .catch(() => undefined)
+          .finally(() => {
+            setLoggedUser(null);
+            setRegisteredUser(null);
+          });
       }}
     />
   );
@@ -292,7 +294,7 @@ function VideoCatalog({
                 className="video-search"
                 onSubmit={(event) => {
                   event.preventDefault();
-                  search(searchText);
+                  void search(searchText);
                 }}
               >
                 <label htmlFor="video-search-input">{t('searchVideos')}</label>
@@ -309,7 +311,7 @@ function VideoCatalog({
                     type="button"
                     onClick={() => {
                       setSearchText('');
-                      search('');
+                      void search('');
                     }}
                   >
                     {t('clear')}

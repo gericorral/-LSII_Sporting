@@ -17,16 +17,10 @@ export function useDarkMode(authenticated: boolean) {
       };
     }
     setState('loading');
-    const request = axios.get<{ darkMode: boolean }>(`${getEnv().API_BASE_URL}/preferences/me`, {
-      withCredentials: true,
-    });
-    if (!request || typeof request.then !== 'function') {
-      setState('ready');
-      return () => {
-        active = false;
-      };
-    }
-    request
+    axios
+      .get<{ darkMode: boolean }>(`${getEnv().API_BASE_URL}/preferences/me`, {
+        withCredentials: true,
+      })
       .then((response) => {
         if (!active) return;
         setDarkMode(response.data.darkMode);
