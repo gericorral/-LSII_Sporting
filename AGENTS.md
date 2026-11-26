@@ -447,3 +447,7 @@ content in this file.
   and coverage paths, and the frontend now generates LCOV alongside JSON and HTML
   coverage reports. The scan runs only when the `SONAR_TOKEN` secret is available,
   preserving builds for contributors who have not configured SonarCloud.
+- 2026-11-26: Refined SonarCloud source/test classification and coverage exclusions
+  using the approved `prompts/42-configure-sonarcloud-quality.md`; E2E specs are now
+  classified as tests, while tooling, configuration, bootstrap and generated support
+  files are excluded from coverage without excluding application source.
