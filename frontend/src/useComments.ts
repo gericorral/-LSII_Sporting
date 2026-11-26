@@ -39,10 +39,9 @@ export function useComments(videoId: string) {
       }
       try {
         setLoading('loading');
-        const response = await axios.get<CommentPage>(
-          `${getEnv().API_BASE_URL}/videos/${safeVideoId}/comments`,
-          { params: { page, size: pageSize } }
-        );
+        const response = await axios.get<CommentPage>(`${getEnv().API_BASE_URL}/videos/${safeVideoId}/comments`, {
+          params: { page, size: pageSize },
+        });
         if (response.status !== 200) {
           setLoading('success');
           return;

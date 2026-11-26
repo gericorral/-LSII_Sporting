@@ -14,6 +14,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
 
 class FileVideoCatalogAdapterTest {
 
@@ -128,6 +134,24 @@ class FileVideoCatalogAdapterTest {
     }
 
     @Test
+    void readsPngThumbnailsAndSkipsInvalidOwnerIdentifiers(@TempDir Path store) throws IOException {
+        Files.writeString(store.resolve("png.json"), """
+                {"title":"PNG video","ownerId":"%s"}
+                """.formatted(UUID.randomUUID()));
+        Files.createFile(store.resolve("png.mp4"));
+        Files.createFile(store.resolve("png.png"));
+        Files.writeString(store.resolve("invalid-owner.json"), """
+                {"title":"Invalid owner","ownerId":"not-a-uuid"}
+                """);
+        Files.createFile(store.resolve("invalid-owner.mp4"));
+        Files.createFile(store.resolve("invalid-owner.webp"));
+        FileVideoCatalogAdapter adapter = new FileVideoCatalogAdapter(store.toString(), objectMapper);
+
+        assertEquals("/media/png.png", adapter.findById("png").orElseThrow().thumbnailUrl());
+        assertEquals(Optional.empty(), adapter.findById("invalid-owner"));
+    }
+
+    @Test
     void updatesMetadataOnlyForTheOwner(@TempDir Path store) throws IOException {
         UUID ownerId = UUID.randomUUID();
         Files.writeString(store.resolve("1.json"), """
@@ -151,6 +175,47 @@ class FileVideoCatalogAdapterTest {
         assertEquals(12, metadata.path("analytics").path("views").asInt());
         assertEquals(3, metadata.path("analytics").path("comments").asInt());
         assertEquals(4, metadata.path("analytics").path("likes").asInt());
+    }
+
+    @Test
+    void preservesDurationWhenUpdatingMetadataWithoutAnalytics(@TempDir Path store) throws IOException {
+        UUID ownerId = UUID.randomUUID();
+        Files.writeString(store.resolve("duration.json"), """
+                {"title":"Old","duration":90,"ownerId":"%s","meta":{"description":"Old"}}
+                """.formatted(ownerId));
+        Files.createFile(store.resolve("duration.mp4"));
+        Files.createFile(store.resolve("duration.webp"));
+        FileVideoCatalogAdapter adapter = new FileVideoCatalogAdapter(store.toString(), objectMapper);
+
+        assertEquals(90, adapter.updateMetadata(
+                "duration", ownerId, "New", "New description", List.of(), "New category"
+        ).orElseThrow().duration());
+        var metadata = objectMapper.readTree(Files.readString(store.resolve("duration.json")));
+        assertEquals(90, metadata.path("duration").asInt());
+        assertFalse(metadata.has("analytics"));
+    }
+
+    @Test
+    void cleansTheTemporaryMetadataWhenTheUpdateCannotBeWritten(@TempDir Path store) throws IOException {
+        UUID ownerId = UUID.randomUUID();
+        Path metadataPath = store.resolve("1.json");
+        Path temporaryPath = store.resolve(".1.json.editing");
+        Files.writeString(metadataPath, """
+                {"title":"Old","ownerId":"%s","meta":{"description":"Old"}}
+                """.formatted(ownerId));
+        Files.createFile(store.resolve("1.mp4"));
+        Files.createFile(store.resolve("1.webp"));
+        ObjectMapper mapper = spy(new ObjectMapper());
+        doThrow(new IOException("write failed")).when(mapper).writeValue(eq(temporaryPath.toFile()), any());
+        FileVideoCatalogAdapter adapter = new FileVideoCatalogAdapter(store.toString(), mapper);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> adapter.updateMetadata(
+                "1", ownerId, "New", "New description", List.of(), "New category"
+        ));
+
+        assertEquals("Unable to update video metadata: 1", exception.getMessage());
+        assertFalse(Files.exists(temporaryPath));
+        assertEquals("Old", adapter.findById("1").orElseThrow().title());
     }
 
     @Test

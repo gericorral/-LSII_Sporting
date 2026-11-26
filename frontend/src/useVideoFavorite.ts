@@ -59,10 +59,9 @@ export function useVideoFavorite(videoId: string, authenticated: boolean) {
     setState('saving');
     try {
       const response = await (favorited
-        ? axios.delete<{ favorited: boolean }>(
-            `${getEnv().API_BASE_URL}/videos/${safeVideoId}/favorite`,
-            { withCredentials: true }
-          )
+        ? axios.delete<{ favorited: boolean }>(`${getEnv().API_BASE_URL}/videos/${safeVideoId}/favorite`, {
+            withCredentials: true,
+          })
         : axios.put<{ favorited: boolean }>(
             `${getEnv().API_BASE_URL}/videos/${safeVideoId}/favorite`,
             {},

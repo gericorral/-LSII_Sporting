@@ -86,4 +86,54 @@ describe('UploadForm', () => {
 
     expect(await screen.findByText('Storage unavailable')).toBeInTheDocument();
   });
+
+  it('rejects missing media and oversized video files before uploading', () => {
+    render(<UploadForm onUploaded={jest.fn()} />);
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'My video' } });
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'A description' } });
+    fireEvent.change(screen.getByLabelText('Image thumbnail'), {
+      target: { files: [new File(['image'], 'thumbnail.png', { type: 'image/png' })] },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Upload video' }));
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Title, description, an MP4 video and an image thumbnail are required.'
+    );
+
+    fireEvent.change(screen.getByLabelText('Image thumbnail'), { target: { files: [] } });
+    fireEvent.change(screen.getByLabelText('MP4 video'), {
+      target: { files: [new File(['video'], 'video.mp4', { type: 'video/mp4' })] },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Upload video' }));
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Title, description, an MP4 video and an image thumbnail are required.'
+    );
+
+    fireEvent.change(screen.getByLabelText('Image thumbnail'), {
+      target: { files: [new File(['image'], 'thumbnail.png', { type: 'image/png' })] },
+    });
+    const oversizedVideo = new File(['video'], 'large.mp4', { type: 'video/mp4' });
+    Object.defineProperty(oversizedVideo, 'size', { value: 100 * 1024 * 1024 + 1 });
+    fireEvent.change(screen.getByLabelText('MP4 video'), { target: { files: [oversizedVideo] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Upload video' }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Video files must not exceed 100 MB.');
+    expect(mockedAxios.post).not.toHaveBeenCalled();
+  });
+
+  it('shows the generic upload error for a non-Axios rejection', async () => {
+    jest.spyOn(axios, 'isAxiosError').mockReturnValue(false);
+    mockedAxios.post.mockRejectedValue(new Error('offline'));
+    render(<UploadForm onUploaded={jest.fn()} />);
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'My video' } });
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'A description' } });
+    fireEvent.change(screen.getByLabelText('MP4 video'), {
+      target: { files: [new File(['video'], 'video.mp4', { type: 'video/mp4' })] },
+    });
+    fireEvent.change(screen.getByLabelText('Image thumbnail'), {
+      target: { files: [new File(['image'], 'thumbnail.png', { type: 'image/png' })] },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Upload video' }));
+
+    expect(await screen.findByText('The video could not be uploaded.')).toBeInTheDocument();
+  });
 });

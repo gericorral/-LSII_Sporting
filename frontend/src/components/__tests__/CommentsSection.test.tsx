@@ -170,4 +170,43 @@ describe('CommentsSection', () => {
       { withCredentials: true }
     );
   });
+
+  it('validates replies and reports comment and reply submission failures', async () => {
+    mockedAxios.get.mockResolvedValue({
+      status: 200,
+      data: { content: [existingComment], hasNext: false },
+    });
+    mockedAxios.post.mockRejectedValue(new Error('offline'));
+    render(<CommentsSection videoId="video-1" loggedUser={{ username: 'Player' }} />);
+
+    await screen.findByText('Useful video');
+    fireEvent.click(screen.getByRole('button', { name: 'Reply' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Post reply' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Reply cannot be empty.');
+
+    fireEvent.change(screen.getByLabelText('Reply'), { target: { value: 'r'.repeat(2001) } });
+    fireEvent.click(screen.getByRole('button', { name: 'Post reply' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Reply must be at most 2000 characters.');
+
+    fireEvent.change(screen.getByLabelText('Reply'), { target: { value: 'A reply' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Post reply' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Error posting reply: offline');
+
+    fireEvent.change(screen.getByLabelText('Add a comment'), { target: { value: 'A comment' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Post comment' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Error posting comment: offline');
+    expect(mockedAxios.post).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not post comments for unsafe video identifiers', async () => {
+    render(<CommentsSection videoId="../video" loggedUser={{ username: 'Player' }} />);
+
+    fireEvent.change(await screen.findByLabelText('Add a comment'), { target: { value: 'A comment' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Post comment' }));
+
+    expect(screen.getAllByRole('alert').map((alert) => alert.textContent)).toContain(
+      'Error posting comment: Invalid video ID.'
+    );
+    expect(mockedAxios.post).not.toHaveBeenCalled();
+  });
 });

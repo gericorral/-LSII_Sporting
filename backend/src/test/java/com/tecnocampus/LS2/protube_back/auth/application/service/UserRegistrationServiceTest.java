@@ -65,6 +65,18 @@ class UserRegistrationServiceTest {
     }
 
     @Test
+    void reportsPasswordHashingFailures() {
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> service.register("user@example.com", "player_1", null)
+        );
+
+        assertEquals("Unable to hash password", exception.getMessage());
+        assertInstanceOf(NullPointerException.class, exception.getCause());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
     void exposesAllUserFields() {
         User user = new User(
                 java.util.UUID.randomUUID(),

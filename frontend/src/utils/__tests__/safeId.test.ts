@@ -12,10 +12,20 @@ describe('toSafeId', () => {
     expect(toSafeId(42)).toBe('42');
   });
 
-  it.each([null, undefined, '', '../', 'a/b', 'id?x=1', 'a.b', 'a'.repeat(65), 0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1])(
-    'rejects unsafe identifier %s',
-    (value) => {
-      expect(toSafeId(value)).toBeNull();
-    }
-  );
+  it.each([
+    null,
+    undefined,
+    '',
+    '../',
+    'a/b',
+    'id?x=1',
+    'a.b',
+    'a'.repeat(65),
+    0,
+    -1,
+    1.5,
+    Number.MAX_SAFE_INTEGER + 1,
+  ])('rejects unsafe identifier %s', (value) => {
+    expect(toSafeId(value)).toBeNull();
+  });
 });

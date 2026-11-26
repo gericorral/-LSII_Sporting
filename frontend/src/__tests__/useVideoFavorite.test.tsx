@@ -58,4 +58,45 @@ describe('useVideoFavorite', () => {
     await act(() => second.result.current.toggleFavorite());
     expect(second.result.current.message).toBe('The favorite could not be updated.');
   });
+
+  it('ignores a stale favorite response after the video changes', async () => {
+    let rejectStaleRequest: ((error: Error) => void) | undefined;
+    mockedAxios.get
+      .mockReturnValueOnce(
+        new Promise((_, reject) => {
+          rejectStaleRequest = reject;
+        }) as never
+      )
+      .mockResolvedValueOnce({ data: { favorited: false } });
+    const { result, rerender } = renderHook(({ id }) => useVideoFavorite(id, true), {
+      initialProps: { id: 'first-video' },
+    });
+
+    rerender({ id: 'second-video' });
+    await waitFor(() => expect(result.current.state).toBe('ready'));
+    await act(async () => rejectStaleRequest?.(new Error('stale failure')));
+
+    expect(result.current.favorited).toBe(false);
+    expect(result.current.message).toBe('');
+  });
+
+  it('does not apply an older successful favorite response', async () => {
+    let resolveStaleRequest: ((value: { data: { favorited: boolean } }) => void) | undefined;
+    mockedAxios.get
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveStaleRequest = resolve;
+        }) as never
+      )
+      .mockResolvedValueOnce({ data: { favorited: false } });
+    const { result, rerender } = renderHook(({ id }) => useVideoFavorite(id, true), {
+      initialProps: { id: 'first-video' },
+    });
+
+    rerender({ id: 'second-video' });
+    await waitFor(() => expect(result.current.state).toBe('ready'));
+    await act(async () => resolveStaleRequest?.({ data: { favorited: true } }));
+
+    expect(result.current.favorited).toBe(false);
+  });
 });

@@ -463,3 +463,9 @@ content in this file.
 - 2026-11-26: Renamed the registration email and username patterns to
   `EMAIL_PATTERN` and `USERNAME_PATTERN` for unambiguous record-field validation;
   the change is part of the SonarCloud quality task and documented in the study guide.
+- 2026-11-26: Expanded backend and frontend regression coverage using the approved
+  `prompts/10-enforce-global-coverage.md`; tests cover file-publication cleanup and
+  thumbnail variants, metadata update and JDBC profile mapping, password-hash
+  failures, stale asynchronous responses, upload validation, comments, profiles and
+  language selection. The AI-assisted test changes are documented in the Catalan
+  study guide and Word export.

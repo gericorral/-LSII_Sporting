@@ -49,9 +49,7 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
       setMessage(t('profile.loadError'));
       return;
     }
-    const url = safeUserId
-      ? `${getEnv().API_BASE_URL}/profiles/${safeUserId}`
-      : `${getEnv().API_BASE_URL}/profiles/me`;
+    const url = safeUserId ? `${getEnv().API_BASE_URL}/profiles/${safeUserId}` : `${getEnv().API_BASE_URL}/profiles/me`;
     axios
       .get<Profile>(url, { withCredentials: true })
       .then((response) => {
