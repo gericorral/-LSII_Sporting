@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { getEnv } from './utils/Env';
+import { toSafeId } from './utils/safeId';
 
 export type VideoRating = {
   videoId: string;
@@ -19,8 +20,17 @@ export function useVideoRating(videoId: string, enabled: boolean) {
     let active = true;
     setLoading(true);
     setMessage('');
+    const safeVideoId = toSafeId(videoId);
+    if (!safeVideoId) {
+      setRating(null);
+      setMessage('The video rating could not be loaded.');
+      setLoading(false);
+      return () => {
+        active = false;
+      };
+    }
     axios
-      .get<VideoRating>(`${getEnv().API_BASE_URL}/videos/${encodeURIComponent(videoId)}/rating`, {
+      .get<VideoRating>(`${getEnv().API_BASE_URL}/videos/${safeVideoId}/rating`, {
         withCredentials: true,
       })
       .then((response) => {
@@ -38,6 +48,11 @@ export function useVideoRating(videoId: string, enabled: boolean) {
   }, [videoId]);
 
   const saveRating = async (value: number) => {
+    const safeVideoId = toSafeId(videoId);
+    if (!safeVideoId) {
+      setMessage('The video rating could not be saved.');
+      return;
+    }
     if (!enabled) {
       setMessage('Log in to rate videos.');
       return;
@@ -46,7 +61,7 @@ export function useVideoRating(videoId: string, enabled: boolean) {
     setMessage('');
     try {
       const response = await axios.put<VideoRating>(
-        `${getEnv().API_BASE_URL}/videos/${encodeURIComponent(videoId)}/rating`,
+        `${getEnv().API_BASE_URL}/videos/${safeVideoId}/rating`,
         { rating: value },
         { withCredentials: true }
       );

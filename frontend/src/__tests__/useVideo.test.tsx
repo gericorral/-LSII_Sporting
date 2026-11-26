@@ -43,4 +43,11 @@ describe('useVideo', () => {
     rerender(<Harness id="broken" />);
     await waitFor(() => expect(screen.getByText('Error fetching video: Network error')).toBeInTheDocument());
   });
+
+  it('rejects unsafe video identifiers without making a request', async () => {
+    render(<Harness id="../private" />);
+
+    await waitFor(() => expect(screen.getByText('Video not found.')).toBeInTheDocument());
+    expect(mockedAxios.get).not.toHaveBeenCalled();
+  });
 });

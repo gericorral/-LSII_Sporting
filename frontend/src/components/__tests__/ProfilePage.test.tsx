@@ -147,6 +147,21 @@ describe('ProfilePage', () => {
     expect(await screen.findByText('Unable to load this profile.')).toBeInTheDocument();
   });
 
+  it('rejects unsafe public profile identifiers without requesting a route', async () => {
+    render(<ProfilePage userId="../private" editable={false} onBack={jest.fn()} />);
+
+    expect(await screen.findByText('Unable to load this profile.')).toBeInTheDocument();
+    expect(mockedAxios.get).not.toHaveBeenCalled();
+  });
+
+  it('keeps the public profile visible when subscription status cannot be loaded', async () => {
+    mockedAxios.get.mockResolvedValueOnce({ data: profile }).mockRejectedValueOnce(new Error('offline'));
+    render(<ProfilePage userId="1" editable={false} onBack={jest.fn()} />);
+
+    expect(await screen.findByText('A video fan')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Subscribe' })).toBeInTheDocument();
+  });
+
   it('shows the server error when saving fails', async () => {
     mockedAxios.get.mockResolvedValue({ data: profile });
     mockedAxios.put.mockRejectedValue({

@@ -34,7 +34,7 @@ export function useAnalytics(enabled: boolean) {
   }, [enabled]);
 
   useEffect(() => {
-    refresh().then();
+    void refresh();
   }, [refresh]);
 
   return { value, loading, message, refresh };

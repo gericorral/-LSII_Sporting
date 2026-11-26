@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import axios from 'axios';
 import { getEnv } from '../utils/Env';
 import { useTranslation } from 'react-i18next';
+import { isValidEmail } from '../utils/validation';
 
 type LoginUser = { id?: string; username: string; email: string };
 type LoginFormProps = { onLoggedIn: (user: LoginUser) => void; oauthError?: string };
@@ -18,7 +19,7 @@ export default function LoginForm({ onLoggedIn, oauthError }: LoginFormProps) {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const nextErrors: Record<string, string> = {};
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    if (!isValidEmail(email.trim())) {
       nextErrors.email = t('auth.validEmail');
     }
     if (!password) nextErrors.password = t('auth.requiredPassword');
@@ -78,7 +79,7 @@ export default function LoginForm({ onLoggedIn, oauthError }: LoginFormProps) {
           </small>
         )}
         <div className="registration-field">
-          <label htmlFor="login-password">{t('auth.password')}</label>
+          <label htmlFor="login-password">{t('auth.passwordLabel')}</label>
           <input
             id="login-password"
             type="password"

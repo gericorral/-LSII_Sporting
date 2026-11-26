@@ -6,6 +6,7 @@ import CommentsSection from './CommentsSection';
 import { useVideoRating } from '../useVideoRating';
 import { useVideoFavorite } from '../useVideoFavorite';
 import { useTranslation } from 'react-i18next';
+import { toSafeId } from '../utils/safeId';
 
 type VideoDetailProps = {
   video: VideoSummary;
@@ -48,17 +49,20 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!video.ownerId) return;
+    const ownerId = toSafeId(video.ownerId);
+    if (!ownerId) return;
     setAuthor({
-      userId: video.ownerId,
+      userId: ownerId,
       username: video.ownerUsername || t('video.unknownAuthor'),
       displayName: null,
       avatarPath: null,
     });
-    const ownerId = encodeURIComponent(video.ownerId);
     axios
       .get(`${getEnv().API_BASE_URL}/profiles/${ownerId}`, { withCredentials: true })
-      .then((response) => setAuthor(response.data))
+      .then((response) => {
+        const profileId = toSafeId(response.data.userId);
+        if (profileId) setAuthor({ ...response.data, userId: profileId });
+      })
       .catch(() => undefined);
     if (loggedUser && loggedUser.id !== video.ownerId) {
       axios
@@ -71,11 +75,11 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
   }, [loggedUser, t, video.ownerId, video.ownerUsername]);
 
   const changeSubscription = async () => {
-    if (!video.ownerId || !loggedUser || loggedUser.id === video.ownerId) return;
+    const ownerId = toSafeId(video.ownerId);
+    if (!ownerId || !loggedUser || loggedUser.id === ownerId) return;
     setSubscriptionSaving(true);
     setSubscriptionMessage('');
     try {
-      const ownerId = encodeURIComponent(video.ownerId);
       const response = subscribed
         ? await axios.delete(`${getEnv().API_BASE_URL}/profiles/${ownerId}/subscription`, { withCredentials: true })
         : await axios.put(`${getEnv().API_BASE_URL}/profiles/${ownerId}/subscription`, {}, { withCredentials: true });
@@ -93,10 +97,15 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
 
   const save = async () => {
     setError('');
+    const videoId = toSafeId(video.id);
+    if (!videoId) {
+      setError(t('video.updateFailed'));
+      return;
+    }
     try {
       setSaving(true);
       await axios.put(
-        `${getEnv().API_BASE_URL}/videos/${encodeURIComponent(video.id)}`,
+        `${getEnv().API_BASE_URL}/videos/${videoId}`,
         {
           title,
           description,
@@ -123,9 +132,11 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
 
   const registerView = async () => {
     if (viewRegistered) return;
+    const videoId = toSafeId(video.id);
+    if (!videoId) return;
     setViewRegistered(true);
     try {
-      await axios.post(`${getEnv().API_BASE_URL}/videos/${encodeURIComponent(video.id)}/views`);
+      await axios.post(`${getEnv().API_BASE_URL}/videos/${videoId}/views`);
     } catch {
       setViewRegistered(false);
     }
@@ -146,7 +157,7 @@ const VideoDetail = ({ video, canEdit = false, onUpdated, loggedUser = null }: V
       </video>
       {author && (
         <section className="video-author" aria-label={t('video.author')}>
-          <a href={`#profile/${encodeURIComponent(author.userId)}`} className="video-author-profile">
+          <a href={`#profile/${author.userId}`} className="video-author-profile">
             {author.avatarPath ? (
               <img src={author.avatarPath} alt={t('avatarFor', { username: author.username })} />
             ) : (

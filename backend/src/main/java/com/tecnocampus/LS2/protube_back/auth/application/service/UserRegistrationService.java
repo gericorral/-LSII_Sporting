@@ -17,6 +17,8 @@ import java.util.Optional;
 
 @Service
 public class UserRegistrationService implements RegistrationUseCase {
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final UserPersistencePort userRepository;
 
     public UserRegistrationService(UserPersistencePort userRepository) {
@@ -57,7 +59,7 @@ public class UserRegistrationService implements RegistrationUseCase {
 
     private String hashPassword(String password) {
         byte[] salt = new byte[16];
-        new SecureRandom().nextBytes(salt);
+        SECURE_RANDOM.nextBytes(salt);
         try {
             PBEKeySpec keySpec = new PBEKeySpec(password.toCharArray(), salt, 120_000, 256);
             byte[] hash = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(keySpec).getEncoded();

@@ -447,3 +447,29 @@ content in this file.
   and coverage paths, and the frontend now generates LCOV alongside JSON and HTML
   coverage reports. The scan runs only when the `SONAR_TOKEN` secret is available,
   preserving builds for contributors who have not configured SonarCloud.
+- 2026-11-26: Refined SonarCloud source/test classification and coverage exclusions
+  using the approved `prompts/42-configure-sonarcloud-quality.md`; E2E specs are now
+  classified as tests, while tooling, configuration, bootstrap and generated support
+  files are excluded from coverage without excluding application source.
+- 2026-11-26: Hardened the SonarCloud workflow and runtime paths using the approved
+  `prompts/42-configure-sonarcloud-quality.md` and the SonarCloud quality task;
+  workflow actions are SHA-pinned, npm lifecycle scripts are controlled, dynamic
+  frontend IDs are allowlist-validated, email validation resists excessive
+  backtracking, and both Docker images use non-root runtime users.
+- 2026-11-26: Improved password-salt generation and asynchronous frontend behavior
+  for the SonarCloud quality task; `SecureRandom` is reused, email validation uses
+  bounded-backtracking patterns, fire-and-forget promises are explicit, and test
+  setup awaits language reset with Axios promise mocks.
+- 2026-11-26: Renamed the registration email and username patterns to
+  `EMAIL_PATTERN` and `USERNAME_PATTERN` for unambiguous record-field validation;
+  the change is part of the SonarCloud quality task and documented in the study guide.
+- 2026-11-26: Expanded backend and frontend regression coverage using the approved
+  `prompts/10-enforce-global-coverage.md`; tests cover file-publication cleanup and
+  thumbnail variants, metadata update and JDBC profile mapping, password-hash
+  failures, stale asynchronous responses, upload validation, comments, profiles and
+  language selection. The AI-assisted test changes are documented in the Catalan
+  study guide and Word export.
+- 2026-11-26: Made the SonarCloud scan depend on a job-level token-presence flag while
+  keeping the token itself scoped to the scan step; this preserves optional scans
+  while ensuring configured CI secrets can enable analysis. Uses the approved
+  `prompts/42-configure-sonarcloud-quality.md`.

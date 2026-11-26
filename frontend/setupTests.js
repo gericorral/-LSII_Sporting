@@ -11,10 +11,9 @@ jest.mock('./src/utils/Env', () => ({
 }));
 
 enableMocks();
-require('./src/i18n').default;
 const i18n = require('./src/i18n').default;
 
-beforeEach(() => {
-  i18n.changeLanguage('en');
+beforeEach(async () => {
+  await i18n.changeLanguage('en');
   window.localStorage.removeItem('protube-language');
 });

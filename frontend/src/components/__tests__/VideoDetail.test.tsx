@@ -9,6 +9,7 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('VideoDetail', () => {
   beforeEach(() => {
+    mockedAxios.get.mockReset();
     mockedAxios.get.mockResolvedValue({
       status: 200,
       data: { content: [], hasNext: false },
@@ -341,5 +342,31 @@ describe('VideoDetail', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit metadata' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
     return waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('You cannot edit this video.'));
+  });
+
+  it('does not request routes for unsafe video and owner identifiers', () => {
+    render(
+      <VideoDetail
+        canEdit
+        video={{
+          id: '../video',
+          title: 'Unsafe video',
+          description: '',
+          duration: null,
+          thumbnailUrl: '',
+          videoUrl: '',
+          ownerId: '../owner',
+        }}
+      />
+    );
+
+    fireEvent.play(document.querySelector('video')!);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit metadata' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    expect(mockedAxios.get).not.toHaveBeenCalled();
+    expect(mockedAxios.post).not.toHaveBeenCalled();
+    expect(mockedAxios.put).not.toHaveBeenCalled();
+    expect(screen.getAllByRole('alert').map((alert) => alert.textContent)).toContain('The video could not be updated.');
   });
 });
