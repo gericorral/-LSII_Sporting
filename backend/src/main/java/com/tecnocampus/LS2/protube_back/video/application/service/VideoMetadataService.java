@@ -3,6 +3,7 @@ package com.tecnocampus.LS2.protube_back.video.application.service;
 import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.UpdateVideoMetadataUseCase;
 import com.tecnocampus.LS2.protube_back.video.domain.port.out.VideoCatalogPort;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class VideoMetadataService implements UpdateVideoMetadataUseCase {
     }
 
     @Override
+    @CacheEvict(value = {"videoCatalog", "videoDetail"}, allEntries = true)
     public VideoSummary update(
             String id,
             UUID ownerId,

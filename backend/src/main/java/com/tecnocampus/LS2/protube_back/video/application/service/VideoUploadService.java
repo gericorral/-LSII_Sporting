@@ -3,6 +3,7 @@ package com.tecnocampus.LS2.protube_back.video.application.service;
 import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.UploadVideoUseCase;
 import com.tecnocampus.LS2.protube_back.video.domain.port.out.VideoPublicationPort;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -21,6 +22,7 @@ public class VideoUploadService implements UploadVideoUseCase {
     }
 
     @Override
+    @CacheEvict(value = {"videoCatalog", "videoDetail"}, allEntries = true)
     public VideoSummary upload(String title, String description, VideoFile video,
                                ThumbnailFile thumbnail, UUID ownerId) {
         validate(title, description, video, thumbnail);

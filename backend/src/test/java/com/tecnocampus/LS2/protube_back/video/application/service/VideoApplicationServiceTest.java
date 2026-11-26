@@ -3,12 +3,15 @@ package com.tecnocampus.LS2.protube_back.video.application.service;
 import com.tecnocampus.LS2.protube_back.video.domain.port.out.VideoCatalogPort;
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.ListVideosUseCase.VideoPage;
 import org.junit.jupiter.api.Test;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.List;
 import java.util.Optional;
+import java.lang.reflect.Method;
 import com.tecnocampus.LS2.protube_back.video.domain.model.VideoSummary;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -83,5 +86,19 @@ class VideoApplicationServiceTest {
 
         assertEquals(new VideoPage(List.of(videos.get(1)), 1, 1, 2, 2, false),
                 videoApplicationService.listVideos(1, 1, " travel "));
+    }
+
+    @Test
+    void catalogAndDetailMethodsDeclareCacheAnnotations() throws NoSuchMethodException {
+        Method catalogMethod = VideoApplicationService.class
+                    .getMethod("listVideos", int.class, int.class);
+        Method searchMethod = VideoApplicationService.class
+                    .getMethod("listVideos", int.class, int.class, String.class);
+        Method detailMethod = VideoApplicationService.class
+                    .getMethod("getVideo", String.class);
+
+        assertTrue(catalogMethod.isAnnotationPresent(Cacheable.class));
+        assertTrue(searchMethod.isAnnotationPresent(Cacheable.class));
+        assertTrue(detailMethod.isAnnotationPresent(Cacheable.class));
     }
 }

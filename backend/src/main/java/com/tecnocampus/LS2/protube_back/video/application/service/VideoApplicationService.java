@@ -2,6 +2,7 @@ package com.tecnocampus.LS2.protube_back.video.application.service;
 
 import com.tecnocampus.LS2.protube_back.video.domain.port.in.ListVideosUseCase;
 import com.tecnocampus.LS2.protube_back.video.domain.port.out.VideoCatalogPort;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,11 +19,19 @@ public class VideoApplicationService implements ListVideosUseCase {
     }
 
     @Override
+    @Cacheable(
+            value = "videoCatalog",
+            key = "'catalog:' + #page + ':' + #size"
+    )
     public VideoPage listVideos(int page, int size) {
         return listVideos(page, size, "");
     }
 
     @Override
+    @Cacheable(
+            value = "videoCatalog",
+            key = "'catalog:' + #page + ':' + #size + ':' + (#query == null ? '' : #query.trim().toLowerCase())"
+    )
     public VideoPage listVideos(int page, int size, String query) {
         if (page < 0 || size < 1 || size > 100) {
             throw new IllegalArgumentException("Page must be non-negative and size must be between 1 and 100");
@@ -45,6 +54,7 @@ public class VideoApplicationService implements ListVideosUseCase {
         );
     }
 
+    @Cacheable(value = "videoDetail", key = "#id")
     public Optional<VideoSummary> getVideo(String id) {
         return videoCatalogPort.findById(id);
     }

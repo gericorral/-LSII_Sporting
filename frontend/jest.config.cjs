@@ -19,7 +19,7 @@ module.exports = {
     '!src/vite-env.d.ts',
     '!src/utils/Env.ts',
   ],
-  coverageReporters: ['json', 'html'],
+  coverageReporters: ['json', 'lcov', 'html'],
   coverageThreshold: {
     global: {
       branches: 90,

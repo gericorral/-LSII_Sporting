@@ -431,3 +431,19 @@ content in this file.
 - 2026-11-11: Exposed the PostgreSQL video owner's public username in `VideoSummary`
   and used it as the video-detail fallback, so the author is shown by name rather
   than the generic `Author` label when profile loading is unavailable.
+- 2026-11-23: Added Swagger/OpenAPI documentation using
+  `prompts/40-document-swagger-openapi.md`; the backend now exposes a ProTube API
+  title, version, contact, server URLs and a JSESSIONID session-cookie security
+  scheme, with operation summaries on authentication, profile, video, comment and
+  analytics endpoints. Swagger UI is enabled in development and disabled in the
+  production profile used by Docker Compose. The change is documented in the Catalan
+  study guide and Word export.
+- 2026-11-23: Added process-local Caffeine caching using
+  `prompts/41-add-caffeine-video-cache.md`; catalog pages, searches and video details
+  are reused for up to five minutes, while successful uploads and metadata edits
+  invalidate catalog and detail entries. PostgreSQL remains the source of truth.
+- 2026-11-23: Configured SonarCloud static analysis using
+  `prompts/42-configure-sonarcloud-quality.md`; CI declares source, test, Java binary
+  and coverage paths, and the frontend now generates LCOV alongside JSON and HTML
+  coverage reports. The scan runs only when the `SONAR_TOKEN` secret is available,
+  preserving builds for contributors who have not configured SonarCloud.
