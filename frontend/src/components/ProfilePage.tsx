@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import axios from 'axios';
 import { getEnv } from '../utils/Env';
 import { useTranslation } from 'react-i18next';
+import { toSafeId } from '../utils/safeId';
 
 const MAX_DISPLAY_NAME_LENGTH = 50;
 
@@ -42,8 +43,14 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
   const [subscriptionSaving, setSubscriptionSaving] = useState(false);
 
   useEffect(() => {
-    const url = userId
-      ? `${getEnv().API_BASE_URL}/profiles/${encodeURIComponent(userId)}`
+    const safeUserId = userId ? toSafeId(userId) : null;
+    if (userId && !safeUserId) {
+      setProfile(null);
+      setMessage(t('profile.loadError'));
+      return;
+    }
+    const url = safeUserId
+      ? `${getEnv().API_BASE_URL}/profiles/${safeUserId}`
       : `${getEnv().API_BASE_URL}/profiles/me`;
     axios
       .get<Profile>(url, { withCredentials: true })
@@ -56,9 +63,9 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
         setMessage('');
       })
       .catch(() => setMessage(t('profile.loadError')));
-    if (userId) {
+    if (safeUserId) {
       axios
-        .get<{ subscribed: boolean }>(`${getEnv().API_BASE_URL}/profiles/${encodeURIComponent(userId)}/subscription`, {
+        .get<{ subscribed: boolean }>(`${getEnv().API_BASE_URL}/profiles/${safeUserId}/subscription`, {
           withCredentials: true,
         })
         .then((response) => setSubscribed(response.data.subscribed))
@@ -67,12 +74,13 @@ export default function ProfilePage({ userId, editable, onProfileUpdated, onBack
   }, [editable, onProfileUpdated, t, userId]);
 
   const changeSubscription = async () => {
-    if (!userId) return;
+    const safeUserId = toSafeId(userId);
+    if (!safeUserId) return;
     setSubscriptionSaving(true);
     try {
       const response = await axios({
         method: subscribed ? 'delete' : 'put',
-        url: `${getEnv().API_BASE_URL}/profiles/${encodeURIComponent(userId)}/subscription`,
+        url: `${getEnv().API_BASE_URL}/profiles/${safeUserId}/subscription`,
         withCredentials: true,
       });
       setSubscribed(response.data.subscribed);

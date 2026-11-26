@@ -69,4 +69,15 @@ describe('useVideoRating', () => {
     await waitFor(() => expect(screen.getAllByText('The video rating could not be saved.').length).toBeGreaterThan(0));
     rerender(<Harness />);
   });
+
+  it('rejects unsafe video identifiers without making requests', async () => {
+    render(<Harness id="a/b" />);
+
+    expect(await screen.findByText('The video rating could not be loaded.')).toBeInTheDocument();
+    expect(mockedAxios.get).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(screen.getByText('The video rating could not be saved.')).toBeInTheDocument();
+    expect(mockedAxios.put).not.toHaveBeenCalled();
+  });
 });

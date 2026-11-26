@@ -451,3 +451,8 @@ content in this file.
   using the approved `prompts/42-configure-sonarcloud-quality.md`; E2E specs are now
   classified as tests, while tooling, configuration, bootstrap and generated support
   files are excluded from coverage without excluding application source.
+- 2026-11-26: Hardened the SonarCloud workflow and runtime paths using the approved
+  `prompts/42-configure-sonarcloud-quality.md` and the SonarCloud quality task;
+  workflow actions are SHA-pinned, npm lifecycle scripts are controlled, dynamic
+  frontend IDs are allowlist-validated, email validation resists excessive
+  backtracking, and both Docker images use non-root runtime users.

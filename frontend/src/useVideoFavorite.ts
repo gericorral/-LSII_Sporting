@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { getEnv } from './utils/Env';
+import { toSafeId } from './utils/safeId';
 
 type FavoriteState = 'loading' | 'ready' | 'saving' | 'error';
 
@@ -19,9 +20,17 @@ export function useVideoFavorite(videoId: string, authenticated: boolean) {
         active = false;
       };
     }
+    const safeVideoId = toSafeId(videoId);
+    if (!safeVideoId) {
+      setState('error');
+      setMessage('Unable to load favorite status.');
+      return () => {
+        active = false;
+      };
+    }
     setState('loading');
     axios
-      .get<{ favorited: boolean }>(`${getEnv().API_BASE_URL}/videos/${encodeURIComponent(videoId)}/favorite`, {
+      .get<{ favorited: boolean }>(`${getEnv().API_BASE_URL}/videos/${safeVideoId}/favorite`, {
         withCredentials: true,
       })
       .then((response) => {
@@ -40,16 +49,22 @@ export function useVideoFavorite(videoId: string, authenticated: boolean) {
   }, [authenticated, videoId]);
 
   const toggleFavorite = async () => {
+    const safeVideoId = toSafeId(videoId);
+    if (!safeVideoId) {
+      setState('error');
+      setMessage('The favorite could not be updated.');
+      return;
+    }
     setMessage('');
     setState('saving');
     try {
       const response = await (favorited
         ? axios.delete<{ favorited: boolean }>(
-            `${getEnv().API_BASE_URL}/videos/${encodeURIComponent(videoId)}/favorite`,
+            `${getEnv().API_BASE_URL}/videos/${safeVideoId}/favorite`,
             { withCredentials: true }
           )
         : axios.put<{ favorited: boolean }>(
-            `${getEnv().API_BASE_URL}/videos/${encodeURIComponent(videoId)}/favorite`,
+            `${getEnv().API_BASE_URL}/videos/${safeVideoId}/favorite`,
             {},
             { withCredentials: true }
           ));

@@ -114,14 +114,16 @@ public class AuthController {
     }
 
     public record RegistrationRequest(String email, String username, String password) {
-        private static final Pattern EMAIL = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
-        private static final Pattern USERNAME = Pattern.compile("^[a-zA-Z0-9_]{3,50}$");
+        private static final Pattern EMAIL_PATTERN =
+                Pattern.compile("^[^\\s@]++@[^\\s@.]++(?:\\.[^\\s@.]++)++$");
+        private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{3,50}$");
 
         Map<String, String> validationError() {
-            if (email == null || email.isBlank() || email.length() > 320 || !EMAIL.matcher(email.trim()).matches()) {
+            if (email == null || email.isBlank() || email.length() > 320
+                    || !EMAIL_PATTERN.matcher(email.trim()).matches()) {
                 return Map.of("field", "email", "message", "Enter a valid email address.");
             }
-            if (username == null || username.isBlank() || !USERNAME.matcher(username.trim()).matches()) {
+            if (username == null || username.isBlank() || !USERNAME_PATTERN.matcher(username.trim()).matches()) {
                 return Map.of("field", "username", "message", "Use 3-50 letters, numbers or underscores.");
             }
             if (password == null || password.length() < 8 || password.length() > 72) {

@@ -86,7 +86,7 @@ const resources = {
         login: 'Log in',
         loginDescription: 'Use your ProTube account to continue.',
         email: 'Email address',
-        password: 'Password',
+        passwordLabel: 'Password',
         validEmail: 'Enter a valid email address.',
         requiredPassword: 'Enter your password.',
         unableLogin: 'Unable to log in.',
@@ -260,7 +260,7 @@ const resources = {
         login: 'Iniciar sesión',
         loginDescription: 'Usa tu cuenta de ProTube para continuar.',
         email: 'Correo electrónico',
-        password: 'Contraseña',
+        passwordLabel: 'Contraseña',
         validEmail: 'Introduce un correo electrónico válido.',
         requiredPassword: 'Introduce tu contraseña.',
         unableLogin: 'No se ha podido iniciar sesión.',
@@ -354,7 +354,7 @@ const resources = {
 
 const savedLanguage = window.localStorage.getItem('protube-language');
 
-i18n.use(initReactI18next).init({
+void i18n.use(initReactI18next).init({
   resources,
   lng: savedLanguage === 'es' ? 'es' : 'en',
   fallbackLng: 'en',

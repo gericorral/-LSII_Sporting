@@ -18,6 +18,19 @@ describe('useVideoFavorite', () => {
     expect(mockedAxios.get).not.toHaveBeenCalled();
   });
 
+  it('rejects unsafe video identifiers without making requests', async () => {
+    const { result } = renderHook(() => useVideoFavorite('../private', true));
+
+    await waitFor(() => expect(result.current.state).toBe('error'));
+    expect(result.current.message).toBe('Unable to load favorite status.');
+    expect(mockedAxios.get).not.toHaveBeenCalled();
+
+    await act(() => result.current.toggleFavorite());
+    expect(result.current.message).toBe('The favorite could not be updated.');
+    expect(mockedAxios.put).not.toHaveBeenCalled();
+    expect(mockedAxios.delete).not.toHaveBeenCalled();
+  });
+
   it('loads and toggles a favorite', async () => {
     mockedAxios.get.mockResolvedValue({ data: { favorited: false } });
     mockedAxios.put.mockResolvedValue({ data: { favorited: true } });
