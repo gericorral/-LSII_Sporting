@@ -469,3 +469,7 @@ content in this file.
   failures, stale asynchronous responses, upload validation, comments, profiles and
   language selection. The AI-assisted test changes are documented in the Catalan
   study guide and Word export.
+- 2026-11-26: Made the SonarCloud scan depend on a job-level token-presence flag while
+  keeping the token itself scoped to the scan step; this preserves optional scans
+  while ensuring configured CI secrets can enable analysis. Uses the approved
+  `prompts/42-configure-sonarcloud-quality.md`.
