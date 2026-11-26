@@ -460,3 +460,6 @@ content in this file.
   for the SonarCloud quality task; `SecureRandom` is reused, email validation uses
   bounded-backtracking patterns, fire-and-forget promises are explicit, and test
   setup awaits language reset with Axios promise mocks.
+- 2026-11-26: Renamed the registration email and username patterns to
+  `EMAIL_PATTERN` and `USERNAME_PATTERN` for unambiguous record-field validation;
+  the change is part of the SonarCloud quality task and documented in the study guide.
