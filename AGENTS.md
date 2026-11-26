@@ -456,3 +456,7 @@ content in this file.
   workflow actions are SHA-pinned, npm lifecycle scripts are controlled, dynamic
   frontend IDs are allowlist-validated, email validation resists excessive
   backtracking, and both Docker images use non-root runtime users.
+- 2026-11-26: Improved password-salt generation and asynchronous frontend behavior
+  for the SonarCloud quality task; `SecureRandom` is reused, email validation uses
+  bounded-backtracking patterns, fire-and-forget promises are explicit, and test
+  setup awaits language reset with Axios promise mocks.

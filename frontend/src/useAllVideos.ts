@@ -60,7 +60,7 @@ export function useAllVideos() {
   }, []);
 
   useEffect(() => {
-    refresh().then();
+    void refresh();
   }, [refresh]);
 
   const loadMore = async () => {

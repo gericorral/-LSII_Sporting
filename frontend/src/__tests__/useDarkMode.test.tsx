@@ -9,6 +9,7 @@ describe('useDarkMode', () => {
   beforeEach(() => {
     mockedAxios.get.mockReset();
     mockedAxios.put.mockReset();
+    mockedAxios.get.mockResolvedValue({ data: { darkMode: false } });
   });
 
   it('defaults to light mode when anonymous', () => {
@@ -22,13 +23,6 @@ describe('useDarkMode', () => {
     await act(() => result.current.toggleDarkMode());
     expect(result.current.darkMode).toBe(true);
     expect(mockedAxios.put).not.toHaveBeenCalled();
-  });
-
-  it('handles a missing preference request in lightweight test environments', () => {
-    mockedAxios.get.mockReturnValue(undefined as never);
-    const { result } = renderHook(() => useDarkMode(true));
-    expect(result.current.state).toBe('ready');
-    expect(result.current.darkMode).toBe(false);
   });
 
   it('loads and persists the selected mode', async () => {
