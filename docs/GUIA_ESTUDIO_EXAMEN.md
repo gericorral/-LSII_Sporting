@@ -4,7 +4,7 @@
 > després de cada canvi de codi. No substitueix el codi: resumeix què fa
 > l'aplicació, quines peces es modifiquen i quines decisions s'han de saber justificar.
 
-**Última actualització:** 9 de novembre de 2026
+**Última actualització:** 28 de novembre de 2026
 
 ### Subscripcions d'usuaris
 
@@ -666,6 +666,7 @@ semàntica del frontend; no modifiquen els ports ni els contractes de l'API.
 | 26/11/2026 | Es reforça la gestió de promeses i la creació de credencials. | El backend reutilitza una instància `SecureRandom` per generar salts, i la validació d'email usa quantificadors possessius al backend i una utilitat compartida al frontend amb proves de cadena llarga. Els efectes React marquen les promeses com a intencionadament ignorades, gestionen el logout i esperen el restabliment de l'idioma als tests; els mocks d'Axios retornen promeses reals. |
 | 26/11/2026 | S'aclareixen els patrons de validació del registre. | Les constants `EMAIL_PATTERN` i `USERNAME_PATTERN` identifiquen explícitament els patrons del `RegistrationRequest`, evitant que els noms de constants i camps del record siguin confosos per les eines d'anàlisi. |
 | 26/11/2026 | S'amplien les proves de regressió per augmentar la cobertura de línies i branques. | Els tests backend cobreixen la publicació de fitxers i la neteja després d'errors, les variants de miniatura, la lectura i actualització de metadades i el mapatge JDBC de subscripcions. Els tests frontend comproven errors d'API, respostes asíncrones obsoletes, validacions de pujada, preferències d'idioma i interaccions de comentaris i perfil. Per a l'examen, cal distingir cobertura de línies de cobertura de condicions: els casos de prova han de verificar sortides i efectes observables, no limitar-se a executar el codi. |
+| 28/11/2026 | Es corregeix la pujada de vídeos als tests E2E en una màquina neta. | El volum de `video-store/` pot ser creat per Docker com a directori de root quan encara no existeix al checkout. L'entrypoint del backend n'ajusta el propietari abans d'iniciar Java com a usuari no privilegiat `app`; així el contenidor pot publicar els fitxers sense executar l'aplicació com a root. |
 
 ## 8. Temes pendents
 

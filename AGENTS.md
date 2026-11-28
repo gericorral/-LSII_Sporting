@@ -473,3 +473,7 @@ content in this file.
   keeping the token itself scoped to the scan step; this preserves optional scans
   while ensuring configured CI secrets can enable analysis. Uses the approved
   `prompts/42-configure-sonarcloud-quality.md`.
+- 2026-11-28: Fixed CI E2E video uploads on fresh checkouts using the approved
+  `prompts/26-add-e2e-tests.md`; the backend container now prepares the mounted
+  media directory before starting Java as the non-root `app` user. The change is
+  documented in the Catalan study guide and Word export.

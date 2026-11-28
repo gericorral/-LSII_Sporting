@@ -21,8 +21,6 @@ RUN groupadd --system app \
 
 COPY --chown=app:app --from=build /workspace/backend/target/protube-back-0.0.1-SNAPSHOT.jar app.jar
 
-USER app
-
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "chown app:app /app/store && exec su -s /bin/sh app -c 'exec /opt/java/openjdk/bin/java -jar /app/app.jar'"]

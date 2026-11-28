@@ -203,6 +203,10 @@ imports the JSON metadata and local asset references from `video-store/` into Po
 `JdbcVideoCatalogAdapter` then queries PostgreSQL for the catalog, while the `.mp4` and thumbnail files continue to be
 served from the mounted `video-store/` directory.
 
+The backend image prepares the mounted media directory at startup, then runs the Java process as the unprivileged
+`app` user. This is needed when Docker creates an initially absent `video-store/` bind-mount directory, as happens in a
+fresh CI checkout.
+
 ### Run directly with Maven
 
 ```bash
